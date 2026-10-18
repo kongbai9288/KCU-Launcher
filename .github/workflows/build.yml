@@ -1,5 +1,9 @@
 name: Build
 
+env:
+  # secrets 不能直接用在 step 级 if，先在这里求值
+  HAS_KEYSTORE: ${{ secrets.KCU_KEYSTORE_BASE64 != '' }}
+
 on:
   push:
     branches: ["**"]
@@ -51,12 +55,12 @@ jobs:
       # 签名库来自私有仓库 kongbai，以 base64 存于 secrets。
       # 缺失时不阻断：产物为未签名 APK，仅标记。
       - name: 恢复签名库
-        if: ${{ secrets.KCU_KEYSTORE_BASE64 != '' }}
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
         run: |
           echo "${{ secrets.KCU_KEYSTORE_BASE64 }}" | base64 -d > key-store.jks
           echo "签名库已恢复 $(stat -c%s key-store.jks) 字节"
       - name: 无签名库时告警
-        if: ${{ secrets.KCU_KEYSTORE_BASE64 == '' }}
+        if: ${{ env.HAS_KEYSTORE != 'true' }}
         run: echo "::warning::未配置 KCU_KEYSTORE_BASE64，本次产物将未签名"
 
       - name: 确认存在 Android 源码
