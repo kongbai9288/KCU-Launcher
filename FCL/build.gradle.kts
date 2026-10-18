@@ -40,9 +40,15 @@ android {
         localProperty = Properties()
         file("${rootDir}/local.properties").inputStream().use { localProperty.load(it) }
     }
-    val pwd = System.getenv("FCL_KEYSTORE_PASSWORD") ?: localProperty?.getProperty("pwd")
+    // KCU：密钥一律来自环境变量或 local.properties，读不到就是空，绝不让构建失败
+    val pwd = System.getenv("KCU_KEYSTORE_PASSWORD")
+        ?: System.getenv("FCL_KEYSTORE_PASSWORD")
+        ?: localProperty?.getProperty("pwd")
+    val keyAlias = System.getenv("KCU_KEY_ALIAS") ?: localProperty?.getProperty("key.alias") ?: "FCL-Key"
+    val keyPwd = System.getenv("KCU_KEY_PASSWORD") ?: pwd
     val curseApiKey = System.getenv("CURSE_API_KEY") ?: localProperty?.getProperty("curse.api.key")
     val oauthApiKey = System.getenv("OAUTH_API_KEY") ?: localProperty?.getProperty("oauth.api.key")
+    val useReleaseSign = file("${rootDir}/key-store.jks").exists() && !pwd.isNullOrEmpty()
     // 命令行 -Darch 优先；local.properties 仅在命令行未指定时生效
     if (System.getProperty("arch") == null && localProperty != null && localProperty.getProperty(
             "arch",
@@ -52,17 +58,23 @@ android {
         System.setProperty("arch", "arm64")
 
     signingConfigs {
+        // KCU：正式签名库缺失时留空，交由 buildTypes 回退到 AGP 默认 debug 签名
         create("FCLKey") {
-            storeFile = file("../key-store.jks")
-            storePassword = pwd
-            keyAlias = "FCL-Key"
-            keyPassword = pwd
+            if (useReleaseSign) {
+                storeFile = file("../key-store.jks")
+                storePassword = pwd
+                keyAlias = keyAlias
+                keyPassword = keyPwd
+            }
         }
         create("FCLDebugKey") {
-            storeFile = file("../debug-key.jks")
-            storePassword = "FCL-Debug"
-            keyAlias = "FCL-Debug"
-            keyPassword = "FCL-Debug"
+            val dbg = file("../debug-key.jks")
+            if (dbg.exists()) {
+                storeFile = dbg
+                storePassword = "FCL-Debug"
+                keyAlias = "FCL-Debug"
+                keyPassword = "FCL-Debug"
+            }
         }
         // minSdk 26 ≥ 24，v1 已无必要，统一启用 v2 + v3 签名方案
         configureEach {
@@ -76,8 +88,8 @@ android {
         applicationId = "com.tungsten.fcl"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 1340
-        versionName = "1.3.4.0"
+        versionCode = 3
+        versionName = "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
@@ -89,13 +101,16 @@ android {
     testBuildType = "fordebug"
 
     buildTypes {
+        // KCU：签名为空时回退 AGP 默认 debug 签名，产物为未签名/调试签名，构建不失败
         getByName("release") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("FCLKey")
+            signingConfig = if (useReleaseSign) signingConfigs.getByName("FCLKey")
+                            else signingConfigs.getByName("debug")
         }
         getByName("debug") {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("FCLKey")
+            signingConfig = if (useReleaseSign) signingConfigs.getByName("FCLKey")
+                            else signingConfigs.getByName("debug")
         }
         create("fordebug") {
             initWith(getByName("debug"))
@@ -106,8 +121,9 @@ android {
         }
         configureEach {
             resValue("string", "app_version", defaultConfig.versionName.toString())
-            resValue("string", "curse_api_key", curseApiKey.toString())
-            resValue("string", "oauth_api_key", oauthApiKey.toString())
+            // KCU：空则写空串，运行时据此切换国内镜像，不依赖 "null" 字符串比较
+            resValue("string", "curse_api_key", curseApiKey ?: "")
+            resValue("string", "oauth_api_key", oauthApiKey ?: "")
         }
     }
 
@@ -186,7 +202,7 @@ androidComponents {
             if (output is com.android.build.api.variant.impl.VariantOutputImpl) {
                 (output.getFilter(ABI)?.identifier ?: "all").let { abi ->
                     output.outputFileName =
-                        "FCL-${variant.buildType}-${project.android.defaultConfig.versionName}-${abi}.apk"
+                        "KCU-${variant.buildType}-${project.android.defaultConfig.versionName}-${abi}.apk"
                 }
             }
         }
