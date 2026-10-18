@@ -79,11 +79,21 @@ jobs:
 
       - name: Build release
         if: steps.guard.outputs.has_source == 'true' && github.event_name != 'pull_request'
-        run: ./gradlew assembleRelease -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon
+        id: gradle
+        continue-on-error: true
+        run: |
+          ./gradlew assembleRelease -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
+          echo "gradle_exit=${PIPESTATUS[0]}"
+          { echo "BUILD_LOG<<EOF_DELIM"; tail -c 4000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: Build debug
         if: steps.guard.outputs.has_source == 'true' && github.event_name == 'pull_request'
-        run: ./gradlew assembleDebug -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon
+        id: gradle
+        continue-on-error: true
+        run: |
+          ./gradlew assembleDebug -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
+          echo "gradle_exit=${PIPESTATUS[0]}"
+          { echo "BUILD_LOG<<EOF_DELIM"; tail -c 4000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: Upload APK
         if: steps.guard.outputs.has_source == 'true'
@@ -92,3 +102,23 @@ jobs:
           name: app-${{ matrix.arch }}
           path: "*/build/outputs/apk/*/*.apk"
           if-no-files-found: warn
+
+      - name: 构建失败时报 issue
+        if: ${{ steps.gradle.outcome == 'failure' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          log = os.environ.get('BUILD_LOG') or '(无日志)'
+          body = "arch=" + os.environ.get('MATRIX_ARCH','?') + "\n\n```\n" + log + "\n```"
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/issues",
+              data=json.dumps({"title": "build 失败: " + os.environ.get('MATRIX_ARCH','?'), "body": body}).encode(),
+              headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                       "Accept": "application/vnd.github+json", "Content-Type": "application/json"})
+          try:
+              print("issue:", json.load(urllib.request.urlopen(req, timeout=30)).get("html_url"))
+          except Exception as e:
+              print("上报失败:", e)
+          PY
