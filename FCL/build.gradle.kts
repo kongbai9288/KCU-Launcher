@@ -44,7 +44,7 @@ android {
     val pwd = System.getenv("KCU_KEYSTORE_PASSWORD")
         ?: System.getenv("FCL_KEYSTORE_PASSWORD")
         ?: localProperty?.getProperty("pwd")
-    val keyAlias = System.getenv("KCU_KEY_ALIAS") ?: localProperty?.getProperty("key.alias") ?: "FCL-Key"
+    val kcuKeyAlias = System.getenv("KCU_KEY_ALIAS") ?: localProperty?.getProperty("key.alias") ?: "FCL-Key"
     val keyPwd = System.getenv("KCU_KEY_PASSWORD") ?: pwd
     val curseApiKey = System.getenv("CURSE_API_KEY") ?: localProperty?.getProperty("curse.api.key")
     val oauthApiKey = System.getenv("OAUTH_API_KEY") ?: localProperty?.getProperty("oauth.api.key")
@@ -63,7 +63,7 @@ android {
             if (useReleaseSign) {
                 storeFile = file("../key-store.jks")
                 storePassword = pwd
-                keyAlias = keyAlias
+                keyAlias = kcuKeyAlias
                 keyPassword = keyPwd
             }
         }
