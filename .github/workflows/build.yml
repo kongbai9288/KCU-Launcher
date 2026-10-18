@@ -88,7 +88,7 @@ jobs:
 
       - name: Build debug
         if: steps.guard.outputs.has_source == 'true' && github.event_name == 'pull_request'
-        id: gradle
+        id: gradle_debug
         continue-on-error: true
         run: |
           ./gradlew assembleDebug -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
@@ -104,7 +104,7 @@ jobs:
           if-no-files-found: warn
 
       - name: 构建失败时报 issue
-        if: ${{ steps.gradle.outcome == 'failure' }}
+        if: ${{ steps.gradle.outcome == 'failure' || steps.gradle_debug.outcome == 'failure' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
