@@ -63,3 +63,29 @@
 - 官方文档核对补充：Minecraft `version.json` 的 `rules` / `${var}` / `assetIndex` 规范；CurseForge `gameId=432`、`x-api-key`
 
 状态：**仍未编写业务代码，仍未编译 APK，仍未实机验证。** 文档中技术结论在实机验证前均为 NOT PROVEN。
+
+## 0.3.0 — 2026.10.19
+
+执行者：**yuanbao**
+
+- **导入 FCL 上游基线**（`sync-upstream` 工作流）
+
+  | 项 | 值 |
+  |---|---|
+  | 上游提交 | `cd14d179ce22a806c9eda6353836e5abfa93cf30` |
+  | 落地模块 | `FCL`、`LWJGL`、`Terracotta`、`ZipFileSystem` |
+  | 保留自有 | `docs/` 全部、`README.md`、`CHANGELOG.md`、`version_map.json`、`.github/` |
+  | 已排除 | `key-store.jks`、`debug-key.jks`、`private_key.pepk` |
+
+  新增 `UPSTREAM.txt` 记录上游来源与同步时间。
+
+- 踩坑记录：Actions 内 `git push` 默认无凭据 → 改用 `x-access-token@github.com`；上游历史与本地纠缠导致 rebase 冲突 → 改用**孤立分支单次提交 + 强制推送**，得到干净基线。
+
+- 改造 `FCL/build.gradle.kts`
+
+  - 签名：密钥走 `KCU_KEYSTORE_PASSWORD` / `KCU_KEY_ALIAS` / `KCU_KEY_PASSWORD` 环境变量；**签名库缺失时回退 AGP 默认 debug 签名，构建不失败**（规则 66）
+  - CurseForge / OAuth Key：空值写**空串**而非字符串 `"null"`，运行时据此切换国内镜像（规则 67）
+  - 产物命名 `KCU-<buildType>-<version>-<abi>.apk`
+  - `versionCode=3` / `versionName=0.3.0`
+
+状态：基线已落地但**尚未编译验证**。`applicationId` 仍为 `com.tungsten.fcl`，改包名需连同源码目录与 Manifest 一起迁移，列为下一步。
