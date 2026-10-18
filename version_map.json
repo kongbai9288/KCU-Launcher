@@ -1,6 +1,29 @@
 [
   {
     "type": "release",
+    "versionCode": 3,
+    "versionName": "0.3.0",
+    "date": "2026.10.19",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "导入 FCL 上游基线：FCL / LWJGL / Terracotta / ZipFileSystem 四个模块全部落地，上游提交 cd14d179ce22a806c9eda6353836e5abfa93cf30。",
+          "保留本仓库自有内容：docs 全部分类文档、README、CHANGELOG、version_map、.github。",
+          "上游签名库 key-store.jks / debug-key.jks / private_key.pepk 已排除，未进公开仓库。",
+          "新增 UPSTREAM.txt 记录上游来源与同步时间。",
+          "改造 FCL/build.gradle.kts：签名库缺失时回退 AGP 默认 debug 签名，构建不失败；密钥全走 KCU_* 环境变量。",
+          "改造 CurseForge / OAuth Key 注入：空值写空串而非字符串 null，运行时据此切换国内镜像。",
+          "产物命名改为 KCU-<buildType>-<version>-<abi>.apk。",
+          "versionCode=3 versionName=0.3.0。",
+          "仍未实机编译验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 2,
     "versionName": "0.2.0",
     "date": "2026.10.19",
