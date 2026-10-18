@@ -1,0 +1,48 @@
+[
+  {
+    "type": "release",
+    "versionCode": 2,
+    "versionName": "0.2.0",
+    "date": "2026.10.19",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "新增 .github/workflows/build.yml：五架构矩阵、密钥全走 secrets、产物命名 KCU-<type>-<version>-<abi>.apk。",
+          "新增 .github/workflows/sync-upstream.yml：一键导入 FCL 上游基线，保留本仓库自有目录与文档。",
+          "新增 docs/08-Android版本适配：16KB 页大小、MANAGE_EXTERNAL_STORAGE 政策、前台服务类型、动态代码加载只读、MediaProjection 每次授权。",
+          "新增 docs/04-上游分析/上游API地图：FCL 启动全链路、JRE 与 .so 加载方式、渲染器、输入、任务系统、已修复的坑。",
+          "补充官方文档核对：Minecraft version.json 规范、CurseForge 参数。",
+          "确定玩家自定义 .so 的接入点为 MOD_RUNTIME_DIR / NativeLibPlugin.getPaths / LD_LIBRARY_PATH，不自己 System.load。",
+          "确定复制进私有目录的库必须置为只读（Android 14 动态代码加载要求）。",
+          "确定玩家自带 .so 需增加 16KB 页对齐校验。",
+          "仍然：未编写业务代码，未编译 APK，未实机验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
+    "versionCode": 1,
+    "versionName": "0.1.0",
+    "date": "2026.10.19",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh",
+        "text": [
+          "建立公开仓库，GPL-3.0。",
+          "落地分类文档目录：总览 / 架构 / 契约 / 防错 / 上游分析 / 合规 / 构建与CI / 兜底。",
+          "共用 KCU-Migrator 的 Kcu_icon.png 作为项目图标。",
+          "确定 .so 双层目录模型：公共目录存素材，私有目录加载。",
+          "确定 native_load_order.json 契约，玩家不配置则零干预。",
+          "确定 CurseForge Key 缺省自动走国内镜像，不写死、不阻断构建。",
+          "确定加载器图标走单一 LoaderIcon 模块复用。",
+          "写入失败分级兜底策略与安全模式。",
+          "尚未编写业务代码，尚未编译 APK。"
+        ]
+      }
+    ]
+  }
+]

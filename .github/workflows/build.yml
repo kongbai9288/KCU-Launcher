@@ -1,0 +1,90 @@
+name: Build
+
+on:
+  push:
+    branches: ["**"]
+    paths-ignore:
+      - ".github/workflows/**"
+      - "**.md"
+      - "version_map.json"
+      - "docs/**"
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: "目标架构"
+        required: false
+        default: "all"
+        type: choice
+        options: ["all", "arm", "arm64", "x86", "x86_64"]
+  workflow_call:
+
+jobs:
+  build:
+    name: Build ${{ matrix.arch }}
+    strategy:
+      matrix:
+        arch: ["all", "arm", "arm64", "x86", "x86_64"]
+      fail-fast: false
+    env:
+      # 全部走 secrets / 环境变量，读不到就是空，不允许让构建失败
+      KCU_KEYSTORE_PASSWORD: ${{ secrets.KCU_KEYSTORE_PASSWORD }}
+      KCU_KEY_ALIAS: ${{ secrets.KCU_KEY_ALIAS }}
+      KCU_KEY_PASSWORD: ${{ secrets.KCU_KEY_PASSWORD }}
+      CURSE_API_KEY: ${{ secrets.CURSE_API_KEY }}
+      OAUTH_API_KEY: ${{ secrets.OAUTH_API_KEY }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: 17
+          cache: "gradle"
+
+      # 签名库来自私有仓库 kongbai，以 base64 存于 secrets。
+      # 缺失时不阻断：产物为未签名 APK，仅标记。
+      - name: 恢复签名库
+        if: ${{ secrets.KCU_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "${{ secrets.KCU_KEYSTORE_BASE64 }}" | base64 -d > key-store.jks
+          echo "签名库已恢复 $(stat -c%s key-store.jks) 字节"
+      - name: 无签名库时告警
+        if: ${{ secrets.KCU_KEYSTORE_BASE64 == '' }}
+        run: echo "::warning::未配置 KCU_KEYSTORE_BASE64，本次产物将未签名"
+
+      - name: 确认存在 Android 源码
+        id: guard
+        run: |
+          if [ -f "settings.gradle.kts" ] && [ -f "gradlew" ]; then
+            echo "has_source=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_source=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::未检测到 Android 源码基线，跳过编译。请先运行 sync-upstream 工作流导入上游。"
+          fi
+
+      - name: Grant execute permission
+        if: steps.guard.outputs.has_source == 'true'
+        run: chmod +x gradlew
+
+      - name: Build release
+        if: steps.guard.outputs.has_source == 'true' && github.event_name != 'pull_request'
+        run: ./gradlew assembleRelease -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon
+
+      - name: Build debug
+        if: steps.guard.outputs.has_source == 'true' && github.event_name == 'pull_request'
+        run: ./gradlew assembleDebug -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon
+
+      - name: Upload APK
+        if: steps.guard.outputs.has_source == 'true'
+        uses: actions/upload-artifact@v6
+        with:
+          name: app-${{ matrix.arch }}
+          path: "*/build/outputs/apk/*/*.apk"
+          if-no-files-found: warn

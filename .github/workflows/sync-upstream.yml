@@ -1,0 +1,132 @@
+name: Sync Upstream (FCL baseline)
+
+# 把上游 FoldCraftLauncher 基线导入本仓库。
+# 沙盒无法整体 clone（仅 api.github.com 可达），所以这一步交给 Actions。
+# 采用「单次提交 + 强制推送」：本仓库由本工作流独家写入基线，
+# 自有内容（docs / README / CHANGELOG / version_map / .github）已在 KEEP 中保留。
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_ref:
+        description: "上游 ref（branch / tag / sha）"
+        required: false
+        default: "main"
+      include_jre:
+        description: "是否带上游内置 JRE 包"
+        required: false
+        default: true
+        type: boolean
+      dry_run:
+        description: "只打印动作，不推送"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout 本仓库
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: 拉取上游
+        run: |
+          git clone --depth 1 --branch "${{ inputs.upstream_ref }}" \
+            https://github.com/FCL-Team/FoldCraftLauncher.git /tmp/upstream
+          cd /tmp/upstream
+          echo "UPSTREAM_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "上游提交: $(git rev-parse HEAD)"
+
+      - name: 可选剔除 JRE 包
+        if: ${{ !inputs.include_jre }}
+        run: rm -rf /tmp/upstream/FCL/src/main/jreAssets
+
+      - name: 同步源码（保留本仓库自有内容）
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          KEEP="docs version_map.json CHANGELOG.md .github UPSTREAM.txt README.md LICENSE"
+          for f in $(ls -A /tmp/upstream); do
+            case " $KEEP " in
+              *" $f "*) echo "skip(own): $f"; continue;;
+            esac
+            rm -rf "$f"
+            cp -r "/tmp/upstream/$f" .
+            echo "imported: $f"
+          done
+          # 上游签名库与 pepk 不进公开仓库
+          rm -f key-store.jks debug-key.jks private_key.pepk
+
+      - name: 加固 .gitignore
+        run: |
+          {
+            echo ""
+            echo "# --- KCU Launcher 自有规则 ---"
+            echo "*.jks"
+            echo "*.pepk"
+            echo "*.keystore"
+            echo "local.properties"
+          } >> .gitignore
+
+      - name: 记录上游版本
+        run: |
+          {
+            echo "UPSTREAM_REPO=FCL-Team/FoldCraftLauncher"
+            echo "UPSTREAM_REF=${{ inputs.upstream_ref }}"
+            echo "UPSTREAM_SHA=${UPSTREAM_SHA}"
+            echo "INCLUDE_JRE=${{ inputs.include_jre }}"
+            echo "SYNC_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "AUTHOR=yuanbao"
+          } > UPSTREAM.txt
+
+      - name: 提交并推送
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            cd "$GITHUB_WORKSPACE"
+            git config --global --add safe.directory "$GITHUB_WORKSPACE"
+            git config user.name  "kcu-bot"
+            git config user.email "kcu-bot@users.noreply.github.com"
+            git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+            # 用孤立分支生成干净的单一提交，避免与上游历史纠缠
+            git checkout --orphan kcu-baseline
+            git add -A
+            echo "暂存文件数: $(git diff --cached --name-only | wc -l)"
+            git commit -m "chore: import FCL baseline ${UPSTREAM_SHA} (yuanbao)"
+            echo "=== push ==="
+            git push --force origin kcu-baseline:main 2>&1
+            echo "push_exit=$?"
+            echo "新 HEAD: $(git rev-parse HEAD)"
+          } 2>&1 | tee /tmp/push.log
+          echo "PUSH_LOG_BODY<<EOF_DELIM" >> "$GITHUB_ENV"
+          tail -c 3000 /tmp/push.log >> "$GITHUB_ENV"
+          echo "EOF_DELIM" >> "$GITHUB_ENV"
+        continue-on-error: true
+
+      - name: 上报诊断（始终）
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          log = '```\n' + (os.environ.get('PUSH_LOG_BODY') or '(无日志)') + '\n```'
+          run_url = f"{os.environ.get('GITHUB_SERVER_URL','')}/{os.environ.get('GITHUB_REPOSITORY','')}/actions/runs/{os.environ.get('GITHUB_RUN_ID','')}"
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/issues",
+              data=json.dumps({"title": "sync-upstream 诊断报告", "body": "run: " + run_url + "\n\n" + log}).encode(),
+              headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                       "Accept": "application/vnd.github+json",
+                       "Content-Type": "application/json"})
+          try:
+              print("issue:", json.load(urllib.request.urlopen(req, timeout=30)).get("html_url"))
+          except Exception as e:
+              print("上报失败:", e)
+          PY
