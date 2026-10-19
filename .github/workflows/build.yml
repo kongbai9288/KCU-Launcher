@@ -26,6 +26,9 @@ on:
 jobs:
   build:
     name: Build ${{ matrix.arch }}
+    permissions:
+      contents: read
+      issues: write
     strategy:
       matrix:
         arch: ["all", "arm", "arm64", "x86", "x86_64"]
