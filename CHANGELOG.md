@@ -157,3 +157,33 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
 - 确定差异化原则：**差异全部落在数据与资源层**（布局 JSON、样式配置、事件组合、本地图标），Java/Kotlin 一行不动。
 
 状态：本轮**未编写业务代码、未改 Java、未编译**。文档结论基于已落地源码的实测阅读。
+
+## 0.6.0 — 2026.10.19
+
+执行者：**yuanbao**
+
+- 新增 `docs/01-架构/输入问题诊断.md`
+
+  三个触摸问题的源码级定位：
+
+  | 问题 | 根因 | 位置 |
+  |---|---|---|
+  | 滑动过程检测不到 | ACTION_MOVE 未遍历 `getHistorySize()`，中间轨迹丢弃 | `TouchPad.java` / `ControlButton.java` |
+  | 点击难受 | 单击判定 100ms / 10px 对触摸过严 | `TouchPad.java` 两处 `ACTION_UP` |
+  | 点不到位置 | `MouseMoveMode.SLIDE` 下手指位置 ≠ 光标位置 | `MouseMoveMode.java` |
+
+- **换别人的代码能解决吗：不能。** 检索 5 个仓库的 `getHistorySize`：
+
+  | 项目 | 命中 |
+  |---|---|
+  | FoldCraftLauncher | 1（仅外接鼠标/指针捕获路径）|
+  | ZalithLauncher2 | **0** |
+  | PojavLauncher | **0** |
+  | Amethyst | **0** |
+  | MojoLauncher | 1（仅指针捕获路径）|
+
+  所有项目的触摸板路径都没处理历史点批处理。换任何一家，根因一原样保留。
+
+- 三条路径评估：路径 A 零改码调设置（切 CLICK 模式）→ 路径 B 最小补丁约 30-50 行 → 路径 C 整体替换输入层（**不建议**，需重新对齐 native `input_bridge_v3.c` 协议，风险高且核心问题仍在）。
+
+状态：本轮**未改任何代码、未编译、未实机验证**。结论源于源码阅读与官方文档对照。
