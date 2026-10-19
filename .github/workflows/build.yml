@@ -122,7 +122,7 @@ jobs:
           if-no-files-found: warn
 
       - name: 构建结果上报（始终）
-        if: ${{ steps.gradle.outcome == 'failure' || steps.gradle_debug.outcome == 'failure' }}
+        if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -132,7 +132,7 @@ jobs:
           listing = os.environ.get('APK_LISTING') or '(未生成产物清单)'
           log = os.environ.get('BUILD_LOG') or ''
           ok = os.environ.get('GRADLE_OK', '?')
-          title = "build 失败: " + arch
+          title = ("build 成功: " if ok == 'true' else "build 失败: ") + arch
           body = ("arch=" + arch + "\ngradle_ok=" + ok + "\n\n## 产物清单\n```\n"
                   + listing[-3000:] + "\n```")
           if ok != 'true' and log:
