@@ -265,3 +265,13 @@
 121. **socketName 保持 "FoldCraftLauncher" 不改**：它是本地 IPC 通道名，非用户可见品牌。改名收益为零、但可能触发 mod 侧硬编码导致断连，风险不对称。
 122. **依赖版本以官方 `properties.bzl` 为准**：TouchController 的 proxy client 版本定义在 `touchcontroller/proxy/client/properties.bzl`（当前 0.0.8），不要用 fork 里锁定的旧版本（FCL 分支是 0.0.3，主线是 0.0.5）。
 123. **沙盒验证不了 Maven 依赖是否存在时，让 CI 来证伪**：改版本号 → 触发构建 → 看结果。比猜测可靠。
+
+---
+
+## 16. 追加硬规则（v13，2026-10-20，包名迁移）
+
+124. **applicationId 与 namespace 可以且应当分离**：`applicationId` 决定 APK 唯一标识（用户可见、可共存、可签名），`namespace` 决定 R 文件包名。改品牌只需改 `applicationId`，不要动 `namespace`——动它就必须同步改上千个源码文件的 package 声明，否则 R 文件找不到直接编译失败。
+125. **不要全量重命名源码包名**：本仓库含 "com.tungsten.fcl" 的文件约 1200 个（GitHub code search 实测 total_count=1196）。收益为零（内部实现用户不可见），风险极高（漏一个 import 就崩）。
+126. **改 applicationId 时必须同步检查硬编码 authority**：`${applicationId}` 会自动跟随，但**硬编码字符串不会**。本例中 debug 变体的 `file_browser_provider` resValue 是硬编码的 `"com.tungsten.fcl.debug.provider"`，必须手动改。
+127. **`com.tungsten.fclcore` / `com.tungsten.fcllibrary` 是独立包不是子包**：Manifest 里 4 个硬编码类引用指向它们。因为源码包名整体不动，这些引用保持有效，不要"顺手改"。
+128. **CI 排队超过 10 分钟不等于失败，也不等于成功**：必须看到 conclusion 才能下结论。排队期间只能报 NOT PROVEN，不能凭"已提交"宣称成功。
