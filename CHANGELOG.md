@@ -187,3 +187,41 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
 - 三条路径评估：路径 A 零改码调设置（切 CLICK 模式）→ 路径 B 最小补丁约 30-50 行 → 路径 C 整体替换输入层（**不建议**，需重新对齐 native `input_bridge_v3.c` 协议，风险高且核心问题仍在）。
 
 状态：本轮**未改任何代码、未编译、未实机验证**。结论源于源码阅读与官方文档对照。
+
+## 0.7.0 — 2026.10.19
+
+执行者：**yuanbao**
+
+- **【重要修正】撤销 v0.6.0 的路径 B**
+
+  上一轮我建议在 `TouchPad.java` / `ControlButton.java` 补 `getHistorySize()` 遍历。
+  **这个建议撤回。** 用户判断成立，且有官方证据：
+
+  > TouchController（CurseForge）：请禁用手机上启动器（例如 PojavLauncher 和 FoldCraftLauncher）自带的触摸手势，否则会出现**预料之外的鼠标输入**，尤其是你按下屏幕上的按钮的时候。
+
+  > TouchController 官方 wiki：隐藏启动器的控件……**以 FCL 为例，您只需要新建一个空布局，删除原布局**后进入游戏。
+
+  在启动器 Java 层补历史点，等于在错误的层级做修正：它感知不到 MC 的 `touchscreen` 开关，经过 `pushEventLookDelta` 后语义已在游戏外，与游戏内 mod 的触摸接管直接冲突，而 MC 视角本身的病一个都治不了。
+
+- 确认 MC 的两个固有毛病（用户指出，均成立）
+
+  | 毛病 | 证据 |
+  |---|---|
+  | 灵敏度立方非线性 | `f=0.6s+0.2; g=f³×8; Δ=g×dx×0.15`，即 `(0.6s+0.2)³×1.2`。社区有 `Linear Sensitivity` mod 专门修 |
+  | `touchscreen` 内置选项 | `options.txt` 中 `touchscreen:true/false`，影响物品栏两段式点击 |
+
+- 新方案：**输入下移到游戏内**
+
+  | 项 | 值 |
+  |---|---|
+  | 项目 | `TouchController/TouchController` |
+  | 许可 | **LGPL-3.0-or-later**（与 GPL-3.0 兼容） |
+  | Stars / 更新 | 212 / 2026-10-14（活跃） |
+  | 架构 | 平台输入与处理代码**相互隔离**，UDP + `TOUCH_CONTROLLER_PROXY` 环境变量 |
+  | 已适配 | `TouchController/FoldCraftLauncher`（7★，GPL-3.0）——**直接就是本基座 FCL 的分支** |
+
+  启动器只做转发与让路：集成 `proxy-client`，提供一键空布局。
+
+- 保留：切 `MouseMoveMode.CLICK` 仍是零改码解法（v0.6.0 第三条原判保留）。
+
+状态：本轮**未改任何代码、未编译、未实机验证**。TouchController 当前支持的 MC 版本范围**尚未查证**。
