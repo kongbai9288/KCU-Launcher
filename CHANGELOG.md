@@ -225,3 +225,57 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
 - 保留：切 `MouseMoveMode.CLICK` 仍是零改码解法（v0.6.0 第三条原判保留）。
 
 状态：本轮**未改任何代码、未编译、未实机验证**。TouchController 当前支持的 MC 版本范围**尚未查证**。
+
+## 0.8.0 — 2026.10.19
+
+执行者：**yuanbao**
+
+- **【重大发现】TouchController 上游已经内置，不用写代码**
+
+  | 文件 | 大小 |
+  |---|---|
+  | `com/mio/touchcontroller/TouchController.kt` | 5881 B |
+  | `com/mio/touchcontroller/TouchControllerInputView.kt` | 25461 B |
+
+  依赖 `implementation(libs.touchcontroller)`。
+
+  自动启用链路：
+
+  ```
+  安装 TouchController mod
+    → ModChecker 检测到 "touchcontroller"
+    → bridge.setHasTouchController(true)
+    → GameMenu:795 if (hasTouchController())
+    → new TouchController(...)
+  ```
+
+  **装了 mod 就生效，没装就不启用。**
+
+- 修正上一轮文档的错误
+
+  | 项 | 上一轮（错） | 实测（对） |
+  |---|---|---|
+  | 传输 | UDP 端口 | **Unix Domain Socket** |
+  | 环境变量 | `TOUCH_CONTROLLER_PROXY` | **`TOUCH_CONTROLLER_PROXY_SOCKET`** |
+
+- 升级 `proxy-client-android` **0.0.5 → 0.0.8**
+
+  依据官方 `touchcontroller/proxy/client/properties.bzl`：`proxy_client_version = "0.0.8"`。
+
+  沙盒访问不了 Maven Central，无法预先确认该版本是否已发布 —— **交给 CI 证伪**。
+
+  结果（Actions run 39206354140）：**五架构 `Build release` 全部 success**
+
+  | arch | 产物 |
+  |---|---|
+  | all | 327461076 B |
+  | x86_64 | 176087077 B |
+  | arm64 | 170392839 B |
+  | arm | 163133552 B |
+  | x86 | 156781811 B |
+
+- 决策：socketName **保持 "FoldCraftLauncher" 不改**。本地 IPC 通道名，非用户可见品牌；改名收益为零，却可能因 mod 侧硬编码导致断连，风险不对称。
+
+- 主线比 fork 分支多 `moveView()`（对应 NEWS「添加了启动器转头的接口」），启动器侧控件也能驱动视角。
+
+状态：编译已验证 **PROVEN**。**未实机验证**；0.0.8 与 mod 0.3.1-alpha15 协议兼容性未验证；原生事件桥（alpha14 新增）上游未接入。
