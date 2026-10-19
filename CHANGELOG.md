@@ -345,3 +345,16 @@ FCL/src/main/res/values/strings.xml:1555
 > 凭阅读 build.gradle.kts 只能发现 debug 变体那一处，release 的藏在 strings.xml 里。**先扫描再改动**是对的。
 
 同时扫描印证决策：布局 XML 大量引用 `com.tungsten.fcllibrary.component.view.*` 全限定名，若改 fcllibrary 包名而不同步改上百个布局，会直接 `InflateException`。源码包名不动，全部保持有效。
+
+### 0.9.0 编译验证（实测，06:46 完成）
+
+```
+./FCL/build/outputs/apk/release/KCU-release-0.9.0-arm64-v8a.apk  172645373 bytes
+sha256 0bc7bb590c90bdbd82c00e4dc96b9a124288b240f5bbf05fdba29cbc41174d87
+```
+
+产物名来自 Actions 实际输出。**包名迁移 + 版本对齐已编译通过（PROVEN）。**
+
+全架构 run 39287000078 同样 success：all 327461103 / x86_64 176086882 / arm64 170392797 / arm 163133491 / x86 156781587。
+
+顺带修正一处 CI 误报：早期一版上报逻辑在取不到 `GRADLE_OK` 时会把结果标成"失败"（issue #20，实际构建 success）。已改为三态：成功 / 失败 / **结果未知**，避免再产生误导性 issue。
