@@ -85,7 +85,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.tungsten.fcl"
+        applicationId = "com.kcu.launcher"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 4
@@ -117,7 +117,7 @@ android {
             applicationIdSuffix = ".debug"
             signingConfig = signingConfigs.getByName("FCLDebugKey")
             // 与 FileProvider authority（${applicationId}.provider）保持一致（原 FCLLibrary 模块的 resValue）
-            resValue("string", "file_browser_provider", "com.tungsten.fcl.debug.provider")
+            resValue("string", "file_browser_provider", "com.kcu.launcher.debug.provider")
         }
         configureEach {
             resValue("string", "app_version", defaultConfig.versionName.toString())
