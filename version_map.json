@@ -15,7 +15,9 @@
           "Manifest 中三处 authority 均使用 ${applicationId}，自动跟随，无需改动。",
           "确认 com.tungsten.fclcore / com.tungsten.fcllibrary 为并列独立包，Manifest 4 处硬编码类引用保持不变。",
           "新增 docs/01-架构/包名迁移.md 与防错规则 124-128。",
-          "未完成：编译验证。提交后触发的 build.yml 长时间处于 queued（超过12分钟未开跑），属 GitHub 平台侧排队延迟。按防错规则只能报 NOT PROVEN。"
+          "未完成：编译验证。提交后触发的 build.yml 长时间处于 queued（超过12分钟未开跑），属 GitHub 平台侧排队延迟。按防错规则只能报 NOT PROVEN。",
+          "补充修复：CI 扫描发现 FCL/src/main/res/values/strings.xml:1555 的 file_browser_provider 硬编码 com.tungsten.fcl.provider（release 变体走此值，不随 ${applicationId} 变），已改为 com.kcu.launcher.provider。",
+          "扫描统计：涉及文件 1143 个，出现 7672 次（fclcore 3809 / fcllibrary 2358 / fcl 1352 / fclauncher 153）。布局 XML 大量引用 com.tungsten.fcllibrary.component.view.* 全限定名，印证不改源码包名的决策正确。"
         ]
       }
     ]
