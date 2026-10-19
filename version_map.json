@@ -1,6 +1,28 @@
 [
   {
     "type": "release",
+    "versionCode": 7,
+    "versionName": "0.7.0",
+    "date": "2026.10.19",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "【重要修正】撤销 v0.6.0 的「路径 B：在启动器 Java 层补 getHistorySize 遍历」建议。用户判断成立，有官方证据。",
+          "证据：TouchController 官方明确警告「请禁用 PojavLauncher / FoldCraftLauncher 自带的触摸手势，否则会出现预料之外的鼠标输入」；官方 wiki 教用户新建空布局删除启动器控件。",
+          "确认 MC 灵敏度为立方非线性 (0.6s+0.2)^3*1.2，用户所说「角度移动量引擎也有毛病」成立；社区有 Linear Sensitivity mod 专门修。",
+          "确认 options.txt 存在 MC 内置 touchscreen 选项，影响物品栏两段式点击，启动器不同步会导致 GUI 检测不到输入。",
+          "确定新方案：输入下移到游戏内，由 TouchController（LGPL-3.0，212 stars，2026-10-14 活跃）接管；启动器只集成 proxy-client 转发，通过 TOUCH_CONTROLLER_PROXY 环境变量传 UDP 端口。",
+          "发现 TouchController/FoldCraftLauncher 分支（7 stars，GPL-3.0）——直接就是本基座 FCL 的分支，接入路径最短。",
+          "保留：MouseMoveMode.CLICK 切换仍是零改码解法。新增：必须提供一键空布局入口。",
+          "未做：未改任何代码，未实机验证。TouchController 当前支持的 MC 版本范围未查证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 6,
     "versionName": "0.6.0",
     "date": "2026.10.19",
