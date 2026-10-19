@@ -223,3 +223,14 @@
 99. **同一个 job 内 step id 不能重复**：报 `The identifier 'gradle' may not be used more than once`。
 100. **无日志下载权限时用 issue 上报**：沙盒/受限环境拿不到 Actions 日志压缩包（`results-receiver` 被策略拒绝），但 Issues API 可用。把关键输出（产物清单、sha256、错误尾部）通过开 issue 回传，作为可核验证据。
 101. **产物体积是反证**：多架构产物若体积完全相同，说明过滤没生效、是同一份复制。本次 all/arm64/arm/x86_64/x86 体积各异，证明 `splits.abi` + `filterJreAssets` 生效。
+
+---
+
+## 12. 追加硬规则（v9，2026-10-19 13:2x，上滑与图标）
+
+102. **差异化只落在数据与资源层，不动 Java/Kotlin**：布局差异靠自写 `controllers/` 布局 JSON，样式靠 `ControlButtonStyle` 配置，事件靠 4 个事件槽组合。上游控件原样复用。
+103. **不要引入第三方手势库做上滑**：上游 `ControlButton.handleSwipeMove` 已实现滑动链（坐标命中 + `handleSwipeEnter/Exit` + 与点击语义分离）。第三方库需接管 `onTouchEvent`，会与 `pointerFollow` 和 `acquireLookOwner` 视角独占逻辑冲突，导致滑动时视角乱飘。
+104. **滑动链是坐标命中，不是方向映射**：必须真的滑到联动按钮上才触发。手指滑出所有按钮区域会返回 null 不触发任何动作。联动按钮要紧贴主按钮并开 `swipable` + `VISIBLE`，可部分重叠缩短滑动距离。
+105. **`findSwipableButtonAt` 四个硬性准入**：是 `ControlButton`、不是自己、`VISIBLE`、`isSwipable()==true`。任一不满足直接跳过，表现为"上滑没反应"。
+106. **图标一律本地**：不在运行时拉远程头像/项目图标，不在开源许可页嵌外链图片。许可证全文放 `assets/licenses/`，条目与图标映射放本地 JSON。
+107. **收录开源许可必须带上游客项目**：至少含 FoldCraftLauncher、PojavLauncher、HMCL、Android-OpenJDK-Build、Terracotta、SDL3、LWJGL。开发者页每项都要有图标。
