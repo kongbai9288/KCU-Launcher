@@ -319,3 +319,29 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
 - 新增 `docs/01-架构/包名迁移.md`，防错规则追加 124–128。
 
 状态：改动已提交。**编译验证未完成** —— 触发的 `build.yml` 长时间 queued（超 12 分钟未开跑），属 GitHub 平台侧排队延迟。按防错规则报 **NOT PROVEN**，不凭"已提交"宣称成功。
+
+### 0.9.0 补充（CI 扫描后追加修复）
+
+扫描统计（Actions run 39282032200）：
+
+| 项 | 值 |
+|---|---|
+| 涉及文件数 | 1143 |
+| 出现总次数 | 7672 |
+| `com.tungsten.fclcore` | 3809 |
+| `com.tungsten.fcllibrary` | 2358 |
+| `com.tungsten.fcl` | 1352 |
+| `com.tungsten.fclauncher` | 153 |
+
+**扫描抓到一处遗漏**：
+
+```
+FCL/src/main/res/values/strings.xml:1555
+<string name="file_browser_provider">com.tungsten.fcl.provider</string>
+```
+
+这是 main source set 的默认值（**release 变体走它**），硬编码、不随 `${applicationId}` 变。已改为 `com.kcu.launcher.provider`。
+
+> 凭阅读 build.gradle.kts 只能发现 debug 变体那一处，release 的藏在 strings.xml 里。**先扫描再改动**是对的。
+
+同时扫描印证决策：布局 XML 大量引用 `com.tungsten.fcllibrary.component.view.*` 全限定名，若改 fcllibrary 包名而不同步改上百个布局，会直接 `InflateException`。源码包名不动，全部保持有效。
