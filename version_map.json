@@ -1,6 +1,26 @@
 [
   {
     "type": "release",
+    "versionCode": 5,
+    "versionName": "0.5.0",
+    "date": "2026.10.19",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "新增 docs/01-架构/上滑多动作.md：实测确认上游 ControlButton 已实现滑动链，不引入第三方库、不改一行 Java，通过布局 JSON + 事件配置实现上滑切换动作。",
+          "确认单个按钮原生支持 4 种操作：按下保持 / 长按(400ms) / 单击 / 双击。",
+          "确认滑动链为准：坐标命中 + VISIBLE + isSwipable，与点击语义分离（swipeEngaged 时不触发单击双击）。",
+          "新增 docs/01-架构/本地化图标与关于页.md：图标全部本地，开源许可与开发者页带图标且收录上游项目。",
+          "确定差异化原则：差异全部落在数据与资源层，Java/Kotlin 一行不动。",
+          "未做：KCU 默认布局 JSON 尚未编写（CustomControl 序列化格式未亲验）、图标素材未收集、未编译验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 4,
     "versionName": "0.4.0",
     "date": "2026.10.19",
