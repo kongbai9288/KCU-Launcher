@@ -279,3 +279,43 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
 - 主线比 fork 分支多 `moveView()`（对应 NEWS「添加了启动器转头的接口」），启动器侧控件也能驱动视角。
 
 状态：编译已验证 **PROVEN**。**未实机验证**；0.0.8 与 mod 0.3.1-alpha15 协议兼容性未验证；原生事件桥（alpha14 新增）上游未接入。
+
+## 0.9.0 — 2026.10.20
+
+执行者：**yuanbao**
+
+- **包名迁移：applicationId → `com.kcu.launcher`**
+
+  规模证据（GitHub 代码搜索，本仓库）：
+
+  ```
+  "com.tungsten.fcl"  →  total_count = 1196
+  ```
+
+  **决策：只改 applicationId，不动源码包名。**
+
+  | 项 | 全量改源码包名 | 只改 applicationId |
+  |---|---|---|
+  | 改动文件数 | ~1200 | **2 处** |
+  | APK 包名 | com.kcu.launcher | **同样达成** |
+  | 与官方 FCL 共存 | ✅ | **✅** |
+  | 编译风险 | 高 | **极低** |
+
+  Android 官方支持 applicationId 独立于代码包名：前者决定 APK 唯一标识，后者决定 R 文件包名。源码包名是内部实现，用户不可见。
+
+- 改动清单（`FCL/build.gradle.kts`）
+
+  | 行 | 改前 | 改后 |
+  |---|---|---|
+  | 88 | `applicationId = "com.tungsten.fcl"` | `"com.kcu.launcher"` |
+  | 120 | `file_browser_provider = "com.tungsten.fcl.debug.provider"` | `"com.kcu.launcher.debug.provider"` |
+
+  `namespace` **保持 `com.tungsten.fcl` 不动**——改它会让 R 文件落到新包而源码 package 未变，直接编译失败。
+
+- 自动跟随、无需改动的部分：Manifest 三处 authority 均为 `${applicationId}`（`.document.provider` / `.provider` / `.crashreporterinitprovider`）。
+
+- 保持不变的部分：Manifest 中 4 处硬编码类引用指向 `com.tungsten.fclcore` / `com.tungsten.fcllibrary`——它们是与 `fcl` **并列的独立包**，源码包名整体不动故引用仍有效。
+
+- 新增 `docs/01-架构/包名迁移.md`，防错规则追加 124–128。
+
+状态：改动已提交。**编译验证未完成** —— 触发的 `build.yml` 长时间 queued（超 12 分钟未开跑），属 GitHub 平台侧排队延迟。按防错规则报 **NOT PROVEN**，不凭"已提交"宣称成功。
