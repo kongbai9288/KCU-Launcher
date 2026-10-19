@@ -275,3 +275,11 @@
 126. **改 applicationId 时必须同步检查硬编码 authority**：`${applicationId}` 会自动跟随，但**硬编码字符串不会**。本例中 debug 变体的 `file_browser_provider` resValue 是硬编码的 `"com.tungsten.fcl.debug.provider"`，必须手动改。
 127. **`com.tungsten.fclcore` / `com.tungsten.fcllibrary` 是独立包不是子包**：Manifest 里 4 个硬编码类引用指向它们。因为源码包名整体不动，这些引用保持有效，不要"顺手改"。
 128. **CI 排队超过 10 分钟不等于失败，也不等于成功**：必须看到 conclusion 才能下结论。排队期间只能报 NOT PROVEN，不能凭"已提交"宣称成功。
+
+---
+
+## 17. 追加硬规则（v14，2026-10-20 06:4x，CI 上报准确性）
+
+129. **CI 上报必须区分三态，不能二值**：成功 / 失败 / **结果未知**。早期版本在取不到 `GRADLE_OK` 环境变量时把成功构建标成"失败"（issue #20，实际 conclusion=success）。二值判断会把"没拿到信号"误当成"失败"，是另一种谎报。
+130. **产物名是版本与包名的最强证据**：`KCU-release-0.9.0-arm64-v8a.apk` 这个文件名同时证明了 applicationId 改名生效、versionName 生效、命名约定生效。比读配置文件可靠，因为它是构建实际输出。
+131. **改 applicationId 后必须查 strings.xml / resources**：`${applicationId}` 会在 Manifest 自动跟随，但 **res/values 里的硬编码 authority 不会**。本例漏了一处 `file_browser_provider`（release 变体走它），靠 CI 全仓 grep 才发现。
