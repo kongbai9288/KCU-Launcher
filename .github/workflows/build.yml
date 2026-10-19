@@ -30,7 +30,10 @@ jobs:
       matrix:
         arch: ["all", "arm", "arm64", "x86", "x86_64"]
       fail-fast: false
+    # 手动指定 arch 时只跑匹配的那一个矩阵任务
+    if: ${{ github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch }}
     env:
+      MATRIX_ARCH: ${{ github.event.inputs.arch || matrix.arch }}
       # 全部走 secrets / 环境变量，读不到就是空，不允许让构建失败
       KCU_KEYSTORE_PASSWORD: ${{ secrets.KCU_KEYSTORE_PASSWORD }}
       KCU_KEY_ALIAS: ${{ secrets.KCU_KEY_ALIAS }}
@@ -94,6 +97,14 @@ jobs:
           ./gradlew assembleDebug -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
           echo "gradle_exit=${PIPESTATUS[0]}"
           { echo "BUILD_LOG<<EOF_DELIM"; tail -c 4000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
+
+      - name: 列出产物
+        if: steps.guard.outputs.has_source == 'true'
+        run: |
+          echo "=== 产物清单 ==="
+          find . -name "*.apk" -type f -printf "%p  %s bytes\n" | sort
+          echo "=== 校验 ==="
+          find . -name "*.apk" -type f -exec sha256sum {} \; | sort
 
       - name: Upload APK
         if: steps.guard.outputs.has_source == 'true'
