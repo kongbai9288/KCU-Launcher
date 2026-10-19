@@ -234,3 +234,13 @@
 105. **`findSwipableButtonAt` 四个硬性准入**：是 `ControlButton`、不是自己、`VISIBLE`、`isSwipable()==true`。任一不满足直接跳过，表现为"上滑没反应"。
 106. **图标一律本地**：不在运行时拉远程头像/项目图标，不在开源许可页嵌外链图片。许可证全文放 `assets/licenses/`，条目与图标映射放本地 JSON。
 107. **收录开源许可必须带上游客项目**：至少含 FoldCraftLauncher、PojavLauncher、HMCL、Android-OpenJDK-Build、Terracotta、SDL3、LWJGL。开发者页每项都要有图标。
+
+---
+
+## 13. 追加硬规则（v10，2026-10-19 13:2x，输入诊断）
+
+108. **触摸 ACTION_MOVE 必须遍历 `getHistorySize()`**：Android 批量投递 motion event，单个 ACTION_MOVE 可能含多个历史采样点。只取 `getX()` 会丢弃中间轨迹，表现为快速滑动不跟手。上游 `TouchPad.java` / `ControlButton.java` 均未处理，是全行业共性短板（ZL2 / Pojav / Amethyst 检索均为 0 次）。
+109. **点击判定阈值不要照抄 100ms / 10px**：上游 `TouchPad` 与 `ControlButton` 用此值判定单击，对触摸过严，手指正常点击常超 100ms 导致落空。若改动建议 250ms / 16px。
+110. **`MouseMoveMode` 两种语义差别极大**：`CLICK` 是绝对定位（手指位置即光标位置），`SLIDE` 是相对位移（按下点非光标位置）。用户报"点不到位置"时应先确认是否处于 SLIDE 模式，切 CLICK 即可零改码解决。
+111. **不要为采样精度问题整体替换输入层**：输入最终过 `CallbackBridge` → `libpojavexec` 的 `input_bridge_v3.c`（native）。换 Java 层要重新对齐 native 事件协议，风险高，且目标实现同样没解决历史点问题。
+112. **指针捕获路径的历史点累加是正确写法不是 bug**：`FCLInput.handleMouse` 里累加 `getHistoricalX()` 看起来像把绝对坐标相加，但指针捕获模式下 `getX()` 语义本就是相对增量，累加正确。不要"修复"它。
