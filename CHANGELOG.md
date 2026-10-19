@@ -131,3 +131,29 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
 
 产物名来自 Actions 实际输出，非配置文件推断。命名与 `KCU-<buildType>-<version>-<abi>.apk` 约定一致。
 首版成功 APK 打的是 0.3.0（当时的 versionCode=3），此后对齐为 0.4.0 / versionCode=4。
+
+## 0.5.0 — 2026.10.19
+
+执行者：**yuanbao**
+
+- 新增 `docs/01-架构/上滑多动作.md`
+
+  读源码实测的结论：**上游 `ControlButton` 已经实现了滑动链，不需要第三方库，也不需要改代码**。
+
+  | 机制 | 位置 |
+  |---|---|
+  | 4 个独立事件槽 | `ButtonEventData`：press / longPress(400ms) / click / doubleClick |
+  | 滑动链移动 | `ControlButton.handleSwipeMove` |
+  | 目标查找 | `ViewManager.findSwipableButtonAt`（坐标命中 + VISIBLE + isSwipable） |
+  | 进入/退出 | `handleSwipeEnter` / `handleSwipeExit` |
+  | 与点击分离 | `swipeEngaged` 为真时抬起不触发单击/双击 |
+
+  方案：把联动按钮放在主按钮上方并紧贴（可部分重叠），上滑即自动切换按住的动作。**零 Java 改动。**
+
+  明确限制：上游是坐标命中不是方向映射，必须滑到联动按钮上才触发；滑出所有按钮区域不触发。
+
+- 新增 `docs/01-架构/本地化图标与关于页.md`：图标全部本地不联网；开源许可与开发者页每项带图标，收录上游项目（FCL / Pojav / HMCL / Android-OpenJDK-Build / Terracotta / SDL3 / LWJGL）。
+
+- 确定差异化原则：**差异全部落在数据与资源层**（布局 JSON、样式配置、事件组合、本地图标），Java/Kotlin 一行不动。
+
+状态：本轮**未编写业务代码、未改 Java、未编译**。文档结论基于已落地源码的实测阅读。
