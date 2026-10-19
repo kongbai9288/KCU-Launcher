@@ -89,3 +89,35 @@
   - `versionCode=3` / `versionName=0.3.0`
 
 状态：基线已落地但**尚未编译验证**。`applicationId` 仍为 `com.tungsten.fcl`，改包名需连同源码目录与 Manifest 一起迁移，列为下一步。
+
+## 0.4.0 — 2026.10.19
+
+执行者：**yuanbao**
+
+- **首次编译成功**（关键里程碑）
+
+  `./gradlew assembleRelease` 在 GitHub Actions 上通过，产出真实 APK：
+
+  | arch | 产物体积 |
+  |---|---|
+  | all | ~327 MB |
+  | arm64 | ~170 MB |
+  | arm | ~163 MB |
+  | x86_64 | ~176 MB |
+  | x86 | ~157 MB |
+
+  五个架构体积各异，说明 `splits.abi` 与 `filterJreAssets` 确实生效，不是同一份产物复制五次。
+
+- CI 修复清单
+
+  | 问题 | 修法 |
+  |---|---|
+  | `secrets.*` 不能用在 step 级 `if` | 提到 workflow 顶层 `env:` 求值 |
+  | 两个 step 用了同一个 id `gradle` | 第二个改 `gradle_debug` |
+  | `keyAlias = keyAlias` 自赋值 | 变量改名 `kcuKeyAlias` |
+  | 手动指定 arch 时 5 个矩阵任务都构建同一个 arch | 改步骤级条件过滤 |
+  | **`continue-on-error` 把构建失败掩盖成任务成功** | **移除**，失败就是失败 |
+
+- 新增"构建结果上报（始终）"步骤：无论成败都开 issue，附产物清单与 sha256，便于在无日志下载权限时核实。
+
+- 仍未做：**包名迁移**（当前 `applicationId` 仍是 `com.tungsten.fcl`）、公共目录改造、自定义 .so 接入、实机安装验证。
