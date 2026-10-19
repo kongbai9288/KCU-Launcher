@@ -1,6 +1,26 @@
 [
   {
     "type": "release",
+    "versionCode": 4,
+    "versionName": "0.4.0",
+    "date": "2026.10.19",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "首次成功编译出 APK：assembleRelease 在 GitHub Actions 上通过，产出真实可用的 arm64 / arm / x86 / x86_64 / all 五份产物。",
+          "产物命名 KCU-<buildType>-<version>-<abi>.apk，与既有约定一致。",
+          "修复 CI：secrets 不能用于 step 级 if；重复步骤 id；gradle 自赋值；矩阵重复构建（手动指定 arch 时 5 个任务都构建同一个）。",
+          "移除 gradle 步骤的 continue-on-error——它会把构建失败掩盖成任务成功，属于谎报成功。",
+          "新增构建结果上报：无论成功失败都开 issue，附产物清单与 sha256。",
+          "仍未做：包名迁移（当前仍为 com.tungsten.fcl）、公共目录改造、自定义 .so 接入、实机安装验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 3,
     "versionName": "0.3.0",
     "date": "2026.10.19",
