@@ -255,3 +255,13 @@
 116. **MC 灵敏度是立方非线性**：`(0.6*s + 0.2)^3 * 1.2`。换 DPI 后手感完全对不上，这不是 bug 是 MC 设计。需要线性灵敏度时用 `Linear Sensitivity` mod，不要在启动器侧补偿。
 117. **`touchscreen` 是 MC 内置选项**：`options.txt` 里 `touchscreen:true/false`（默认 false）。开启后物品栏走基岩版式两段式点击。启动器不同步处理这个开关会导致 GUI"检测不到"输入。
 118. **不要在启动器侧补偿 MC 的视角病**：立方灵敏度、符号、帧同步这些 MC 侧的问题，在启动器层做修正是层级错误。
+
+---
+
+## 15. 追加硬规则（v12，2026-10-19 13:5x，TouchController 实况）
+
+119. **不要重新实现上游已有的集成**：FCL 主线 1.3.4.0 已内置 TouchController（`com/mio/touchcontroller/`，`libs.touchcontroller`）。自动链路：ModChecker 检测 mod → `setHasTouchController(true)` → GameMenu 创建实例。装了 mod 就生效。**动手前先搜上游是否已实现。**
+120. **TouchController 走 Unix Domain Socket 不是 UDP**：环境变量是 `TOUCH_CONTROLLER_PROXY_SOCKET`（值 = socket 名），不是 `TOUCH_CONTROLLER_PROXY`（值 = 端口）。旧版文档（v0.0.9 时代）的 UDP 说法已过时。
+121. **socketName 保持 "FoldCraftLauncher" 不改**：它是本地 IPC 通道名，非用户可见品牌。改名收益为零、但可能触发 mod 侧硬编码导致断连，风险不对称。
+122. **依赖版本以官方 `properties.bzl` 为准**：TouchController 的 proxy client 版本定义在 `touchcontroller/proxy/client/properties.bzl`（当前 0.0.8），不要用 fork 里锁定的旧版本（FCL 分支是 0.0.3，主线是 0.0.5）。
+123. **沙盒验证不了 Maven 依赖是否存在时，让 CI 来证伪**：改版本号 → 触发构建 → 看结果。比猜测可靠。
