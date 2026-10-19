@@ -81,7 +81,6 @@ jobs:
       - name: Build release
         if: ${{ steps.guard.outputs.has_source == 'true' && github.event_name != 'pull_request' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         id: gradle
-        continue-on-error: true
         run: |
           ./gradlew assembleRelease -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
           GE=${PIPESTATUS[0]}
@@ -92,7 +91,6 @@ jobs:
       - name: Build debug
         if: ${{ steps.guard.outputs.has_source == 'true' && github.event_name == 'pull_request' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         id: gradle_debug
-        continue-on-error: true
         run: |
           ./gradlew assembleDebug -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
           GE=${PIPESTATUS[0]}
