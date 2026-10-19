@@ -201,3 +201,25 @@
 87. **不要重新引入上游已修的坑**：`OAuth.IS_CANCELED` volatile、`GameMenu.initCursorView` Y 偏移笔误、Room `MIGRATION_1_2`、`ClassicAccountLoginDialog` 回调死锁、`ModrinthInstallTask` TypeToken 误用 `CurseManifest`、`GameOption` 静态参数表多实例覆盖、`ControlDirectionData.equals` 笔误、`CacheRepository.storages` 竞态。
 88. **键码映射数组必须保序**：`AndroidKeycodeMap` / `EfficientAndroidLWJGLKeycode` 依赖有序数组做 `binarySearch`，加映射不保序 = 查找失败。
 89. **初始化不能只放 `Application.onCreate`**：强杀进程可能绕过 SplashActivity 直接落 MainActivity，上游靠 `MainActivity.onCreate` 的 `ConfigHolder.isInit()` 兜底。自定义层必须跟同一模式。
+
+---
+
+## 10. 追加硬规则（v7，2026-10-19 07:00，CI 踩坑实录）
+
+90. **Actions 内 `git push` 默认没有凭据**：直接 `git push` 会报 `fatal: could not read Username for 'https://github.com'`。必须 `git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"`。
+91. **导入上游不要保留历史**：上游历史与本地纠缠会导致 rebase 冲突（本次实际遇到 `.gitignore` / `LICENSE` / `README.md` 等 add/add 冲突）。正确做法：`git checkout --orphan <分支>` 生成干净的单一提交，再 `git push --force origin <分支>:main`。
+92. **`secrets.*` 不能用在 step 级 `if`**：报 `Unrecognized named-value: 'secrets'`。改为在 workflow 顶层 `env:` 里求值，再在 `if` 里判断 `env.X == 'true'`。
+93. **上游的签名库绝不能进公开仓库**：导入时显式 `rm -f key-store.jks debug-key.jks private_key.pepk`，并在 `.gitignore` 末尾追加 `*.jks` / `*.pepk` / `*.keystore`（上游 .gitignore 会覆盖我们的，必须导入后再追加）。
+94. **`curl` 直接请求含中文路径的 contents API 会 400**：中文路径必须做 URL 编码。
+95. **验证仓库状态时不要只信一次 API 返回**：本次出现过 `contents` / `trees` 与实际 git 状态不一致的情况，关键结论要用 `git/refs/heads/<分支>` + `contents/<具体路径>` 双重确认。
+
+---
+
+## 11. 追加硬规则（v8，2026-10-19 12:54，首次编译通过后）
+
+96. **禁止用 `continue-on-error` 掩盖构建失败**：它会让失败的 gradle 步骤显示为任务成功，这正是"谎报成功"的温床。构建失败必须让任务失败，需要抓取日志就配 `if: always()` 的独立上报步骤。
+97. **`matrix` 不能用在 job 级 `if`**：报 `Unrecognized named-value: 'matrix'`。需要按矩阵过滤时改到 **step 级 `if`**（step if 可以用 `matrix`）。
+98. **`PIPESTATUS[0]` 只能取一次**：第二次引用已被重置。必须先存变量 `GE=${PIPESTATUS[0]}` 再判断。
+99. **同一个 job 内 step id 不能重复**：报 `The identifier 'gradle' may not be used more than once`。
+100. **无日志下载权限时用 issue 上报**：沙盒/受限环境拿不到 Actions 日志压缩包（`results-receiver` 被策略拒绝），但 Issues API 可用。把关键输出（产物清单、sha256、错误尾部）通过开 issue 回传，作为可核验证据。
+101. **产物体积是反证**：多架构产物若体积完全相同，说明过滤没生效、是同一份复制。本次 all/arm64/arm/x86_64/x86 体积各异，证明 `splits.abi` + `filterJreAssets` 生效。
