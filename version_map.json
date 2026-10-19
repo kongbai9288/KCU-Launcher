@@ -1,6 +1,27 @@
 [
   {
     "type": "release",
+    "versionCode": 8,
+    "versionName": "0.8.0",
+    "date": "2026.10.19",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "【重大发现】FCL 主线 1.3.4.0 已内置完整 TouchController 支持，无需编写任何接入代码。",
+          "源码：com/mio/touchcontroller/TouchController.kt (5881B) + TouchControllerInputView.kt (25461B)，依赖 implementation(libs.touchcontroller)。",
+          "自动启用链路：ModChecker 检测 touchcontroller 模组 → setHasTouchController(true) → FCLBridge.hasTouchController() → GameMenu 创建实例。装了 mod 就生效。",
+          "修正上一轮错误：通信是 Unix Domain Socket 不是 UDP；环境变量是 TOUCH_CONTROLLER_PROXY_SOCKET 不是 TOUCH_CONTROLLER_PROXY。",
+          "升级 proxy-client-android 0.0.5 → 0.0.8（依据官方 properties.bzl）。CI 验证通过：五架构全部 Build release success，产物齐全。",
+          "决策：socketName 保持 FoldCraftLauncher 不改，属本地 IPC 通道名，改名收益为零且有断连风险。",
+          "未做：未实机验证；0.0.8 与 mod 0.3.1-alpha15 的协议兼容性未验证；原生事件桥（alpha14 新增）上游未接入，仍用 UnixSocketTransport。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 7,
     "versionName": "0.7.0",
     "date": "2026.10.19",
