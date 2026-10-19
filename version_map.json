@@ -1,6 +1,27 @@
 [
   {
     "type": "release",
+    "versionCode": 6,
+    "versionName": "0.6.0",
+    "date": "2026.10.19",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "新增 docs/01-架构/输入问题诊断.md：定位三个触摸问题的根因，均为源码级证据。",
+          "根因一：TouchPad/ControlButton 的 ACTION_MOVE 未遍历 getHistorySize，中间轨迹被丢弃，导致滑动不跟手。",
+          "根因二：单击判定 100ms / 10px 对触摸过严，导致点击落空。",
+          "根因三：MouseMoveMode.SLIDE 下手指位置不等于光标位置，切换 CLICK 模式可零改码解决。",
+          "全行业对比：ZL2 / PojavLauncher / Amethyst 检索 getHistorySize 均为 0 次，MojoLauncher 与 FCL 各 1 次但仅在指针捕获路径。换任何一家的输入层都不能解决根因一。",
+          "结论：不建议整体替换输入层（需重新对齐 native input_bridge_v3.c 协议，风险高且核心问题仍在）。",
+          "未做：未改任何代码，未实机验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 5,
     "versionName": "0.5.0",
     "date": "2026.10.19",
