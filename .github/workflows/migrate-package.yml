@@ -1,0 +1,160 @@
+name: 包名迁移
+
+# 沙盒只能访问 api.github.com，无法整体 clone 仓库，因此把批量改名交给 Actions 执行。
+# 本工作流自带扫描：先统计 com.tungsten.fcl 的分布，再按 dry_run 决定是否落盘。
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "true=只扫描不修改"
+        required: false
+        default: "true"
+      new_app_id:
+        description: "目标 applicationId"
+        required: false
+        default: "com.kcu.launcher"
+      verify:
+        description: "true=改名后编译 arm64 验证"
+        required: false
+        default: "true"
+
+jobs:
+  migrate:
+    name: 包名迁移
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      DRY: ${{ github.event.inputs.dry_run || 'true' }}
+      NEW_ID: ${{ github.event.inputs.new_app_id || 'com.kcu.launcher' }}
+      VERIFY: ${{ github.event.inputs.verify || 'true' }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 扫描包名分布
+        id: scan
+        run: |
+          mkdir -p /tmp/rep
+          R=/tmp/rep/scan.txt
+          {
+            echo "=== 目标: com.tungsten.fcl -> applicationId $NEW_ID ==="
+            echo
+            echo "--- 1. 涉及文件总数 ---"
+            grep -rl "com\.tungsten\.fcl" --exclude-dir=.git . 2>/dev/null | wc -l
+            echo
+            echo "--- 2. 出现总次数 ---"
+            grep -ro "com\.tungsten\.fcl[a-z]*" --exclude-dir=.git . 2>/dev/null | wc -l
+            echo
+            echo "--- 3. 按包名后缀分类 ---"
+            grep -rho "com\.tungsten\.fcl[a-z]*" --exclude-dir=.git . 2>/dev/null | sort | uniq -c | sort -rn
+            echo
+            echo "--- 4. 非源码文件中的出现（XML/JSON/assets，前 40 条）---"
+            grep -rn "com\.tungsten\.fcl" --exclude-dir=.git \
+              --include=*.xml --include=*.json --include=*.properties --include=*.txt \
+              --include=*.pro --include=*.kts --include=*.gradle . 2>/dev/null | head -40
+            echo
+            echo "--- 5. 字符串常量形态（带引号，可能是硬编码契约，前 40 条）---"
+            grep -rn "\"com\.tungsten\.fcl[^\"]*\"" --exclude-dir=.git . 2>/dev/null | head -40
+            echo
+            echo "--- 6. 源码目录规模 ---"
+            for d in fcl fclcore fclauncher fcllibrary; do
+              if [ -d "FCL/src/main/java/com/tungsten/$d" ]; then
+                echo "com/tungsten/$d: $(find FCL/src/main/java/com/tungsten/$d -type f | wc -l) 个文件"
+              fi
+            done
+            echo
+            echo "--- 7. AndroidManifest 中的硬编码类名 ---"
+            grep -n "com\.tungsten\." FCL/src/main/AndroidManifest.xml 2>/dev/null
+          } | tee "$R"
+          { echo "SCAN<<EOF_DELIM"; cat "$R"; echo; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
+
+      - name: 执行改名（applicationId 层）
+        if: env.DRY != 'true'
+        run: |
+          set -e
+          F=FCL/build.gradle.kts
+          [ -f "$F" ] || { echo "找不到 $F"; exit 1; }
+          cp "$F" /tmp/before.gradle.kts
+          # 1) applicationId
+          sed -i 's/applicationId = "com\.tungsten\.fcl"/applicationId = "'"$NEW_ID"'"/' "$F"
+          # 2) debug 变体的 FileProvider authority（原为硬编码字符串）
+          sed -i 's|resValue("string", "file_browser_provider", "com\.tungsten\.fcl\.debug\.provider")|resValue("string", "file_browser_provider", "'"$NEW_ID"'\.debug\.provider")|' "$F"
+          # 3) release 变体若也有硬编码 authority，一并替换
+          sed -i 's|"com\.tungsten\.fcl\.provider"|"'"$NEW_ID"'\.provider"|g' "$F"
+          echo "=== 改动 diff ==="
+          diff /tmp/before.gradle.kts "$F" || true
+          echo
+          echo "=== 改动后确认 ==="
+          grep -n "applicationId\|file_browser_provider\|\.provider" "$F"
+
+      - name: 提交
+        if: env.DRY != 'true'
+        run: |
+          git config user.name  "yuanbao"
+          git config user.email "yuanbao@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "无改动可提交"
+          else
+            git commit -m "build: applicationId -> $NEW_ID (yuanbao) [skip ci]"
+            git push origin HEAD:${GITHUB_REF#refs/heads/}
+          fi
+
+      - name: Set up JDK 17
+        if: env.DRY != 'true' && env.VERIFY == 'true'
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: 17
+          cache: "gradle"
+
+      - name: 编译验证 arm64
+        if: env.DRY != 'true' && env.VERIFY == 'true'
+        id: gradle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease -Darch=arm64-v8a --no-daemon 2>&1 | tee /tmp/build.log
+          GE=${PIPESTATUS[0]}
+          if [ "$GE" -eq 0 ]; then echo "GRADLE_OK=true" >> "$GITHUB_ENV"; else echo "GRADLE_OK=false" >> "$GITHUB_ENV"; fi
+          {
+            echo "=== 产物 ==="
+            find . -name "*.apk" -type f -printf "%p  %s bytes\n" | sort
+          } | tee /tmp/apk.txt
+          { echo "APK_LISTING<<EOF_DELIM"; cat /tmp/apk.txt; echo; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
+          { echo "BUILD_LOG<<EOF_DELIM"; tail -c 3000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
+
+      - name: 结果上报
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          scan = os.environ.get('SCAN', '(无扫描结果)')
+          listing = os.environ.get('APK_LISTING', '')
+          log = os.environ.get('BUILD_LOG', '')
+          ok = os.environ.get('GRADLE_OK', '')
+          dry = os.environ.get('DRY', '?')
+          title = "包名迁移扫描报告" if dry == 'true' else (
+              "包名迁移 完成" if ok == 'true' else "包名迁移 完成（编译失败）")
+          body = "dry_run=" + dry + "\ngradle_ok=" + (ok or 'n/a') + "\n\n## 扫描\n```\n" + scan[:6000] + "\n```"
+          if listing:
+              body += "\n## 产物\n```\n" + listing[:1500] + "\n```"
+          if ok == 'false' and log:
+              body += "\n## 构建日志尾部\n```\n" + log[-4000:] + "\n```"
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/issues",
+              data=json.dumps({"title": title, "body": body}).encode(),
+              headers={"Authorization": "Bearer " + os.environ["GH_TOKEN"],
+                       "Accept": "application/vnd.github+json", "Content-Type": "application/json"})
+          try:
+              print("issue:", json.load(urllib.request.urlopen(req, timeout=30)).get("html_url"))
+          except Exception as e:
+              print("上报失败:", e)
+          PY
