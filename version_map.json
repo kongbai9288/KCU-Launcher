@@ -1,6 +1,27 @@
 [
   {
     "type": "release",
+    "versionCode": 9,
+    "versionName": "0.9.0",
+    "date": "2026.10.20",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "执行包名迁移：applicationId 由 com.tungsten.fcl 改为 com.kcu.launcher。",
+          "规模证据：GitHub 代码搜索显示含 com.tungsten.fcl 的文件共 1196 个，因此决策为只改 applicationId、不动源码包名与 namespace。",
+          "改动仅 2 处，均在 FCL/build.gradle.kts：applicationId（第88行）、debug 变体 file_browser_provider 硬编码 authority（第120行）。",
+          "Manifest 中三处 authority 均使用 ${applicationId}，自动跟随，无需改动。",
+          "确认 com.tungsten.fclcore / com.tungsten.fcllibrary 为并列独立包，Manifest 4 处硬编码类引用保持不变。",
+          "新增 docs/01-架构/包名迁移.md 与防错规则 124-128。",
+          "未完成：编译验证。提交后触发的 build.yml 长时间处于 queued（超过12分钟未开跑），属 GitHub 平台侧排队延迟。按防错规则只能报 NOT PROVEN。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 8,
     "versionName": "0.8.0",
     "date": "2026.10.19",
