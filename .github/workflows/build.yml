@@ -30,8 +30,6 @@ jobs:
       matrix:
         arch: ["all", "arm", "arm64", "x86", "x86_64"]
       fail-fast: false
-    # 手动指定 arch 时只跑匹配的那一个矩阵任务
-    if: ${{ github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch }}
     env:
       MATRIX_ARCH: ${{ github.event.inputs.arch || matrix.arch }}
       # 全部走 secrets / 环境变量，读不到就是空，不允许让构建失败
@@ -81,7 +79,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build release
-        if: steps.guard.outputs.has_source == 'true' && github.event_name != 'pull_request'
+        if: ${{ steps.guard.outputs.has_source == 'true' && github.event_name != 'pull_request' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         id: gradle
         continue-on-error: true
         run: |
@@ -90,7 +88,7 @@ jobs:
           { echo "BUILD_LOG<<EOF_DELIM"; tail -c 4000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: Build debug
-        if: steps.guard.outputs.has_source == 'true' && github.event_name == 'pull_request'
+        if: ${{ steps.guard.outputs.has_source == 'true' && github.event_name == 'pull_request' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         id: gradle_debug
         continue-on-error: true
         run: |
@@ -99,7 +97,7 @@ jobs:
           { echo "BUILD_LOG<<EOF_DELIM"; tail -c 4000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: 列出产物
-        if: steps.guard.outputs.has_source == 'true'
+        if: ${{ steps.guard.outputs.has_source == 'true' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         run: |
           echo "=== 产物清单 ==="
           find . -name "*.apk" -type f -printf "%p  %s bytes\n" | sort
