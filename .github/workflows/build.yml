@@ -113,6 +113,31 @@ jobs:
           } | tee "$APK_TXT"
           { echo "APK_LISTING<<EOF_DELIM"; cat "$APK_TXT"; echo; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
+      # 签名是否真的生效，必须由产物自己证明，不能只看"恢复签名库"步骤成功
+      - name: 验证签名
+        if: ${{ steps.guard.outputs.has_source == 'true' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
+        run: |
+          SIGN_TXT=/tmp/sign.txt
+          {
+            echo "=== APK 签名验证 ==="
+            for apk in $(find . -name "*.apk" -type f); do
+              echo "--- $apk ---"
+              APKSIGNER=""
+              if [ -n "$ANDROID_HOME" ]; then
+                APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | head -1)
+              fi
+              if [ -n "$APKSIGNER" ]; then
+                "$APKSIGNER" verify --print-certs "$apk" 2>&1 | head -20
+              else
+                echo "(apksigner 不可用，改用 keytool -printcert -jarfile)"
+                keytool -printcert -jarfile "$apk" 2>&1 | head -25
+              fi
+              echo "META-INF:"
+              unzip -l "$apk" 2>/dev/null | grep -i "META-INF" || echo "  (无 META-INF)"
+            done
+          } | tee "$SIGN_TXT"
+          { echo "SIGN_INFO<<EOF_DELIM"; cat "$SIGN_TXT"; echo; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
+
       - name: Upload APK
         if: steps.guard.outputs.has_source == 'true'
         uses: actions/upload-artifact@v6
@@ -122,7 +147,7 @@ jobs:
           if-no-files-found: warn
 
       - name: 构建结果上报（始终）
-        if: ${{ steps.gradle.outcome == 'failure' || steps.gradle_debug.outcome == 'failure' || (always() && env.GRADLE_OK == 'false') }}
+        if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -135,6 +160,7 @@ jobs:
           title = ("build 成功: " if ok == 'true' else ("build 失败: " if ok == 'false' else "build 结果未知: ")) + arch
           body = ("arch=" + arch + "\ngradle_ok=" + ok + "\n\n## 产物清单\n```\n"
                   + listing[-3000:] + "\n```")
+          body += "\n## 签名信息\n```\n" + sign[:2000] + "\n```"
           if ok != 'true' and log:
               body += "\n## 构建日志尾部\n```\n" + log[-4000:] + "\n```"
           req = urllib.request.Request(
