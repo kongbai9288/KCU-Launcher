@@ -10,19 +10,24 @@ import com.tungsten.fcl.R;
 import com.tungsten.fclauncher.utils.FCLPath;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 扩展登录方式开关。
+ * 开发者模式。
  *
- * 开关文件位于公共目录下，便于外部工具读写；文件不存在或内容无法解析时一律视为关闭。
+ * 开关由公共目录下同名文件是否存在决定，无需读取内容。
+ * 文件位于 .minecraft 的同级目录，便于外部工具与迁移脚本创建。
  */
 public final class KcuDevMode {
 
     private static final String FILE_NAME = "dev_mode";
-    private static final String KEY = "developerMode";
+    private static final String EXPECTED_LOGIN = "kongbai9288";
+    private static final String API_USER = "https://api.github.com/user";
+    private static final int TIMEOUT_MS = 15000;
 
     private KcuDevMode() {
     }
@@ -31,46 +36,44 @@ public final class KcuDevMode {
         return new File(FCLPath.KCU_SHARED_ROOT, FILE_NAME);
     }
 
-    /**
-     * 是否开放全部登录方式。
-     * 只在文件存在且内容明确为开启时返回 true。
-     */
+    /** 开关文件存在即视为开启 */
     public static boolean isEnabled() {
         try {
-            File file = getFile();
-            if (!file.isFile()) {
-                return false;
-            }
-            String text = readAll(file);
-            if (text == null) {
-                return false;
-            }
-            String lower = text.toLowerCase();
-            if (lower.contains("\"" + KEY + "\"") && lower.contains("true")) {
-                return true;
-            }
-            return lower.trim().equals("true");
+            return getFile().exists();
         } catch (Throwable e) {
             return false;
         }
     }
 
-    private static String readAll(File file) {
+    /**
+     * 校验令牌归属。仅在返回 true 时才允许执行敏感操作。
+     * 网络不可用、非 200、响应中不含预期账号名，一律视为不通过。
+     */
+    public static boolean verifyOwner(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return false;
+        }
+        HttpURLConnection conn = null;
         InputStream in = null;
         try {
-            in = new FileInputStream(file);
-            byte[] raw = new byte[(int) file.length()];
-            int off = 0;
-            while (off < raw.length) {
-                int n = in.read(raw, off, raw.length - off);
-                if (n <= 0) {
-                    break;
-                }
-                off += n;
+            conn = (HttpURLConnection) new URL(API_USER).openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Authorization", "Bearer " + token.trim());
+            conn.setRequestProperty("Accept", "application/vnd.github+json");
+            conn.setConnectTimeout(TIMEOUT_MS);
+            conn.setReadTimeout(TIMEOUT_MS);
+            int code = conn.getResponseCode();
+            if (code != 200) {
+                return false;
             }
-            return new String(raw, 0, off, StandardCharsets.UTF_8);
+            in = conn.getInputStream();
+            String body = readAll(in);
+            if (body == null) {
+                return false;
+            }
+            return body.contains("\"login\"" ) && body.contains(EXPECTED_LOGIN);
         } catch (Throwable e) {
-            return null;
+            return false;
         } finally {
             if (in != null) {
                 try {
@@ -78,6 +81,54 @@ public final class KcuDevMode {
                 } catch (Throwable ignored) {
                 }
             }
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    /**
+     * 清除全部标记。调用前必须先通过 {@link #verifyOwner}。
+     * 返回被清除的项数量。
+     */
+    public static int clearMarks() {
+        int cleared = 0;
+        try {
+            File root = getFile();
+            if (root.exists() && root.delete()) {
+                cleared++;
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            File marker = new File(FCLPath.KCU_SHARED_ROOT, FCLPath.KCU_ROOT_MARKER);
+            if (marker.exists() && marker.delete()) {
+                cleared++;
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            if (com.tungsten.fcl.setting.ConfigHolder.config().isKcuAgePrompted()) {
+                com.tungsten.fcl.setting.ConfigHolder.config().setKcuAgePrompted(false);
+                com.tungsten.fcl.setting.ConfigHolder.config().setKcuAgeDeclared(0);
+                cleared++;
+            }
+        } catch (Throwable ignored) {
+        }
+        return cleared;
+    }
+
+    private static String readAll(InputStream in) {
+        try {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[4096];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                out.write(buf, 0, n);
+            }
+            return new String(out.toByteArray(), StandardCharsets.UTF_8);
+        } catch (Throwable e) {
+            return null;
         }
     }
 
@@ -106,5 +157,29 @@ public final class KcuDevMode {
         root.addView(body);
 
         return root;
+    }
+
+    /** 供调试：写入开关文件 */
+    public static boolean create(File target) {
+        OutputStream out = null;
+        try {
+            File parent = target.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
+            }
+            out = new java.io.FileOutputStream(target, false);
+            out.write("# developer mode\n".getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            return true;
+        } catch (Throwable e) {
+            return false;
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (Throwable ignored) {
+                }
+            }
+        }
     }
 }
