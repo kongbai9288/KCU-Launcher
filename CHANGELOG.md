@@ -721,3 +721,51 @@ Actions run **39375975967**，五架构全绿：
 `all 327462121 / x86_64 176088978 / arm64 170394403 / arm 163134501 / x86 156782954`
 
 状态：编译 PROVEN，**实机未验证清单是否真的生成**。
+
+## 0.16.0 — 2026.10.20
+
+执行者：**yuanbao**
+
+- **新增改动台账** `docs/00-总览/改动台账.md`
+
+  按**文件**组织，打开哪个文件就查哪节。含四索引：轮次索引 / 按文件索引 / 新增文件 / 已删除文件，外加遗留与风险。
+
+  覆盖全部 15 轮、10 个源码文件：
+
+  | 文件 | 关键改动 |
+  |---|---|
+  | `build.gradle.kts` | applicationId、storeType、版本号 |
+  | `FCLPath.java` | KCU_SHARED_ROOT + marker 固化（两版） |
+  | `KcuManifest.java` | 新增 |
+  | `SplashActivity.kt` | manifest 挂点 |
+  | `MenuSetting.kt` | 2 开关 × 3 处 |
+  | `RightMenuAdapter.kt` | 2 tag + 2 SwitchRow |
+  | `GameMenu.java` | 2 case |
+  | `TouchPad.java` | getClickSlop + isDisguisedMouse |
+  | `strings.xml` ×2 | provider authority + 2 条文案 |
+
+  所有源码改动带 `KCU` 标记，全局可检索。
+
+- **【发现并修复】版本号长期不一致**
+
+  `build.gradle.kts` 停在 **0.9.0 / code 9**，而 `version_map.json` 与 `CHANGELOG` 已到 **0.15.0**。
+
+  **后果**：产物名一直是 `KCU-release-0.9.0-*.apk`——**前面几轮我报的产物名与文档版本号全是脱节的**。
+
+  已同步为 `0.15.0 / 15`，用产物名证实：
+
+  ```
+  ./FCL/build/outputs/apk/release/KCU-release-0.15.0-arm64-v8a.apk  172648037 bytes
+  sha256 e006b5269ed5c94bc08d356dc0342efd7ad9e6bcdaabdcb41d5ef2fe694e3385
+  Signer #1 certificate DN: CN=kbs, OU=kbs, O=kbs, C=CN
+  ```
+
+  **教训**：`build.gradle.kts` 是版本号**唯一真源**（产物名由它决定），version_map/CHANGELOG 是记录，必须每轮同步。
+
+- **识别 `updateMap` 任务风险**：它会用 build.gradle 的版本覆盖 `version_map.json`，抹掉手工维护的历史条目。已记入台账告警——**不要运行**。
+
+- **清理历史噪音**：曾因临时开启 `always()` 上报，被跳过的矩阵任务也报成"失败"，产生 issue #28–37 共 10 条。真正抑制条件是 `github.event.inputs.arch == matrix.arch`，已验证有效。
+
+- 新增防错规则 160–164。
+
+状态：编译 PROVEN，**实机验证全程仍为零**。
