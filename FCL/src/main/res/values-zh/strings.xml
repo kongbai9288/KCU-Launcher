@@ -592,6 +592,12 @@
     <string name="menu_settings_mouse_offset_y">鼠标偏移Y</string>
     <string name="menu_settings_physical_mouse_mode">实体鼠标控制</string>
     <string name="menu_settings_kcu_dp_threshold">KCU 点击容差改用 dp</string>
+    <string name="kcu_age_title">年龄确认</string>
+    <string name="kcu_age_prompt">请选择你的年龄段，以便应用确定可用范围</string>
+    <string name="kcu_age_unit"> 岁</string>
+    <string name="kcu_age_confirm">确认</string>
+    <string name="kcu_blocked_title">当前不可用</string>
+    <string name="kcu_blocked_body">根据你所选择的年龄段，本应用暂不提供服务。</string>
     <string name="menu_settings_kcu_mouse_disguise">KCU 识别底层鼠标伪装</string>
     <string name="menu_settings_slide_acceleration">滑动加速</string>
     <string name="menu_settings_distance_acceleration">距离加速</string>
