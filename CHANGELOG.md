@@ -654,3 +654,70 @@ Actions run **39375222293**：五架构全绿
 `all 327461621 / x86_64 176087668 / arm64 170393441 / arm 163134150 / x86 156782307`
 
 状态：编译 PROVEN，**实机未验证**。
+
+## 0.15.0 — 2026.10.20
+
+执行者：**yuanbao**
+
+- **公共目录清单 `manifest.json` 落地**
+
+  解决根本问题：迁移工具读不到启动器的实际目录布局。外部工具自行猜测路径，一旦根选择不同（`KCU`/`FCL`）就对不上，故由**启动器自己写清楚**，外部只读不猜。
+
+### API 终点追踪
+
+`Profile.gameDir` 是**绝对路径**，反序列化时直接读入、**不经 `FCLPath`**。所以实例目录与公共根**可以不同源**——这正是迁移工具需要清单的原因。
+
+挂点：
+
+```
+SplashActivity.enterLauncher() [Dispatchers.IO]
+  → ConfigHolder.init()        // Profiles 就绪
+  → KcuManifest.write()        // 路径+实例均就绪，非主线程
+  → startActivity(MainActivity)
+```
+
+### 清单结构
+
+```json
+{
+  "schemaVersion": 1,
+  "generatedAt": 1771000000000,
+  "packageName": "com.kcu.launcher",
+  "root": "/sdcard/KCU",
+  "paths": { "minecraft": "...", "runtime": "...", "nativesExternal": "...", ... },
+  "instances": [ { "name": "...", "gameDir": "...", "selectedVersion": "..." } ]
+}
+```
+
+`nativesExternal` 是玩家自带 .so 的**素材目录**（公共目录 noexec，不可直接 `dlopen`），清单明确区别于可加载的私有目录。
+
+### 严格审核发现并修掉的真实风险
+
+**`Files.write` 要求 API 26，而 `minSdk` 正好 26** —— 边界值，改用 `FileOutputStream` 传统流。
+
+其余：写入全程 `catch (Throwable)` 静默忽略，**绝不阻断启动**；实例列表单独 try-catch，失败仍写路径部分。
+
+### 已知局限（如实）
+
+| 局限 | 说明 |
+|---|---|
+| 清单会过期 | 只在启动时写，实例变更后需重启才反映，含 `generatedAt` 供判断新鲜度 |
+| 根为 FCL 时 | 清单落在 `/sdcard/FCL/manifest.json`，Migrator 需扫两个候选 |
+| 未含 | 账号、Mod 列表、加载器信息，后续按需扩展 schemaVersion |
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuManifest.java` |
+| 行 | **60** |
+| 原文 | `out.close();` |
+| 5 个不同字母 | `o u t c l` |
+| **SHA-1** | **`b8a7fbfbf3b40238f0c8a44a94ade8fc2be7bccd`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39375975967**，五架构全绿：
+`all 327462121 / x86_64 176088978 / arm64 170394403 / arm 163134501 / x86 156782954`
+
+状态：编译 PROVEN，**实机未验证清单是否真的生成**。
