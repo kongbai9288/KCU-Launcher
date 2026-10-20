@@ -65,6 +65,9 @@ android {
                 storePassword = pwd
                 keyAlias = kcuKeyAlias
                 keyPassword = keyPwd
+                // KCU：签名库为 PKCS12（扩展名沿用 .jks，实际 DER 头 0x30 82），
+                // 不显式声明 storeType 时 AGP 按 JKS 解析会失败
+                storeType = System.getenv("KCU_STORE_TYPE") ?: "pkcs12"
             }
         }
         create("FCLDebugKey") {
