@@ -27,6 +27,7 @@ import com.tungsten.fcl.databinding.ActivitySplashBinding
 import com.tungsten.fcl.fragment.EulaFragment
 import com.tungsten.fcl.fragment.RuntimeFragment
 import com.tungsten.fcl.setting.ConfigHolder
+import com.tungsten.fcl.util.KcuManifest
 import com.tungsten.fcl.setting.Controllers
 import com.tungsten.fcl.util.RuntimeUtils
 import com.tungsten.fclauncher.utils.FCLPath
@@ -137,6 +138,10 @@ class SplashActivity : FCLActivity() {
                 Controllers.init()
                 runCatching { ConfigHolder.init() }.exceptionOrNull()?.let {
                     Logging.LOG.log(Level.WARNING, it.message)
+                }
+                // 路径与实例均就绪后写公共目录清单，供外部迁移工具读取实际布局
+                runCatching { KcuManifest.write(this@SplashActivity) }.exceptionOrNull()?.let {
+                    Logging.LOG.log(Level.WARNING, "KcuManifest: " + it.message)
                 }
                 if (System.currentTimeMillis() - sharedPreferences.getLong(
                         "clear_cache", 0L
