@@ -1,6 +1,28 @@
 [
   {
     "type": "release",
+    "versionCode": 12,
+    "versionName": "0.12.0",
+    "date": "2026.10.20",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "按用户决策：单位修正不直接改默认路径，用开关包裹、默认关闭，出问题可一键回退。",
+          "新增两个独立实验开关（均默认 false = 完全等同上游行为）：KCU_DP_THRESHOLD（点击容差 10px -> 10dp）、KCU_MOUSE_DISGUISE（getToolType 识别底层鼠标伪装）。",
+          "做成两个独立开关而非总开关：任一项出问题可单独关，便于分别 A/B 对比。",
+          "改动 6 个文件：MenuSetting.kt（字段+序列化+反序列化各2处）、RightMenuAdapter.kt（2 tag + 2 SwitchRow）、GameMenu.java（2 case）、TouchPad.java（getClickSlop + isDisguisedMouse）、values/values-zh 的 strings.xml。",
+          "dp 换算：关闭时返回 CLICK_SLOP_PX=10，开启时 10 * density。两处判定（捕获态/非捕获态）均已改。",
+          "伪装识别：命中 TOOL_TYPE_MOUSE 后复用上游已有的 handleExternalTouchButtons / setPointer，不自研新逻辑；已由 isFromSource(SOURCE_MOUSE) 处理的不再重复拦截。",
+          "编译验证通过（PROVEN）：Actions run 39371915205，Build release / 验证签名 均 success，产物 app-arm64 170392504 B。",
+          "未验证：功能效果未实机对比；getToolType 在伪装场景的实际返回值仍未证实。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 11,
     "versionName": "0.11.0",
     "date": "2026.10.20",
