@@ -1,6 +1,28 @@
 [
   {
     "type": "release",
+    "versionCode": 10,
+    "versionName": "0.10.0",
+    "date": "2026.10.20",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "签名配置完成，产物经 apksigner 验证确认已签名（PROVEN）。",
+          "证书 DN: CN=kbs, OU=kbs, O=kbs, C=CN；SHA-256 d4e860232e977157c41459d7f139f9087036feb38623f07bd2c2f6575db4db4e。",
+          "踩坑一：签名文件扩展名是 .jks 但文件头为 30 82（DER），实际是 PKCS12。已加 storeType 并留环境变量覆盖位。",
+          "踩坑二：pass.txt 按空格 split 会把中文标签混入密码，导致 4 个候选全部解锁失败；改为按全角冒号取最后一段。",
+          "四个 secrets 已用 libsodium sealed box 加密写入仓库：KCU_KEYSTORE_BASE64 / KCU_KEYSTORE_PASSWORD / KCU_KEY_ALIAS / KCU_KEY_PASSWORD。密码从未写入任何文件。",
+          "新增独立验签步骤 apksigner verify --print-certs，由产物自己证明已签名，不依赖「恢复签名库」步骤成功。",
+          "产物 sha256 随签名改变：0bc7bb59... -> 8898d29b...（旁证）。",
+          "未做：实机安装验证；全架构产物未逐个验签。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 9,
     "versionName": "0.9.0",
     "date": "2026.10.20",
