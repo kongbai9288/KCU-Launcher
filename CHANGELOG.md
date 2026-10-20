@@ -830,3 +830,54 @@ sb.append(FCLPath.MOD_RUNTIME_DIR).append(split);
 Actions run **39457783242**：Build release / 列出产物 / 验证签名 均 success。
 
 遗留：**实机未验证**；加载顺序自定义未做；ELF 只验 magic 不验架构位数。
+
+## 0.18.0 — 2026-10-21
+
+执行者：**yuanbao**
+
+- **年龄门槛**：设置式年龄声明，低于阈值（18）完全禁用应用使用
+- **登录方式开关**：公共目录 `dev_mode` 文件
+- **按名称解析账号**
+
+### API 终点追踪
+
+```
+Accounts.FACTORIES → OfflineAccountFactory.create → new OfflineAccount
+                                                     → requireNonNull(uuid)
+```
+
+`OfflineAccount` 构造器是 **protected**，外部包必须走 factory。
+
+### 抓出的真 bug
+
+`create(username, null)` **会 NPE**——构造器对 uuid 有非空校验。已修为先用 `getUUIDFromUserName` 算稳定 uuid。
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `Config.java` | `kcuAgeDeclared` + `kcuAgePrompted` |
+| `KcuAgeGate`【新】 | 阈值 18、判定、声明、界面 |
+| `KcuAgeActivity`【新】 | 声明页 / 受限页 |
+| `KcuDevMode`【新】 | 读 `<root>/dev_mode` |
+| `KcuAccountFlow`【新】 | 复用同名 → 复用在线 → 生成 |
+| `SplashActivity` | onCreate 最前拦截 |
+| `Manifest` | 注册 Activity |
+
+拦截**先于**协议同意与权限检查——未声明年龄时不触发任何权限请求或初始化。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuAccountFlow.java` |
+| 行 | **60** |
+| 原文 | `return Accounts.FACTORY_OFFLINE.create(username, uuid);` |
+| 5 个不同字母 | `r e t u n` |
+| **SHA-1** | **`c0781ed3e29ec775c6bb8dc4be2015a32ea8593b`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39460420664**：Build release / 列出产物 / 验证签名 均 success。
+
+遗留：设置页年龄修改入口、`KcuAccountFlow` 接入 UI、`KcuDevMode` 接入可见性控制、揉纸 UI 落地。**实机未验证。**
