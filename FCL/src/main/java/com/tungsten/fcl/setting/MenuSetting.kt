@@ -291,6 +291,24 @@ class MenuSetting {
             changed()
         }
 
+    // KCU：点击判定阈值改用与密度无关的 dp（原实现写死 10 px，高密屏上容差不足 3 dp）
+    // 默认关闭，保持上游原行为；出问题可一键回退
+    var isKcuDpThreshold: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            changed()
+        }
+
+    // KCU：识别底层把鼠标事件伪装成触摸上报的情况（getToolType 暴露 TOOL_TYPE_MOUSE）
+    // 默认关闭；该判别手段未真机验证，故独立开关以便单独观察
+    var isKcuMouseDisguise: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            changed()
+        }
+
     var gamepadDeadzone: Double = 1.0
         set(value) {
             if (field == value) return
@@ -407,6 +425,8 @@ class MenuSetting {
                 addProperty("mouseOffsetX", src.mouseOffsetX)
                 addProperty("mouseOffsetY", src.mouseOffsetY)
                 addProperty("physicalMouseMode", src.isPhysicalMouseMode)
+                addProperty("kcuDpThreshold", src.isKcuDpThreshold)
+                addProperty("kcuMouseDisguise", src.isKcuMouseDisguise)
                 addProperty("itemBarWidth", src.itemBarWidth)
                 addProperty("itemBarHeight", src.itemBarHeight)
                 addProperty("windowScale", src.windowScale)
@@ -470,6 +490,8 @@ class MenuSetting {
                 ms.mouseOffsetX = json["mouseOffsetX"]?.asInt ?: 0
                 ms.mouseOffsetY = json["mouseOffsetY"]?.asInt ?: 0
                 ms.isPhysicalMouseMode = json["physicalMouseMode"]?.asBoolean ?: false
+                ms.isKcuDpThreshold = json["kcuDpThreshold"]?.asBoolean ?: false
+                ms.isKcuMouseDisguise = json["kcuMouseDisguise"]?.asBoolean ?: false
                 ms.itemBarWidth = json["itemBarWidth"]?.asInt ?: 0
                 ms.itemBarHeight = json["itemBarHeight"]?.asInt ?: 0
                 ms.windowScale = json["windowScale"]?.asDouble ?: 1.0
