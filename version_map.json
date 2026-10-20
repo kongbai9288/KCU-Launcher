@@ -1,6 +1,32 @@
 [
   {
     "type": "release",
+    "versionCode": 18,
+    "versionName": "0.18.0",
+    "date": "2026.10.21",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "落地年龄门槛：设置式年龄声明，低于阈值完全禁用应用使用。",
+          "API 终点追踪：Accounts.FACTORIES -> OfflineAccountFactory.create -> new OfflineAccount，构造器 requireNonNull(uuid)；OfflineAccount 构造器为 protected，外部必须走 factory。",
+          "抓出真 bug：create(username, null) 会 NPE，因为 OfflineAccount 构造器对 uuid 有非空校验。已修为先用 getUUIDFromUserName 算稳定 uuid。",
+          "Config 新增 kcuAgeDeclared(int) 与 kcuAgePrompted(bool)，带 SerializedName 自动持久化。",
+          "新增 KcuAgeGate（阈值 18、判定、声明、选择界面）、KcuAgeActivity（声明页/受限页）、KcuDevMode（读公共目录 dev_mode 开关文件）、KcuAccountFlow（按名称解析账号）。",
+          "拦截位置在 SplashActivity.onCreate 最前，先于协议同意与权限检查——未声明年龄时不触发任何权限请求或初始化。",
+          "KcuAccountFlow.resolve：先复用同名账号，其次复用非离线账号，都没有则按名称生成本地账号，皮肤可选。",
+          "KcuDevMode 开关文件位于公共目录，仅内容明确为 true 才开启，不存在或无法解析一律关闭。",
+          "UI 设计稿（揉纸风格）已归档为设计参考；实例列表不使用图标。",
+          "审核 pass。哈希回执：KcuAccountFlow.java:60 -> retun -> SHA-1 c0781ed3e29ec775c6bb8dc4be2015a32ea8593b。",
+          "编译验证 PROVEN：Actions run 39460420664。实机未验证。",
+          "遗留：设置页年龄修改入口、KcuAccountFlow 接入 UI、KcuDevMode 接入登录方式可见性、揉纸 UI 落地。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 17,
     "versionName": "0.17.0",
     "date": "2026.10.21",
