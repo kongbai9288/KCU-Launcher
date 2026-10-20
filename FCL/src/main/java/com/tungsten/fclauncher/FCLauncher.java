@@ -21,6 +21,7 @@ import com.mio.plugin.NativeLibPlugin;
 import com.oracle.dalvik.VMLauncher;
 import com.tungsten.fclauncher.bridge.FCLBridge;
 import com.tungsten.fclauncher.utils.Architecture;
+import com.tungsten.fclauncher.utils.KcuNativeSync;
 import com.tungsten.fclauncher.utils.FCLPath;
 import com.tungsten.fclcore.util.Logging;
 
@@ -551,6 +552,10 @@ public class FCLauncher {
                 if (logModList) {
                     logModList(bridge);
                 }
+
+                // KCU：把玩家自带原生库同步进 MOD_RUNTIME_DIR（该目录已无条件进入 LD_LIBRARY_PATH），
+                // 必须在 setEnv 之前，否则拼出的库搜索路径不含本次同步的文件
+                KcuNativeSync.sync();
 
                 // env
                 setEnv(config, bridge, render);
