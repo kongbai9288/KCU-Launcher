@@ -34,21 +34,41 @@ public class FCLPath {
     public static String SHARE_DIR;
 
     public static String PRIVATE_COMMON_DIR;
+    /** 根选择标记文件名：存在即表示该目录被选定为公共根，用于固化首次决策 */
+    public static final String KCU_ROOT_MARKER = ".kcu_root";
+
     /**
-     * KCU 公共目录根。旧版 FCL 目录已存在且 KCU 目录尚未建立时沿用旧路径，
-     * 避免从官方 FCL 迁移过来的用户发现数据"消失"；两者只能取其一，不会混用。
+     * KCU 公共目录根。
+     *
+     * 决策只做一次并写入标记文件固化。不能仅以"目录是否存在"判定：
+     * 目录存在性可被外部改变（本项目自带的迁移工具就会创建 KCU 目录），
+     * 一旦变化根路径即漂移，存量数据随之"消失"。
      */
     public static String KCU_SHARED_ROOT = resolveSharedRoot();
     public static String SHARED_COMMON_DIR = KCU_SHARED_ROOT + "/.minecraft";
 
     private static String resolveSharedRoot() {
         String external = Environment.getExternalStorageDirectory().getAbsolutePath();
-        File legacy = new File(external, "FCL");
         File kcu = new File(external, "KCU");
-        if (legacy.exists() && !kcu.exists()) {
+        File legacy = new File(external, "FCL");
+        if (new File(kcu, KCU_ROOT_MARKER).exists()) {
+            return kcu.getAbsolutePath();
+        }
+        if (new File(legacy, KCU_ROOT_MARKER).exists()) {
             return legacy.getAbsolutePath();
         }
-        return kcu.getAbsolutePath();
+        // 首次决策：仅当 FCL 下确有游戏数据时沿用，避免空壳目录抢占
+        // 判定 .minecraft 而非 FCL 本身，因为 log/control 等目录可能单独残留
+        boolean legacyHasData = new File(legacy, ".minecraft").exists();
+        File chosen = legacyHasData ? legacy : kcu;
+        try {
+            File marker = new File(chosen, KCU_ROOT_MARKER);
+            marker.getParentFile().mkdirs();
+            marker.createNewFile();
+        } catch (Exception ignored) {
+            // 标记写入失败（多为权限未授予）不阻断，下次启动会重新判定
+        }
+        return chosen.getAbsolutePath();
     }
 
     public static String AUTHLIB_INJECTOR_PATH;
