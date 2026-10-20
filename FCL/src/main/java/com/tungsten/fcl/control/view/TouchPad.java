@@ -29,6 +29,10 @@ public class TouchPad extends View {
 
     private final int screenWidth;
     private final int screenHeight;
+    /** 原始实现写死的点击位移容差，单位是 px */
+    private static final int CLICK_SLOP_PX = 10;
+    /** 换算到 dp 后的容差基准值 */
+    private static final int CLICK_SLOP_DP = 10;
 
     private GameMenu gameMenu;
 
@@ -50,6 +54,42 @@ public class TouchPad extends View {
         this.screenWidth = AndroidUtilKt.getScreenWidth();
         this.screenHeight = AndroidUtilKt.getScreenHeight();
         init();
+    }
+
+    /**
+     * 底层鼠标伪装识别：部分机型把鼠标移动事件混在普通触摸流里上报，
+     * 此时 getSource() 仍报 SOURCE_TOUCHSCREEN，但 getToolType() 会暴露 TOOL_TYPE_MOUSE。
+     * 命中后走上游已有的外接鼠标处理路径，避免启动器把这类事件当手指手势再处理一遍。
+     * 仅当 KCU_MOUSE_DISGUISE 开启时生效，便于与原始行为对比。
+     */
+    private boolean isDisguisedMouse(MotionEvent event) {
+        if (gameMenu == null || gameMenu.getMenuSetting() == null
+                || !gameMenu.getMenuSetting().isKcuMouseDisguise()) {
+            return false;
+        }
+        if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
+            return false; // 已由上游既有分支处理，不重复拦截
+        }
+        for (int i = 0; i < event.getPointerCount(); i++) {
+            if (event.getToolType(i) == MotionEvent.TOOL_TYPE_MOUSE) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 点击判定容差。默认沿用上游的 10 px（高密屏上折算不足 3 dp，容易点空）；
+     * 开启 KCU_DP_THRESHOLD 后按屏幕密度换算为 10 dp，与设备无关。
+     */
+    private float getClickSlop() {
+        boolean useDp = gameMenu != null
+                && gameMenu.getMenuSetting() != null
+                && gameMenu.getMenuSetting().isKcuDpThreshold();
+        if (!useDp) {
+            return CLICK_SLOP_PX;
+        }
+        return CLICK_SLOP_DP * getResources().getDisplayMetrics().density;
     }
 
     private void init() {
@@ -189,6 +229,13 @@ public class TouchPad extends View {
             handler.removeCallbacks(runnable);
         }
         if (gameMenu.getCursorMode() == FCLBridge.CursorEnabled) {
+            if (isDisguisedMouse(event)) {
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    gameMenu.getInput().setPointer(event.getRawX(), event.getRawY());
+                }
+                gameMenu.getInput().handleExternalTouchButtons(event);
+                return true;
+            }
             if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
                 if (event.getAction() == MotionEvent.ACTION_MOVE) {
                     gameMenu.getInput().setPointer(event.getRawX(), event.getRawY());
@@ -243,9 +290,10 @@ public class TouchPad extends View {
                         break;
                     case MotionEvent.ACTION_CANCEL:
                     case MotionEvent.ACTION_UP:
+                        float clickSlopA = getClickSlop();
                         if (System.currentTimeMillis() - downTime <= 100
-                                && Math.abs(event.getX() - downX) <= 10
-                                && Math.abs(event.getY() - downY) <= 10) {
+                                && Math.abs(event.getX() - downX) <= clickSlopA
+                                && Math.abs(event.getY() - downY) <= clickSlopA) {
                             gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_LEFT, true);
                             gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_LEFT, false);
                         }
@@ -258,6 +306,10 @@ public class TouchPad extends View {
                 }
             }
         } else {
+            if (isDisguisedMouse(event)) {
+                gameMenu.getInput().handleExternalTouchButtons(event);
+                return true;
+            }
             if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
                 // 游戏捕获视角期间外接鼠标的点击同样以 touch 事件到达，转发按键
                 gameMenu.getInput().handleExternalTouchButtons(event);
@@ -326,9 +378,10 @@ public class TouchPad extends View {
                     }
                     shouldBeDown = false;
                     currentPointerID = -1;
+                    float clickSlopB = getClickSlop();
                     if (System.currentTimeMillis() - downTime <= 100
-                            && Math.abs(event.getX() - downX) <= 10
-                            && Math.abs(event.getY() - downY) <= 10) {
+                            && Math.abs(event.getX() - downX) <= clickSlopB
+                            && Math.abs(event.getY() - downY) <= clickSlopB) {
                         if (!gameMenu.getMenuSetting().isDisableGesture()) {
                             if (getGestureMode() == GestureMode.BUILD) {
                                 gameMenu.getInput().sendKeyEvent(FCLInput.MOUSE_RIGHT, true);
