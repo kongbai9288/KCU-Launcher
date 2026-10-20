@@ -10,8 +10,8 @@ import com.tungsten.fcl.R;
 import com.tungsten.fclauncher.utils.FCLPath;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -19,15 +19,19 @@ import java.nio.charset.StandardCharsets;
 /**
  * 开发者模式。
  *
- * 开关由公共目录下同名文件是否存在决定，无需读取内容。
- * 文件位于 .minecraft 的同级目录，便于外部工具与迁移脚本创建。
+ * 开关文件位于公共目录下，与 .minecraft 同级。
+ * 文件内容的 SHA3-256 必须与内置值完全一致才会开启，仅存在不足以开启。
  */
 public final class KcuDevMode {
 
     private static final String FILE_NAME = "dev_mode";
+    private static final String EXPECTED_SHA3 = "4c238702173b7a01d082f2c6f840d8f149e28e6b081a60e54b452d7c9c5453e0";
+    private static final long MAX_BYTES = 64L * 1024 * 1024;
     private static final String EXPECTED_LOGIN = "kongbai9288";
     private static final String API_USER = "https://api.github.com/user";
     private static final int TIMEOUT_MS = 15000;
+
+    private static volatile Boolean cached;
 
     private KcuDevMode() {
     }
@@ -36,12 +40,57 @@ public final class KcuDevMode {
         return new File(FCLPath.KCU_SHARED_ROOT, FILE_NAME);
     }
 
-    /** 开关文件存在即视为开启 */
+    /** 结果会缓存；需要重新判定时调用 {@link #refresh()} */
     public static boolean isEnabled() {
+        Boolean v = cached;
+        if (v != null) {
+            return v;
+        }
+        boolean result = matchFile();
+        cached = result;
+        return result;
+    }
+
+    /** 清除缓存，下次调用重新读取文件 */
+    public static void refresh() {
+        cached = null;
+    }
+
+    private static boolean matchFile() {
+        InputStream in = null;
         try {
-            return getFile().exists();
+            File file = getFile();
+            if (!file.isFile()) {
+                return false;
+            }
+            long len = file.length();
+            if (len <= 0 || len > MAX_BYTES) {
+                return false;
+            }
+            byte[] raw = new byte[(int) len];
+            in = new FileInputStream(file);
+            int off = 0;
+            while (off < raw.length) {
+                int n = in.read(raw, off, raw.length - off);
+                if (n <= 0) {
+                    break;
+                }
+                off += n;
+            }
+            if (off != raw.length) {
+                return false;
+            }
+            String actual = Sha3.sha3256Hex(raw);
+            return !actual.isEmpty() && actual.equals(EXPECTED_SHA3);
         } catch (Throwable e) {
             return false;
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (Throwable ignored) {
+                }
+            }
         }
     }
 
@@ -71,7 +120,7 @@ public final class KcuDevMode {
             if (body == null) {
                 return false;
             }
-            return body.contains("\"login\"" ) && body.contains(EXPECTED_LOGIN);
+            return body.contains("\"login\"") && body.contains(EXPECTED_LOGIN);
         } catch (Throwable e) {
             return false;
         } finally {
@@ -94,8 +143,8 @@ public final class KcuDevMode {
     public static int clearMarks() {
         int cleared = 0;
         try {
-            File root = getFile();
-            if (root.exists() && root.delete()) {
+            File dev = getFile();
+            if (dev.exists() && dev.delete()) {
                 cleared++;
             }
         } catch (Throwable ignored) {
@@ -115,6 +164,7 @@ public final class KcuDevMode {
             }
         } catch (Throwable ignored) {
         }
+        refresh();
         return cleared;
     }
 
@@ -134,28 +184,12 @@ public final class KcuDevMode {
 
     /** 受限状态下的提示界面 */
     public static android.view.View buildBlockedView(Context context) {
-        float density = context.getResources().getDisplayMetrics().density;
-        int pad = (int) (28 * density);
-
-        LinearLayout root = new LinearLayout(context);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.setPadding(pad, pad, pad, pad);
-        root.setBackgroundColor(Color.WHITE);
-
-        TextView title = new TextView(context);
-        title.setText(R.string.kcu_blocked_title);
-        title.setTextSize(19f);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.addView(title);
-
-        TextView body = new TextView(context);
-        body.setText(R.string.kcu_blocked_body);
-        body.setTextSize(13f);
-        body.setGravity(Gravity.CENTER_HORIZONTAL);
-        body.setPadding(0, (int) (16 * density), 0, 0);
-        root.addView(body);
-
+        LinearLayout root = KcuUi.root(context);
+        LinearLayout card = KcuUi.card(context);
+        card.addView(KcuUi.title(context, context.getString(R.string.kcu_blocked_title)));
+        card.addView(KcuUi.gap(context, 12));
+        card.addView(KcuUi.body(context, context.getString(R.string.kcu_blocked_body)));
+        root.addView(card);
         return root;
     }
 
