@@ -1,5 +1,6 @@
 package com.tungsten.fcl.activity
 
+import com.tungsten.fcl.util.KcuDevMode
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -403,8 +404,12 @@ class MainActivity : FCLActivity(), OnSelectListener, View.OnClickListener {
     private fun applyPendingOpenDownload() {
         if (!pendingOpenDownload) return
         if (_uiManager == null) return
-        uiManager.switchUI(uiManager.downloadUI)
-        openDownloadPanel()
+        if (KcuDevMode.isEnabled()) {
+            uiManager.switchUI(uiManager.downloadUI)
+            openDownloadPanel()
+        } else {
+            startActivity(Intent(this@MainActivity, KcuImportActivity::class.java))
+        }
         pendingOpenDownload = false
     }
 
@@ -555,8 +560,13 @@ class MainActivity : FCLActivity(), OnSelectListener, View.OnClickListener {
                 }
 
                 download -> {
-                    title.setTextWithAnim(getString(R.string.download))
-                    uiManager.switchUI(uiManager.downloadUI)
+                    if (KcuDevMode.isEnabled()) {
+                        title.setTextWithAnim(getString(R.string.download))
+                        uiManager.switchUI(uiManager.downloadUI)
+                    } else {
+                        refreshMenuView(null)
+                        startActivity(Intent(this@MainActivity, KcuImportActivity::class.java))
+                    }
                 }
 
                 controller -> {
