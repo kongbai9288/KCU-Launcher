@@ -465,3 +465,62 @@ sha256 0bc7bb590c90bdbd82c00e4dc96b9a124288b240f5bbf05fdba29cbc41174d87
 菜单接入点已定位：`RightMenuAdapter.kt` → `RightMenuCategory.MOUSE` → 照 `Row.SwitchRow` 新增，同步 `MenuSetting`（字段+序列化三处）/ `RightMenuTag` / `strings.xml`。
 
 状态：**设计完成，未实现**，待确认。全程未实机验证。
+
+## 0.12.0 — 2026.10.20
+
+执行者：**yuanbao**
+
+- **按用户决策实施：单位修正包进开关，默认关闭**
+
+  > 用户：他该肯定是有他的理由，比如手机性能问题，所以说那个单位也放在新模式当中，这样的话出问题了不会一下子全碰掉
+
+  **不直接改默认路径。** 两个独立开关，均默认 `false`：
+
+  | 开关 | 作用 | 默认 |
+  |---|---|---|
+  | `KCU_DP_THRESHOLD` | 点击容差 10 px → 10 dp（按 density 换算） | **false** |
+  | `KCU_MOUSE_DISGUISE` | `getToolType` 识别底层鼠标伪装 | **false** |
+
+  做成**两个独立开关而非一个总开关**：任一项出问题可单独关，便于分别 A/B 对比。
+
+  **默认关闭 = 行为完全等同上游**，这是"不会一下子全碰掉"的保证。
+
+- 改动清单（6 个文件）
+
+  | 文件 | 改动 |
+  |---|---|
+  | `MenuSetting.kt` | 2 字段 + 序列化 2 处 + 反序列化 2 处 |
+  | `RightMenuAdapter.kt` | `RightMenuTag` 加 2 tag；`MOUSE` 分类加 2 个 `SwitchRow` |
+  | `GameMenu.java` | `handleRightSwitchToggle` 加 2 case |
+  | `TouchPad.java` | `getClickSlop()` + `isDisguisedMouse()` |
+  | `values/strings.xml` | 英文文案 2 条 |
+  | `values-zh/strings.xml` | 中文文案 2 条 |
+
+- dp 换算（关闭时原值，开启才换算）
+
+  ```java
+  private float getClickSlop() {
+      if (!isKcuDpThreshold) return CLICK_SLOP_PX;   // 10，上游原值
+      return CLICK_SLOP_DP * getResources().getDisplayMetrics().density;
+  }
+  ```
+
+- 伪装识别（复用上游路径，不自研）
+
+  ```java
+  if (event.isFromSource(SOURCE_MOUSE)) return false;  // 上游已处理，不重复拦截
+  for (...) if (event.getToolType(i) == TOOL_TYPE_MOUSE) return true;
+  ```
+
+  命中后交给上游 `handleExternalTouchButtons` / `setPointer`。
+
+- 编译验证（PROVEN）：Actions run **39371915205**
+
+  | 步骤 | 结果 |
+  |---|---|
+  | Build release | success |
+  | 列出产物 | success |
+  | 验证签名 | success |
+  | 产物 | `app-arm64` 170392504 B |
+
+状态：编译 **PROVEN**。**功能效果未实机对比**；`getToolType` 在伪装场景的实际返回值仍未证实。
