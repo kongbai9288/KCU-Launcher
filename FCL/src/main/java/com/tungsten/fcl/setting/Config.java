@@ -151,6 +151,12 @@ public final class Config implements Cloneable, Observable {
     @SerializedName("autoDownloadThreads")
     private BooleanProperty autoDownloadThreads = new SimpleBooleanProperty(true);
 
+    @SerializedName("kcuAgeDeclared")
+    private IntegerProperty kcuAgeDeclared = new SimpleIntegerProperty(0);
+
+    @SerializedName("kcuAgePrompted")
+    private BooleanProperty kcuAgePrompted = new SimpleBooleanProperty(false);
+
     @SerializedName("downloadThreads")
     private IntegerProperty downloadThreads = new SimpleIntegerProperty(64);
 
@@ -246,6 +252,30 @@ public final class Config implements Cloneable, Observable {
 
     public boolean getAutoDownloadThreads() {
         return autoDownloadThreads.get();
+    }
+
+    public int getKcuAgeDeclared() {
+        return kcuAgeDeclared.get();
+    }
+
+    public void setKcuAgeDeclared(int age) {
+        this.kcuAgeDeclared.set(age);
+    }
+
+    public IntegerProperty kcuAgeDeclaredProperty() {
+        return kcuAgeDeclared;
+    }
+
+    public boolean isKcuAgePrompted() {
+        return kcuAgePrompted.get();
+    }
+
+    public void setKcuAgePrompted(boolean prompted) {
+        this.kcuAgePrompted.set(prompted);
+    }
+
+    public BooleanProperty kcuAgePromptedProperty() {
+        return kcuAgePrompted;
     }
 
     public BooleanProperty autoDownloadThreadsProperty() {
