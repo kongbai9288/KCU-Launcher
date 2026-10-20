@@ -1,35 +1,43 @@
 package com.tungsten.fcl.util;
 
 import android.content.Context;
-import android.view.Gravity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
+import android.content.SharedPreferences;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 
+import com.tungsten.fcl.FCLApp;
 import com.tungsten.fcl.R;
-import com.tungsten.fcl.setting.ConfigHolder;
 
 /**
  * 年龄声明与访问判定。
- * 声明值保存在配置中，仅取整数岁数。
+ *
+ * 声明值存于独立 SharedPreferences，不写进 Config：
+ * 入口在 SplashActivity.onCreate 最前执行，此时 ConfigHolder 尚未 init，
+ * config() 会抛 IllegalStateException，导致声明读不出也写不进。
  */
 public final class KcuAgeGate {
 
     /** 判定阈值：低于该岁数不允许使用 */
     public static final int THRESHOLD = 18;
 
+    private static final String PREF = "kcu_age";
+    private static final String KEY_AGE = "age";
+    private static final String KEY_PROMPTED = "prompted";
+
     private KcuAgeGate() {
+    }
+
+    private static SharedPreferences prefs() {
+        Context context = FCLApp.getAppContext();
+        return context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
     }
 
     /** 是否已完成声明 */
     public static boolean isDeclared() {
         try {
-            return ConfigHolder.config().isKcuAgePrompted()
-                    && ConfigHolder.config().getKcuAgeDeclared() > 0;
+            return prefs().getBoolean(KEY_PROMPTED, false)
+                    && prefs().getInt(KEY_AGE, 0) > 0;
         } catch (Throwable e) {
             return false;
         }
@@ -41,7 +49,7 @@ public final class KcuAgeGate {
             if (!isDeclared()) {
                 return false;
             }
-            return ConfigHolder.config().getKcuAgeDeclared() < THRESHOLD;
+            return prefs().getInt(KEY_AGE, 0) < THRESHOLD;
         } catch (Throwable e) {
             return false;
         }
@@ -49,41 +57,27 @@ public final class KcuAgeGate {
 
     public static void declare(int age) {
         try {
-            ConfigHolder.config().setKcuAgeDeclared(age);
-            ConfigHolder.config().setKcuAgePrompted(true);
+            prefs().edit().putInt(KEY_AGE, age).putBoolean(KEY_PROMPTED, true).apply();
         } catch (Throwable ignored) {
         }
     }
 
-    /**
-     * 构建选择界面。返回值的第一个元素为根布局，
-     * 调用方需在 onConfirm 中自行读取 getSelectedAge()。
-     */
-    public static View buildView(Context context, final int[] selected, Runnable onConfirm) {
-        float density = context.getResources().getDisplayMetrics().density;
-        int pad = (int) (24 * density);
+    /** 清除声明 */
+    public static void reset() {
+        try {
+            prefs().edit().remove(KEY_AGE).remove(KEY_PROMPTED).apply();
+        } catch (Throwable ignored) {
+        }
+    }
 
-        LinearLayout root = new LinearLayout(context);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(pad, pad, pad, pad);
-        root.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    /** 构建选择界面；selected[0] 为当前选中值 */
+    public static void buildInto(Context context, LinearLayout card, final int[] selected, Runnable onConfirm) {
+        card.addView(KcuUi.title(context, context.getString(R.string.kcu_age_title)));
+        card.addView(KcuUi.gap(context, 10));
+        card.addView(KcuUi.body(context, context.getString(R.string.kcu_age_prompt)));
+        card.addView(KcuUi.gap(context, 18));
 
-        TextView title = new TextView(context);
-        title.setText(R.string.kcu_age_title);
-        title.setTextSize(20f);
-        title.setGravity(Gravity.CENTER_HORIZONTAL);
-        root.addView(title);
-
-        TextView sub = new TextView(context);
-        sub.setText(R.string.kcu_age_prompt);
-        sub.setTextSize(13f);
-        sub.setGravity(Gravity.CENTER_HORIZONTAL);
-        sub.setPadding(0, (int) (12 * density), 0, (int) (20 * density));
-        root.addView(sub);
-
-        final RadioGroup group = new RadioGroup(context);
+        RadioGroup group = new RadioGroup(context);
         group.setOrientation(RadioGroup.VERTICAL);
         int[] options = {6, 12, 16, 18, 20};
         String unit = context.getString(R.string.kcu_age_unit);
@@ -91,35 +85,28 @@ public final class KcuAgeGate {
             RadioButton rb = new RadioButton(context);
             rb.setText(options[i] + unit);
             rb.setTag(options[i]);
+            rb.setTextColor(KcuUi.INK);
             rb.setTextSize(15f);
             group.addView(rb);
-            if (i == 3) {
+            if (options[i] == THRESHOLD) {
                 group.check(rb.getId());
             }
         }
-        selected[0] = 18;
+        selected[0] = THRESHOLD;
         group.setOnCheckedChangeListener((g, checkedId) -> {
-            View v = g.findViewById(checkedId);
+            android.view.View v = g.findViewById(checkedId);
             if (v != null && v.getTag() instanceof Integer) {
                 selected[0] = (Integer) v.getTag();
             }
         });
-        root.addView(group);
+        card.addView(group);
 
-        Button confirm = new Button(context);
-        confirm.setText(R.string.kcu_age_confirm);
-        confirm.setPadding(0, (int) (10 * density), 0, (int) (10 * density));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.topMargin = (int) (24 * density);
-        confirm.setLayoutParams(lp);
+        android.widget.Button confirm = KcuUi.primaryButton(context, context.getString(R.string.kcu_age_confirm));
         confirm.setOnClickListener(v -> {
             if (onConfirm != null) {
                 onConfirm.run();
             }
         });
-        root.addView(confirm);
-
-        return root;
+        card.addView(confirm);
     }
 }
