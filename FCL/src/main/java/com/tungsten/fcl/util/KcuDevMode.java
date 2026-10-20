@@ -157,11 +157,8 @@ public final class KcuDevMode {
         } catch (Throwable ignored) {
         }
         try {
-            if (com.tungsten.fcl.setting.ConfigHolder.config().isKcuAgePrompted()) {
-                com.tungsten.fcl.setting.ConfigHolder.config().setKcuAgePrompted(false);
-                com.tungsten.fcl.setting.ConfigHolder.config().setKcuAgeDeclared(0);
-                cleared++;
-            }
+            KcuAgeGate.reset();
+            cleared++;
         } catch (Throwable ignored) {
         }
         refresh();
