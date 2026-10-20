@@ -49,6 +49,9 @@ enum class RightMenuTag {
     MOUSE_OFFSET_X, MOUSE_OFFSET_Y, PHYSICAL_MOUSE,
     CAPTURE_POINTER_KEY, CAPTURE_POINTER_MODIFIER, IME_TOGGLE_KEY, IME_TOGGLE_MODIFIER,
 
+    // KCU：新增实验开关，均默认关闭，便于与原始行为 A/B 对比
+    KCU_DP_THRESHOLD, KCU_MOUSE_DISGUISE,
+
     // 手柄
     GAMEPAD_CONTROL, GAMEPAD_RESET_MAPPER, GAMEPAD_BUTTON_BINDING, GAMEPAD_DEADZONE,
     GAMEPAD_INPUT_MODE,
@@ -293,6 +296,16 @@ class RightMenuAdapter(
                 R.string.menu_settings_physical_mouse_mode,
                 { menuSetting.isPhysicalMouseMode },
                 RightMenuTag.PHYSICAL_MOUSE
+            ),
+            Row.SwitchRow(
+                R.string.menu_settings_kcu_dp_threshold,
+                { menuSetting.isKcuDpThreshold },
+                RightMenuTag.KCU_DP_THRESHOLD
+            ),
+            Row.SwitchRow(
+                R.string.menu_settings_kcu_mouse_disguise,
+                { menuSetting.isKcuMouseDisguise },
+                RightMenuTag.KCU_MOUSE_DISGUISE
             ),
             Row.KeyBindRow(
                 R.string.menu_settings_capture_pointer_key,
