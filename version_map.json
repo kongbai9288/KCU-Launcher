@@ -1,6 +1,30 @@
 [
   {
     "type": "release",
+    "versionCode": 17,
+    "versionName": "0.17.0",
+    "date": "2026.10.21",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "落地玩家自定义 .so 的双层目录，直击用户做本项目的核心诉求：上游把依赖锁在私有目录，迁移工具读不到。",
+          "API 终点追踪：FCLauncher.launchProcess -> setEnv -> addCommonEnv -> getLibraryPath -> appendCommonPaths，实测第162行 sb.append(MOD_RUNTIME_DIR) 无任何条件判断，该私有目录恒定进入 LD_LIBRARY_PATH。",
+          "关键结论：只要把 so 放进 runtime_mod 上游机制自动生效，不需要自己 System.load。故实现方式零侵入，不改任何已有加载逻辑，天然满足玩家不设置即等同上游。",
+          "双层模型：公共素材层 /sdcard/KCU/natives/<abi>/（可读写、noexec、迁移工具可访问）-> 私有加载层 runtime_mod/（可执行）。abi 取值来自 Architecture.archAsStringAndroid。",
+          "新增 KcuNativeSync.java，挂载在 launchProcess 内 setEnv 之前——必须在拼 LD_LIBRARY_PATH 之前同步。",
+          "严格审核抓出真 bug：上轮同步已 setReadOnly，下次覆盖时 FileOutputStream 直接失败，导致玩家更新了 so 却永远不生效且静默。已修：copy 开头先 setWritable(true)。",
+          "其余防护：校验 ELF magic 7F454C46 排除非 ELF；整体 catch Throwable 不阻断启动；仅清理 .kcu_synced 记录中本次不在 kept 的条目，不误删其他机制的文件。",
+          "零污染验证：源目录不存在时立即返回，不创建目录不写文件，LD_LIBRARY_PATH 与上游逐字一致。",
+          "审核 pass。哈希回执：KcuNativeSync.java:114 -> dsteW -> SHA-1 3c824fc7562f84cb6454c365d560fc7e0220457e。",
+          "编译验证 PROVEN：Actions run 39457783242。实机未验证。遗留：加载顺序自定义、ELF 深度校验（架构/位数）。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 16,
     "versionName": "0.16.0",
     "date": "2026.10.20",
