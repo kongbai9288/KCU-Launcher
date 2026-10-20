@@ -1,6 +1,32 @@
 [
   {
     "type": "release",
+    "versionCode": 19,
+    "versionName": "0.19.0",
+    "date": "2026.10.21",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "开发者模式开关文件定为 /sdcard/KCU/dev_mode（.minecraft 同级），存在即开启，不看内容，删掉即关闭。",
+          "API 终点追踪：MainActivity.onSelect 的 download 分支 -> switchUI(downloadUI) -> DownloadUI.onCreate（VersionInstallPage/DownloadPage/FavoritePage）；另有第二条入口 applyPendingOpenDownload。",
+          "两条入口都已拦截：菜单分支与 applyPendingOpenDownload。只拦菜单会被绕过。",
+          "关闭状态（默认）点下载进入新增的 KcuImportActivity：填版本标识后按地址下载或选择本地文件，写入 <gameDir>/versions/<id>/<id>.jar（与 DefaultGameRepository.getVersionRoot 一致）。",
+          "开启状态走原 downloadUI（版本安装、mod、整合包、资源包、地图、光影、收藏）。",
+          "KcuDevMode 新增 verifyOwner(token)：GET api.github.com/user，Bearer 令牌，仅 200 且响应含 login 与 kongbai9288 才通过；网络不可用或异常一律 false。",
+          "KcuDevMode 新增 clearMarks()：清除 dev_mode 文件、.kcu_root 标记、年龄声明，返回清除项数。调用前必须先 verifyOwner。当前仅提供 API，未接 UI。",
+          "严格审核抓出并修：Kotlin 中 return 位于 binding.apply 内联 lambda 内属非局部返回，依赖内联语义且易误读，已改为 if-else 显式分支。",
+          "其余防护：主线程不做 IO（单线程 ExecutorService + runOnUiThread）、未填标识前置校验、Profiles 未就绪时 try-catch 返回 null。",
+          "审核 pass。哈希回执：KcuDevMode.java:28 -> priva -> SHA-1 28399ad1e9d4bd701852ebb005259fe30f57e756。",
+          "编译验证 PROVEN：Actions run 39463084086。实机未验证。",
+          "遗留：导入页不写版本 json 故不会出现在版本列表；其余 switchUI(downloadUI) 入口未全覆盖；clearMarks 未接 UI。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 18,
     "versionName": "0.18.0",
     "date": "2026.10.21",
