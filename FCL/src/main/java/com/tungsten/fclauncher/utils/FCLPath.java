@@ -34,7 +34,22 @@ public class FCLPath {
     public static String SHARE_DIR;
 
     public static String PRIVATE_COMMON_DIR;
-    public static String SHARED_COMMON_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/FCL/.minecraft";
+    /**
+     * KCU 公共目录根。旧版 FCL 目录已存在且 KCU 目录尚未建立时沿用旧路径，
+     * 避免从官方 FCL 迁移过来的用户发现数据"消失"；两者只能取其一，不会混用。
+     */
+    public static String KCU_SHARED_ROOT = resolveSharedRoot();
+    public static String SHARED_COMMON_DIR = KCU_SHARED_ROOT + "/.minecraft";
+
+    private static String resolveSharedRoot() {
+        String external = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File legacy = new File(external, "FCL");
+        File kcu = new File(external, "KCU");
+        if (legacy.exists() && !kcu.exists()) {
+            return legacy.getAbsolutePath();
+        }
+        return kcu.getAbsolutePath();
+    }
 
     public static String AUTHLIB_INJECTOR_PATH;
     public static String LIB_PATCHER_PATH;
@@ -46,7 +61,7 @@ public class FCLPath {
     public static void loadPaths(Context context) {
         NATIVE_LIB_DIR = context.getApplicationInfo().nativeLibraryDir;
 
-        LOG_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/FCL/log";
+        LOG_DIR = KCU_SHARED_ROOT + "/log";
         CACHE_DIR = context.getCacheDir() + "/fclauncher";
 
         RUNTIME_DIR = context.getDir("runtime", 0).getAbsolutePath();
@@ -66,8 +81,8 @@ public class FCLPath {
         PLUGIN_DIR = FILES_DIR + "/plugins";
         BACKGROUND_DIR = FILES_DIR + "/background";
         SKIN_DIR = FILES_DIR + "/skin";
-        CONTROLLER_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/FCL/control";
-        SHARE_DIR = Environment.getExternalStorageDirectory().getAbsolutePath() + "/FCL/share";
+        CONTROLLER_DIR = KCU_SHARED_ROOT + "/control";
+        SHARE_DIR = KCU_SHARED_ROOT + "/share";
         File externalFilesDir = context.getExternalFilesDir(null);
         if (externalFilesDir == null) {
             externalFilesDir = new File(Environment.getExternalStorageDirectory(), "Android/data/" + context.getPackageName() + "/files");
