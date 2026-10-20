@@ -1188,6 +1188,14 @@ public class GameMenu implements MenuCallback, FCLBridgeCallback {
             case GYRO_INVERT_Y:
                 menuSetting.setInvertGyroscopeY(checked);
                 break;
+            case KCU_DP_THRESHOLD:
+                menuSetting.setKcuDpThreshold(checked);
+                // 阈值单位切换后重建菜单，使依赖该值的行重新取值
+                rightMenuAdapter.rebuild();
+                break;
+            case KCU_MOUSE_DISGUISE:
+                menuSetting.setKcuMouseDisguise(checked);
+                break;
             case PHYSICAL_MOUSE:
                 menuSetting.setPhysicalMouseMode(checked);
                 // 模式切换即时生效：菜单态改用系统指针时释放捕获，改回虚拟指针时立即补回，不等看门狗轮询
