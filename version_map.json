@@ -1,6 +1,31 @@
 [
   {
     "type": "release",
+    "versionCode": 14,
+    "versionName": "0.14.0",
+    "date": "2026.10.20",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "按用户修正的定义重做严格自我审核：严格预估会导致什么错误 + 对今后使用逻辑造成什么干扰。v0.13.0 的浅层审核被推翻。",
+          "否决 v0.13.0 实现：以目录存在性判定根路径。存在性可变且可被外部改变，是根本缺陷。",
+          "错误A（严重）：外部创建 /sdcard/KCU 即触发根漂移，存量数据消失。本项目自带的 KCU Migrator 天然会创建该目录，属必然发生。",
+          "错误B（严重）：一旦切到 KCU 分支，init() 的 mkdirs 坐实目录存在，条件永不成立，首次误判即永久误判。",
+          "错误C（较严重）：targetSdk 34 + 分区存储，未授权时 File.exists() 静默返回 false；且 Config.java:149 在字段初始化期引用 SHARED_COMMON_DIR，导致 FCLPath 静态初始化早于 loadPaths，决策发生在无权限时刻。",
+          "错误D（中）：Manifest 声明 :crash 与 :jvm 独立进程，各自独立计算，可能拿到不同根。",
+          "对未来干扰：迁移工具无法对齐、manifest 契约无处安放、自定义 .so 双层目录失去依托、无法向用户解释。",
+          "修复：marker 文件 .kcu_root 固化决策；判定有数据看 .minecraft 而非外壳目录；marker 写入失败不阻断以自愈。",
+          "残余风险（如实）：静态初始化期磁盘 IO 未真机验证是否触发 StrictMode；多进程独立计算未修。",
+          "自我审核 pass。哈希回执：FCLPath.java:71 -> retun -> SHA-1 c0781ed3e29ec775c6bb8dc4be2015a32ea8593b。",
+          "编译验证 PROVEN：Actions run 39375222293，五架构全绿，app-arm64 170393441 B。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 13,
     "versionName": "0.13.0",
     "date": "2026.10.20",
