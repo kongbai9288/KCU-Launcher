@@ -164,7 +164,7 @@ jobs:
           if-no-files-found: warn
 
       - name: 构建结果上报（始终）
-        if: ${{ always() && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
+        if: ${{ (steps.gradle.outcome == 'failure' || steps.gradle_debug.outcome == 'failure' || env.GRADLE_OK == 'false') && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
