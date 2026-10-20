@@ -769,3 +769,64 @@ Actions run **39375975967**，五架构全绿：
 - 新增防错规则 160–164。
 
 状态：编译 PROVEN，**实机验证全程仍为零**。
+
+## 0.17.0 — 2026-10-21
+
+执行者：**yuanbao**
+
+- **玩家自定义 .so 双层目录落地**
+
+  直击核心诉求：上游把依赖锁在私有目录，**迁移工具读不到**——这是做 KCU Launcher 的根本原因之一。
+
+### API 终点追踪
+
+```
+launchProcess → setEnv → addCommonEnv → getLibraryPath → appendCommonPaths
+```
+
+实测 `FCLauncher.java:162`：
+
+```java
+sb.append(FCLPath.MOD_RUNTIME_DIR).append(split);
+```
+
+**无任何条件判断**——该私有目录恒定进入 `LD_LIBRARY_PATH`。
+
+**关键结论**：只要把 .so 放进 `runtime_mod`，上游机制自动生效，**不需要自己 `System.load()`**。所以实现可以零侵入，也天然满足"玩家不设置就等同上游"。
+
+### 双层模型
+
+| 层 | 路径 | 属性 |
+|---|---|---|
+| 素材层（公共） | `/sdcard/KCU/natives/<abi>/` | 可读写、noexec、迁移工具可访问 |
+| 加载层（私有） | `runtime_mod/` | 可执行 |
+
+公共目录挂载 noexec，不能直连 `dlopen`；Android 10+ 还有 W^X 约束。
+
+### 严格审核抓出的真 bug
+
+**上轮同步已 `setReadOnly()`，下次覆盖时 `FileOutputStream` 直接失败** → 玩家更新了 .so 却永远不生效，且**静默失败**。
+
+不修的话表现为"我明明换了文件怎么还是旧的"，极难排查。已修：copy 开头先 `setWritable(true)`。
+
+其余防护：校验 ELF magic、整体 `catch (Throwable)`、只清理自己记录过的文件。
+
+### 零污染验证
+
+源目录不存在 → 立即返回，不创建目录、不写文件，`LD_LIBRARY_PATH` 与上游**逐字一致**。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuNativeSync.java` |
+| 行 | **114** |
+| 原文 | `dst.setWritable(true);` |
+| 5 个不同字母 | `d s t e W` |
+| **SHA-1** | **`3c824fc7562f84cb6454c365d560fc7e0220457e`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39457783242**：Build release / 列出产物 / 验证签名 均 success。
+
+遗留：**实机未验证**；加载顺序自定义未做；ELF 只验 magic 不验架构位数。
