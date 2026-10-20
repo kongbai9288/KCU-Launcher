@@ -27,6 +27,8 @@ import com.tungsten.fcl.databinding.ActivitySplashBinding
 import com.tungsten.fcl.fragment.EulaFragment
 import com.tungsten.fcl.fragment.RuntimeFragment
 import com.tungsten.fcl.setting.ConfigHolder
+import com.tungsten.fcl.util.KcuAgeGate
+import com.tungsten.fcl.util.KcuDevMode
 import com.tungsten.fcl.util.KcuManifest
 import com.tungsten.fcl.setting.Controllers
 import com.tungsten.fcl.util.RuntimeUtils
@@ -69,6 +71,15 @@ class SplashActivity : FCLActivity() {
         ImageUtil.loadInto(
             binding.background, ThemeEngine.getInstance().getTheme().getBackground(this)
         )
+        if (KcuAgeGate.isBlocked()) {
+            setContentView(KcuDevMode.buildBlockedView(this))
+            return
+        }
+        if (!KcuAgeGate.isDeclared()) {
+            startActivity(Intent(this, KcuAgeActivity::class.java))
+            finish()
+            return
+        }
         if (sharedPreferences.getBoolean("isAgree", false)) {
             checkPermission()
         } else {
