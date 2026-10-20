@@ -358,3 +358,47 @@ sha256 0bc7bb590c90bdbd82c00e4dc96b9a124288b240f5bbf05fdba29cbc41174d87
 全架构 run 39287000078 同样 success：all 327461103 / x86_64 176086882 / arm64 170392797 / arm 163133491 / x86 156781587。
 
 顺带修正一处 CI 误报：早期一版上报逻辑在取不到 `GRADLE_OK` 时会把结果标成"失败"（issue #20，实际构建 success）。已改为三态：成功 / 失败 / **结果未知**，避免再产生误导性 issue。
+
+## 0.10.0 — 2026.10.20
+
+执行者：**yuanbao**
+
+- **签名接通，产物已验签（PROVEN）**
+
+  ```
+  Signer #1 certificate DN: CN=kbs, OU=kbs, O=kbs, L=Unknown, ST=Unknown, C=CN
+  Signer #1 certificate SHA-256 digest: d4e860232e977157c41459d7f139f9087036feb38623f07bd2c2f6575db4db4e
+  Signer #1 certificate SHA-1 digest:  1a495fc4556b8321274a28782d48c433286eb397
+  ```
+
+  输出来自 `apksigner verify --print-certs` 在 Actions 上的实际执行。
+
+- **坑一：扩展名骗人**
+
+  | 检查项 | 结果 |
+  |---|---|
+  | 文件头 | `30820a7e020103...` |
+  | JKS magic `0xFEEDFEED` | ❌ |
+  | `keytool -storetype pkcs12` | ✅ |
+  | 真实类型 | **PKCS12** |
+
+  名为 `.jks` 实为 PKCS12（DER 头 `30 82`）。已加 `storeType`，并留 `KCU_STORE_TYPE` 环境变量覆盖位。
+
+- **坑二：密码文件解析**
+
+  形如 `- Keystore 密码：xxx`，第一版按空格 split 把中文标签混进值，4 个候选密码全部解锁失败。改按全角冒号取最后一段才通过。
+
+- Secrets（libsodium sealed box 加密写入，密码从未落任何文件）
+
+  | Secret | 内容 |
+  |---|---|
+  | `KCU_KEYSTORE_BASE64` | keystore base64（3588 字符） |
+  | `KCU_KEYSTORE_PASSWORD` | store 密码 |
+  | `KCU_KEY_ALIAS` | `kbs` |
+  | `KCU_KEY_PASSWORD` | key 密码 |
+
+- 新增独立验签步骤：**「恢复签名库」成功 ≠ APK 已签名**，必须由产物自己证明。
+
+- 旁证：产物 sha256 随签名改变 `0bc7bb59…` → `8898d29b…`。
+
+状态：签名 **PROVEN**。**实机安装仍未验证**；全架构产物未逐个验签。
