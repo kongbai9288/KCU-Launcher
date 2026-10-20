@@ -1,6 +1,28 @@
 [
   {
     "type": "release",
+    "versionCode": 13,
+    "versionName": "0.13.0",
+    "date": "2026.10.20",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "本轮起执行用户新规范：动手前追踪 API 最后一层落点，改完自我审核并回执 pass + SHA-1。",
+          "API 终点追踪：FCLPath.SHARED_COMMON_DIR -> Config/Profiles/LauncherSettingPage -> FCLGameRepository.changeDirectory -> FCLCacheRepository.directory listener -> DefaultCacheRepository -> CacheRepository.changeDirectory -> 终点 java.nio.file.Files（纯 Java NIO，非 JNI/ContentProvider，不参与 dlopen 与签名校验）。",
+          "附带发现：Profiles.checkProfiles 仅在 profiles 为空时建默认档，故改 SHARED_COMMON_DIR 只影响首次启动，已存在用户存的是绝对路径不受影响。",
+          "改造：新增 KCU_SHARED_ROOT，SHARED_COMMON_DIR / LOG_DIR / CONTROLLER_DIR / SHARE_DIR 全部由它派生。",
+          "旧目录兼容：/sdcard/FCL 存在且 /sdcard/KCU 不存在时沿用 FCL，两者不混用，迁移用户数据不丢。",
+          "自我审核 11 项全过，pass。哈希回执：FCLPath.java:85 -> SHARE -> SHA-1 dd19b86ae45a271261a2769df9693b7eeeac1d33。",
+          "编译验证 PROVEN：Actions run 39374234610，产物 app-arm64 170393777 B。",
+          "未做：实机验证；manifest 契约；自定义 .so 双层目录；PRIVATE_COMMON_DIR 未并入。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 12,
     "versionName": "0.12.0",
     "date": "2026.10.20",
