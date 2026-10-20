@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.tungsten.fcl.R;
+import com.tungsten.fcl.util.KcuUi;
 import com.tungsten.fcl.setting.Profiles;
 import com.tungsten.fclcore.util.Logging;
 
@@ -43,63 +44,45 @@ public class KcuImportActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        float density = getResources().getDisplayMetrics().density;
-        int pad = (int) (22 * density);
 
-        ScrollView scroll = new ScrollView(this);
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(pad, pad, pad, pad);
-        root.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        scroll.addView(root);
+        android.widget.ScrollView scroll = new android.widget.ScrollView(this);
+        LinearLayout root = KcuUi.root(this);
+        LinearLayout card = KcuUi.card(this);
 
-        TextView title = new TextView(this);
-        title.setText(R.string.kcu_import_title);
-        title.setTextSize(19f);
-        root.addView(title);
+        card.addView(KcuUi.title(this, getString(R.string.kcu_import_title)));
+        card.addView(KcuUi.gap(this, 10));
+        card.addView(KcuUi.body(this, getString(R.string.kcu_import_hint)));
+        card.addView(KcuUi.gap(this, 18));
 
-        TextView hint = new TextView(this);
-        hint.setText(R.string.kcu_import_hint);
-        hint.setTextSize(12f);
-        hint.setPadding(0, (int) (10 * density), 0, (int) (18 * density));
-        root.addView(hint);
+        editId = KcuUi.field(this, getString(R.string.kcu_import_id_hint));
+        card.addView(editId);
 
-        editId = new EditText(this);
-        editId.setHint(R.string.kcu_import_id_hint);
-        editId.setSingleLine(true);
-        root.addView(editId);
-
-        editUrl = new EditText(this);
-        editUrl.setHint(R.string.kcu_import_url_hint);
-        editUrl.setSingleLine(true);
+        editUrl = KcuUi.field(this, getString(R.string.kcu_import_url_hint));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.topMargin = (int) (12 * density);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = KcuUi.dp(this, 12);
         editUrl.setLayoutParams(lp);
-        root.addView(editUrl);
+        card.addView(editUrl);
 
-        Button btnUrl = new Button(this);
-        btnUrl.setText(R.string.kcu_import_fetch);
+        android.widget.Button btnUrl = KcuUi.primaryButton(this, getString(R.string.kcu_import_fetch));
         btnUrl.setOnClickListener(v -> startFetch());
-        root.addView(btnUrl);
+        card.addView(btnUrl);
 
-        Button btnLocal = new Button(this);
-        btnLocal.setText(R.string.kcu_import_pick);
+        android.widget.Button btnLocal = KcuUi.secondaryButton(this, getString(R.string.kcu_import_pick));
         btnLocal.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(Intent.createChooser(intent, getString(R.string.kcu_import_pick)), REQUEST_PICK);
         });
-        root.addView(btnLocal);
+        card.addView(btnLocal);
 
-        status = new TextView(this);
-        status.setTextSize(12f);
-        status.setGravity(Gravity.CENTER_HORIZONTAL);
-        status.setPadding(0, (int) (18 * density), 0, 0);
-        root.addView(status);
+        status = KcuUi.status(this, "");
+        status.setPadding(0, KcuUi.dp(this, 16), 0, 0);
+        card.addView(status);
 
+        root.addView(card);
+        scroll.addView(root);
         setContentView(scroll);
     }
 
