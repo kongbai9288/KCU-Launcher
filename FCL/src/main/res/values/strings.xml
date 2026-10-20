@@ -665,6 +665,8 @@
     <string name="menu_settings_mouse_offset_x">Mouse Offset X</string>
     <string name="menu_settings_mouse_offset_y">Mouse Offset Y</string>
     <string name="menu_settings_physical_mouse_mode">Physical Mouse</string>
+    <string name="menu_settings_kcu_dp_threshold">KCU dp threshold</string>
+    <string name="menu_settings_kcu_mouse_disguise">KCU mouse disguise</string>
     <string name="menu_settings_slide_acceleration">Slide Acceleration</string>
     <string name="menu_settings_distance_acceleration">Distance Acceleration</string>
     <string name="menu_settings_simultaneous_view_control">Simultaneous View Control</string>
