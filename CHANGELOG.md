@@ -402,3 +402,66 @@ sha256 0bc7bb590c90bdbd82c00e4dc96b9a124288b240f5bbf05fdba29cbc41174d87
 - 旁证：产物 sha256 随签名改变 `0bc7bb59…` → `8898d29b…`。
 
 状态：签名 **PROVEN**。**实机安装仍未验证**；全架构产物未逐个验签。
+
+## 0.11.0 — 2026.10.20
+
+执行者：**yuanbao**
+
+- 落地用户提供的《MCJE 移动端输入沙盒：工程设计细节与交互规范 v5.0》，新增 `docs/01-架构/输入交互规范v5.md`。
+
+### 归属分流（先看这个，再谈实现）
+
+| 节 | 归属 | 本项目 |
+|---|---|---|
+| 一~六 | **游戏内**（TouchController） | 不实现 |
+| 七 | **启动器** | 该做 |
+
+启动器重做手势会与游戏内接管打架（v0.7.0 已论证）。但第七节的「事件源判定」发生在手势语义之前，天然在启动器侧。
+
+### 上游已实现，不需重做（实测）
+
+| 规范条目 | 位置 |
+|---|---|
+| 系统拦截强制松开左键 / 切后台归零 | `TouchPad.java:186-190` |
+| 非主控手指抬起不重置 | `TouchPad.java:323` |
+| 一个按键只归一根手指 | `FCLInput.acquireLookOwner` |
+| 渲染帧同步（切界面重锚丢弃本帧） | `TouchPad.java:279-288` |
+| 首帧跳变消除 | `TouchPad.java:296-303` |
+| Raw Input 1:1 不加滤镜 | `TouchPad.java:307-315` |
+
+### 【修正】v0.6.0 的判断是错的
+
+`MenuSetting.kt:195` → `var mouseMoveMode: MouseMoveMode = MouseMoveMode.CLICK`
+
+**默认就是 CLICK。** 此前建议用户"切换到 CLICK"的前提不成立。
+
+### 【新发现】点击难受的真因：阈值写的是 px
+
+```java
+// TouchPad.java:247-248 / 330-331
+&& Math.abs(event.getX() - downX) <= 10
+&& Math.abs(event.getY() - downY) <= 10
+```
+
+`getX()` 返回 px，这个 `10` 是 **10 px**：
+
+| 密度 | 折算 |
+|---|---|
+| mdpi 1.0 | 10 dp |
+| xxhdpi 3.0 | 3.3 dp |
+| xxxhdpi 3.5（2K 屏） | **2.9 dp** |
+
+**在主流 2K 屏上点击容差不到 3 dp** —— 手指任何微小位移都超出。与用户原话"点击非常难受，压根点不到位置"完全吻合。
+
+修还是不修：改手势逻辑 ❌（层级错误）；仅把 px 换成 dp ✅（纯单位修正，不改事件语义）。**待用户确认后再动。**
+
+### 新模式：底层鼠标伪装
+
+上游 `isPhysicalMouseMode`（默认 false，已实现）是「**外接**鼠标如何驱动光标」；
+用户要的是「**底层把鼠标伪装成触摸**时如何识别」——**两件事，未实现，不可复用同一开关**。
+
+判别手段：`getSource()` 在伪装下可能仍报 `SOURCE_TOUCHSCREEN`，**`getToolType()` 更可能暴露 `TOOL_TYPE_MOUSE`**。上游全仓库仅 SDL 相关文件用了它。⚠️ 未真机验证，属技术推断。
+
+菜单接入点已定位：`RightMenuAdapter.kt` → `RightMenuCategory.MOUSE` → 照 `Row.SwitchRow` 新增，同步 `MenuSetting`（字段+序列化三处）/ `RightMenuTag` / `strings.xml`。
+
+状态：**设计完成，未实现**，待确认。全程未实机验证。
