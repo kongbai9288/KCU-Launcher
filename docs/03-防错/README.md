@@ -283,3 +283,14 @@
 129. **CI 上报必须区分三态，不能二值**：成功 / 失败 / **结果未知**。早期版本在取不到 `GRADLE_OK` 环境变量时把成功构建标成"失败"（issue #20，实际 conclusion=success）。二值判断会把"没拿到信号"误当成"失败"，是另一种谎报。
 130. **产物名是版本与包名的最强证据**：`KCU-release-0.9.0-arm64-v8a.apk` 这个文件名同时证明了 applicationId 改名生效、versionName 生效、命名约定生效。比读配置文件可靠，因为它是构建实际输出。
 131. **改 applicationId 后必须查 strings.xml / resources**：`${applicationId}` 会在 Manifest 自动跟随，但 **res/values 里的硬编码 authority 不会**。本例漏了一处 `file_browser_provider`（release 变体走它），靠 CI 全仓 grep 才发现。
+
+---
+
+## 18. 追加硬规则（v15，2026-10-20 12:3x，签名）
+
+132. **不要相信 keystore 的扩展名，看文件头**：本例文件名 `*.jks`，但文件头是 `30 82`（ASN.1 DER SEQUENCE），实际是 **PKCS12**。不显式声明 `storeType` 时 AGP 按 JKS 解析会失败。判定方法：`keytool -list -storetype pkcs12` 能否打开，或看前 4 字节是否 `0xFEEDFEED`。
+133. **`storeType` 留环境变量覆盖位**：`System.getenv("KCU_STORE_TYPE") ?: "pkcs12"`，将来换真 JKS 不用改代码。
+134. **解析密码文件按内容分隔符而非空格**：形如 `- Keystore 密码：xxx` 的行，按空格 split 会把中文标签混进值里，导致所有候选密码解锁失败。应按全角冒号取最后一段。
+135. **「恢复签名库」成功 ≠ APK 已签名**：必须有独立的 `apksigner verify --print-certs` 步骤，由产物自己证明。否则可能签名为空却一路绿灯。
+136. **密码/keystore 绝不进任何仓库**：只走 CI secrets（libsodium sealed box 加密）。沙盒内处理完立即删除，不留在待上传目录。
+137. **产物 sha256 变化可作签名旁证**：签名会改变 APK 字节。本例未签名 `0bc7bb59…` → 签名后 `8898d29b…`。
