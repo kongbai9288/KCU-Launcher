@@ -1,6 +1,30 @@
 [
   {
     "type": "release",
+    "versionCode": 15,
+    "versionName": "0.15.0",
+    "date": "2026.10.20",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "落地公共目录清单 manifest.json，解决迁移工具读不到启动器实际目录布局的问题（用户做本项目的根本原因）。",
+          "API 终点追踪：Profile.gameDir 是绝对路径，反序列化时直接读入不经 FCLPath，故实例目录与公共根可不同源——这正是需要清单的原因。",
+          "挂点：SplashActivity.enterLauncher() 的 Dispatchers.IO 块内，ConfigHolder.init() 之后、startActivity 之前。路径与实例均已就绪，且不在主线程。",
+          "新增 KcuManifest.java（com.tungsten.fcl.util），写 <root>/manifest.json，含 schemaVersion/generatedAt/packageName/root/paths/instances。",
+          "paths 含 minecraft/privateCommon/runtime/modRuntime/java/lwjgl/log/control/share/nativesExternal/nativeLibDir。nativesExternal 为玩家自带 so 素材目录，明确区别于可 dlopen 的私有目录。",
+          "严格审核发现的真实风险并已修：Files.write 要求 API 26 而 minSdk 正好 26 属边界值，改用 FileOutputStream 传统流。",
+          "写入全程 catch Throwable 静默忽略，绝不阻断启动；实例列表单独 try-catch，失败仍写路径部分。",
+          "已知局限：清单只在启动时写，实例变更后需重启才反映，含 generatedAt 供外部判断新鲜度；根为 FCL 时清单落在 FCL 下，迁移工具需扫两个候选。",
+          "审核 pass。哈希回执：KcuManifest.java:60 -> outcl -> SHA-1 b8a7fbfbf3b40238f0c8a44a94ade8fc2be7bccd。",
+          "编译验证 PROVEN：Actions run 39375975967，五架构全绿。实机未验证清单是否真的生成。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 14,
     "versionName": "0.14.0",
     "date": "2026.10.20",
