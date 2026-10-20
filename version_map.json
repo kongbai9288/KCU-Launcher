@@ -1,6 +1,28 @@
 [
   {
     "type": "release",
+    "versionCode": 11,
+    "versionName": "0.11.0",
+    "date": "2026.10.20",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "落地《MCJE 移动端输入沙盒：工程设计细节与交互规范 v5.0》，新增 docs/01-架构/输入交互规范v5.md。",
+          "归属分流：一到六节（意图分流/点击判定/视角手感/多指协同/竞态防御）属游戏内 TouchController，启动器不实现；第七节（dp 阈值、底层鼠标伪装）属启动器侧。",
+          "盘点上游已有实现：系统拦截强制松开、切后台归零、非主控手指不重置、视角独占、渲染帧同步重锚、首帧跳变消除、Raw Input 1:1 下发——均已在 TouchPad/FCLInput 中，不需重做。",
+          "【修正 v0.6.0 的错误判断】mouseMoveMode 默认就是 CLICK（MenuSetting.kt:195），此前建议用户切 CLICK 的前提不成立。",
+          "【新发现·真因】点击判定阈值写死 10 px（TouchPad.java:247/248/330/331），未做 density 换算，2K 屏上仅约 2.9 dp。这才是用户抱怨点击难受的真正原因。",
+          "定位新模式的菜单接入点：RightMenuAdapter.kt 的 RightMenuCategory.MOUSE 下，照 Row.SwitchRow 模式新增，需同步 MenuSetting（字段+序列化三处）、RightMenuTag、strings.xml。",
+          "区分两个鼠标模式：上游 isPhysicalMouseMode 是外接鼠标驱动光标（已实现），用户要的是底层鼠标伪装识别（未实现），不可复用同一开关。",
+          "未实现：10px→dp 修正、底层鼠标伪装模式。两者均待用户确认。getToolType 在伪装场景的实际返回值未真机验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 10,
     "versionName": "0.10.0",
     "date": "2026.10.20",
