@@ -1,6 +1,29 @@
 [
   {
     "type": "release",
+    "versionCode": 16,
+    "versionName": "0.16.0",
+    "date": "2026.10.20",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "按用户要求新增改动台账 docs/00-总览/改动台账.md，按文件组织，供后续维护定位每处改动的来源与原因。",
+          "盘点全部 15 轮改动，逐文件记录：build.gradle.kts、FCLPath.java、KcuManifest.java(新)、SplashActivity.kt、MenuSetting.kt、RightMenuAdapter.kt、GameMenu.java、TouchPad.java、两份 strings.xml、build.yml。",
+          "台账含四个索引：轮次索引、按文件索引、新增文件、已删除文件（上游 key-store.jks / debug-key.jks / private_key.pepk），以及遗留与风险清单。",
+          "【发现并修复重大不一致】build.gradle.kts 长期停在 0.9.0 / code 9，而 version_map 与 CHANGELOG 已到 0.15.0。产物名一直是 KCU-release-0.9.0-*.apk，前面几轮报的产物名全部与文档版本号脱节。已同步为 0.15.0 / 15 并用产物名证实。",
+          "证伪证据：产物 ./FCL/build/outputs/apk/release/KCU-release-0.15.0-arm64-v8a.apk 172648037 bytes，sha256 e006b5269ed5c94bc08d356dc0342efd7ad9e6bcdaabdcb41d5ef2fe694e3385，签名 DN CN=kbs 与之前一致。",
+          "识别上游 updateMap 任务会用 build.gradle 的版本覆盖 version_map.json，与手工维护历史条目冲突，已记入台账告警：不要运行。",
+          "清理历史噪音：曾因临时开启 always() 上报导致被跳过的矩阵任务也报失败，产生 issue 28-37 共 10 条。真正抑制条件是 arch 过滤，已验证有效。",
+          "新增防错规则 160-164：改动台账、版本真源、禁用 updateMap、KCU 标记、不长期开启always上报。",
+          "未做：实机验证全程仍为零。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 15,
     "versionName": "0.15.0",
     "date": "2026.10.20",
