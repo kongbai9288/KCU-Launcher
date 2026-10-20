@@ -582,3 +582,75 @@ return kcu;
 Actions run **39374234610**：Build release / 列出产物 / 验证签名 均 success，产物 `app-arm64` 170393777 B。
 
 状态：编译 PROVEN，**实机未验证**。
+
+## 0.14.0 — 2026.10.20
+
+执行者：**yuanbao**
+
+- **按用户修正的定义重做严格自我审核**
+
+  > 用户：自我审核指的是严格预估可能会导致的错误，并且在使用逻辑上会对以后造成什么干扰
+
+  v0.13.0 只做了语法/依赖检查，未达标准，**已推翻重做**。
+
+### 被否决的实现
+
+```java
+if (legacy.exists() && !kcu.exists()) return legacy;  // 以目录存在性判定
+```
+
+存在性**可变且可被外部改变**，作为持久决策依据是根本缺陷。
+
+### 预估出的错误
+
+| # | 错误 | 严重度 |
+|---|---|---|
+| A | 外部创建 `/sdcard/KCU` 即触发根漂移，存量数据"消失" | **严重** |
+| B | 切到 KCU 后 `init()` 的 mkdirs 坐实存在，首次误判即永久 | **严重** |
+| C | 无权限时 `exists()` 静默 false；且 `Config.java:149` 使静态初始化早于 `loadPaths` | 较严重 |
+| D | `:crash`/`:jvm` 独立进程各自计算，可能拿到不同根 | 中 |
+
+**错误 A 必然发生**：本项目自带的 KCU Migrator 天然会创建 `/sdcard/KCU`。
+
+### 对未来的干扰
+
+| 干扰 | 说明 |
+|---|---|
+| 迁移工具无法对齐 | Migrator 从外部看文件系统，不知启动器选了哪个根 |
+| manifest 契约无处安放 | 计划中的 `/sdcard/KCU/manifest.json` 依赖根 |
+| 自定义 .so 双层目录失去依托 | `natives/<abi>/` 也在根下 |
+| 无法向用户解释 | 启动器自己都说不清数据在哪个目录 |
+
+根是地基，地基漂移则上层全部不可靠。
+
+### 修复
+
+```java
+if (new File(kcu, KCU_ROOT_MARKER).exists())    return kcu;      // 已固化
+if (new File(legacy, KCU_ROOT_MARKER).exists()) return legacy;
+boolean legacyHasData = new File(legacy, ".minecraft").exists();  // 看内容不看外壳
+// marker 写入失败不阻断 -> 下启重新判定，自愈错误 C
+```
+
+### 残余风险（如实）
+
+- 静态初始化期磁盘 IO，未真机验证是否触发 StrictMode
+- 多进程独立计算**未修**，marker 固化后趋同但无跨进程同步保障
+
+### 自我审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `FCLPath.java` |
+| 行 | **71** |
+| 原文 | `return chosen.getAbsolutePath();` |
+| 5 个不同字母 | `r e t u n` |
+| **SHA-1** | **`c0781ed3e29ec775c6bb8dc4be2015a32ea8593b`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39375222293**：五架构全绿
+
+`all 327461621 / x86_64 176087668 / arm64 170393441 / arm 163134150 / x86 156782307`
+
+状态：编译 PROVEN，**实机未验证**。
