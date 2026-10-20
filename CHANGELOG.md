@@ -881,3 +881,56 @@ Accounts.FACTORIES → OfflineAccountFactory.create → new OfflineAccount
 Actions run **39460420664**：Build release / 列出产物 / 验证签名 均 success。
 
 遗留：设置页年龄修改入口、`KcuAccountFlow` 接入 UI、`KcuDevMode` 接入可见性控制、揉纸 UI 落地。**实机未验证。**
+
+## 0.19.0 — 2026-10-21
+
+执行者：**yuanbao**
+
+- **开发者模式开关文件：`/sdcard/KCU/dev_mode`**
+
+  `.minecraft` 同级，**存在即开启**，不看内容，删掉即关闭。
+
+- **原下载入口移入开发者模式**，默认改为手动导入
+
+### API 终点追踪
+
+```
+MainActivity.onSelect → download 分支 → switchUI(downloadUI) → DownloadUI.onCreate
+MainActivity.applyPendingOpenDownload → switchUI(downloadUI)  ← 第二条入口
+```
+
+**两条都拦截了**——只拦菜单会被第二条绕过。
+
+### 关闭状态（默认）
+
+点「下载」→ 新增的导入页：填版本标识后**按地址下载**或**选择本地文件**，写入 `<gameDir>/versions/<id>/<id>.jar`（与 `DefaultGameRepository.getVersionRoot` 一致）。
+
+### 开启状态
+
+原 `downloadUI`：版本安装 / mod / 整合包 / 资源包 / 地图 / 光影 / 收藏。
+
+### 令牌校验与清除
+
+`verifyOwner(token)`：`GET api.github.com/user`，Bearer 令牌，仅 200 且响应含 `"login"` 与 `kongbai9288` 才通过。网络不可用或异常一律 false。
+
+`clearMarks()`：清除 `dev_mode`、`.kcu_root`、年龄声明。调用前必须先通过校验。
+
+### 严格审核抓出的坑
+
+**Kotlin 中 `return` 位于 `binding.apply{}` 内联 lambda 内属非局部返回**，语义依赖内联、易误读。已改为 if-else 显式分支。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuDevMode.java` |
+| 行 | **28** |
+| 原文 | `private static final String EXPECTED_LOGIN = "kongbai9288";` |
+| 5 个不同字母 | `p r i v a` |
+| **SHA-1** | **`28399ad1e9d4bd701852ebb005259fe30f57e756`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39463084086**：Build release / 列出产物 / 验证签名 均 success。
+
+遗留：导入页不写版本 json（故不会出现在版本列表）；其余 `switchUI(downloadUI)` 入口未全覆盖；`clearMarks()` 未接 UI。**实机未验证。**
