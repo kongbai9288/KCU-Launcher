@@ -524,3 +524,61 @@ sha256 0bc7bb590c90bdbd82c00e4dc96b9a124288b240f5bbf05fdba29cbc41174d87
   | 产物 | `app-arm64` 170392504 B |
 
 状态：编译 **PROVEN**。**功能效果未实机对比**；`getToolType` 在伪装场景的实际返回值仍未证实。
+
+## 0.13.0 — 2026.10.20
+
+执行者：**yuanbao**
+
+- **本轮起执行新规范**：动手前追踪 API 最后一层 → 自我审核 → `pass` + SHA-1 回执。规则已写入防错清单 151–153。
+
+### API 终点追踪
+
+```
+SHARED_COMMON_DIR
+  → Config.commonDirectory / Profiles.Profile.gameDir / LauncherSettingPage
+  → FCLGameRepository.changeDirectory → setBaseDirectory
+  → FCLCacheRepository.directory listener → changeDirectory(Paths.get(t))
+  → DefaultCacheRepository.changeDirectory → CacheRepository.changeDirectory
+  → 【终点】java.nio.file.Files
+```
+
+**终点是 Java NIO 文件 IO**，不是 JNI、不是 ContentProvider、不参与 `dlopen` 或签名校验。改这个字符串不牵动原生层。
+
+**附带发现**：`Profiles.checkProfiles()` 只在 profiles 为空时建默认档 → 改动**只影响首次启动**，老用户存的是绝对路径，不受影响。
+
+### 改动（FCLPath.java）
+
+| 字段 | 原值 | 新值 |
+|---|---|---|
+| `KCU_SHARED_ROOT` | — | 新增 |
+| `SHARED_COMMON_DIR` | `/sdcard/FCL/.minecraft` | `KCU_SHARED_ROOT + "/.minecraft"` |
+| `LOG_DIR` | `/sdcard/FCL/log` | `KCU_SHARED_ROOT + "/log"` |
+| `CONTROLLER_DIR` | `/sdcard/FCL/control` | `KCU_SHARED_ROOT + "/control"` |
+| `SHARE_DIR` | `/sdcard/FCL/share` | `KCU_SHARED_ROOT + "/share"` |
+
+旧目录兼容（**要么全 FCL，要么全 KCU，不混用**）：
+
+```java
+if (legacy.exists() && !kcu.exists()) return legacy;  // 迁移用户数据不丢
+return kcu;
+```
+
+### 自我审核：pass
+
+11 项检查全过（初始化顺序 / import / 括号配对 / 无残留硬编码 / 无副作用 / 兼容性 / 不触 native）。
+
+**哈希回执**
+
+| 项 | 值 |
+|---|---|
+| 文件 | `FCLPath.java` |
+| 行 | **85** |
+| 原文 | `SHARE_DIR = KCU_SHARED_ROOT + "/share";` |
+| 5 个不同字母 | `S H A R E` |
+| **SHA-1** | **`dd19b86ae45a271261a2769df9693b7eeeac1d33`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39374234610**：Build release / 列出产物 / 验证签名 均 success，产物 `app-arm64` 170393777 B。
+
+状态：编译 PROVEN，**实机未验证**。
