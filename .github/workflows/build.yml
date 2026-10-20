@@ -117,9 +117,9 @@ jobs:
       - name: 验证签名
         if: ${{ steps.guard.outputs.has_source == 'true' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         run: |
-          SIGN_TXT=/tmp/sign.txt
           {
-            echo "=== APK 签名验证 ==="
+            echo "### APK 签名验证 (${{ matrix.arch }})"
+            echo '```'
             for apk in $(find . -name "*.apk" -type f); do
               echo "--- $apk ---"
               APKSIGNER=""
@@ -132,11 +132,28 @@ jobs:
                 echo "(apksigner 不可用，改用 keytool -printcert -jarfile)"
                 keytool -printcert -jarfile "$apk" 2>&1 | head -25
               fi
-              echo "META-INF:"
-              unzip -l "$apk" 2>/dev/null | grep -i "META-INF" || echo "  (无 META-INF)"
             done
-          } | tee "$SIGN_TXT"
-          { echo "SIGN_INFO<<EOF_DELIM"; cat "$SIGN_TXT"; echo; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          # 同时并入产物清单，随既有上报路径回传（该路径已验证可用）
+          {
+            echo "=== APK 签名验证 ==="
+            for apk in $(find . -name "*.apk" -type f); do
+              echo "--- $apk ---"
+              APKSIGNER=""
+              if [ -n "$ANDROID_HOME" ]; then
+                APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | head -1)
+              fi
+              if [ -n "$APKSIGNER" ]; then
+                "$APKSIGNER" verify --print-certs "$apk" 2>&1 | head -20
+              else
+                keytool -printcert -jarfile "$apk" 2>&1 | head -25
+              fi
+            done
+          } > /tmp/sign.txt 2>&1
+          cat /tmp/apk.txt /tmp/sign.txt > /tmp/apk_all.txt
+          cp /tmp/apk_all.txt /tmp/apk.txt
+          { echo "APK_LISTING<<EOF_DELIM"; head -c 6000 /tmp/apk.txt; echo; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: Upload APK
         if: steps.guard.outputs.has_source == 'true'
@@ -147,7 +164,7 @@ jobs:
           if-no-files-found: warn
 
       - name: 构建结果上报（始终）
-        if: always()
+        if: ${{ always() && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -160,7 +177,6 @@ jobs:
           title = ("build 成功: " if ok == 'true' else ("build 失败: " if ok == 'false' else "build 结果未知: ")) + arch
           body = ("arch=" + arch + "\ngradle_ok=" + ok + "\n\n## 产物清单\n```\n"
                   + listing[-3000:] + "\n```")
-          body += "\n## 签名信息\n```\n" + sign[:2000] + "\n```"
           if ok != 'true' and log:
               body += "\n## 构建日志尾部\n```\n" + log[-4000:] + "\n```"
           req = urllib.request.Request(
