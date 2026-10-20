@@ -934,3 +934,58 @@ MainActivity.applyPendingOpenDownload → switchUI(downloadUI)  ← 第二条入
 Actions run **39463084086**：Build release / 列出产物 / 验证签名 均 success。
 
 遗留：导入页不写版本 json（故不会出现在版本列表）；其余 `switchUI(downloadUI)` 入口未全覆盖；`clearMarks()` 未接 UI。**实机未验证。**
+
+## 0.20.0 — 2026-10-21
+
+执行者：**yuanbao**
+
+- **开关改为 SHA3-256 内容校验**
+
+  存在性不再生效。`/sdcard/KCU/dev_mode` 的 SHA3-256 必须等于：
+
+  ```
+  4c238702173b7a01d082f2c6f840d8f149e28e6b081a60e54b452d7c9c5453e0
+  ```
+
+  不存在 / 为空 / 超 64MB / 哈希不符 → 一律关闭。
+
+  自实现 SHA3-256：`MessageDigest.getInstance("SHA3-256")` 由 Java 9 SUN provider 引入，Android 各版本支持不一致。算法用四个标准向量验证通过。
+
+- **新增 `KcuUi`**：界面构建唯一入口，配色取自设计稿。年龄页、导入页、受限页已全改走它。
+
+### 使用逻辑审查抓出的真 bug
+
+**年龄声明永远存不下。**
+
+拦截在 `SplashActivity.onCreate` 最前，而 `ConfigHolder.init()` 在 `enterLauncher()` 才执行：
+
+```java
+public static Config config() {
+    if (configInstance == null) {
+        throw new IllegalStateException("Configuration hasn't been loaded");
+    }
+}
+```
+
+被 try-catch 吞掉后 → `isDeclared()` 恒 false → **每次冷启动都弹年龄页**；`declare()` 同样抛异常 → **点了确认也不保存**。
+
+改为独立 SharedPreferences 后修复。
+
+### 冒烟测试
+
+Actions run **39466009083**：Build release / 列出产物 / 验证签名 均 success。
+
+未覆盖：真机安装与实际点击。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuDevMode.java` |
+| 行 | **28** |
+| 5 个不同字母 | `p r i v a` |
+| **SHA-1** | **`28399ad1e9d4bd701852ebb005259fe30f57e756`** |
+
+新增规则 165–171。
+
+未做：主界面三栏结构未换、其余上游页面未替换、`verifyOwner`/`clearMarks` 未接 UI、导入页不写版本 json。
