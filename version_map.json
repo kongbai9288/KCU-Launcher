@@ -1,6 +1,35 @@
 [
   {
     "type": "release",
+    "versionCode": 26,
+    "versionName": "0.26.0",
+    "date": "2026.10.22",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "追溯到底：ThemeEngine 搜索命中 87 个文件，ThemeData 6 个，ThemePreference 3 个，themeDataStore 3 个。",
+          "不能直接删类：87 个 View（FCLTextView/FCLButton/FCLSwitch/FCLSpinner/FCLEditText 等）在构造时调 ThemeEngine.registerEvent、运行时调 getTheme()，删类会导致 87 个文件全崩。",
+          "正确拆法：保留 API 面使 87 个调用点零改动，抽掉用户可改的能力，让主题恒定纸面。行为上主题引擎已死，代码上不崩。",
+          "ThemeData.getTheme 改为颜色与背景常量（COLOR #3D6B66、COLOR_DARK #4F8580、COLOR2 #2C2C2A、COLOR2_DARK #E4E1D8、ALPHA 255），不再迁移旧 SharedPreferences，不再读自定义背景文件；saveTheme 仅持久化 fullscreen/closeSkinModel/animationSpeed 三个功能偏好。",
+          "ThemeEngine 废弃为 no-op 共 7 个接口：applyColor、applyColorDark、applyColor2、applyColor2Dark、applyBackground、applyColorAlpha，以及四个颜色 applyAndSave 与背景 applyAndSave。",
+          "LauncherSettingAdapter 删除 7 个设置项：四个配色 ButtonRow（theme/theme_dark/theme2/theme2_dark）、color_alpha SeekBarRow、background_lt 与 background_dk ButtonRow。",
+          "移除的能力：自定义主色/深色主色/次色/深色次色、从背景图取色、自定义亮暗背景图、派生色 alpha 调节。保留：亮暗模式（必要）、全屏/皮肤模型/动画速度（功能偏好非观感）、视频背景（未动）。",
+          "审核抓到的编译错误：初版写 private const val COLOR = 0xFF3D6B66.toInt()，const 不能调用 .toInt()（非编译期常量）必然编译失败，已改为普通 val。",
+          "清理：ThemeEngine 中因 applyBackground no-op 而不再使用的 5 个 import（ImageUtil/BitmapDrawable/ConvertUtils/FCLPath/File）已移除。",
+          "对用户使用逻辑的影响：设置页四个配色项与 alpha 条已消失、亮暗背景图项已消失、视频背景仍在、亮暗模式与皮肤模型与动画速度仍生效、老用户此前存的颜色被忽略一律纸面。",
+          "对代码逻辑的影响：updateTheme 仅被 fullscreen/skinModel/animationSpeed 三条路径调用使刷新范围缩小、getTheme 不再读文件使启动略快且不再依赖存储权限、registerEvent 语义不变故 87 个调用点零影响。",
+          "审核 pass。哈希回执：ThemeData.kt:116 -> priva -> SHA-1 28399ad1e9d4bd701852ebb005259fe30f57e756。",
+          "冒烟测试按新标准（artifacts 数量为准）：第一步 run 39631078553 产出 5 个 APK arm64 169186752 字节；第二步 run 39632971157 产出 5 个 APK arm64 169186090 字节。均无新增失败 issue。",
+          "下轮待清死代码：LauncherSettingPage 的 showColorPicker/selectImage/fetchBackgroundColor/fetchPrimaryColor/fetchSecondaryColor/resetBackground 已无调用点，4 个配色 case 与 2 个背景 case 已成死分支，ThemePreference 四个颜色字段与 colorAlpha 可精简。",
+          "未做：上述死代码未清、历史假 issue #163-167 未清理、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 25,
     "versionName": "0.25.0",
     "date": "2026.10.21",
