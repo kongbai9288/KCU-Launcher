@@ -43,6 +43,7 @@ public class MainUI extends FCLCommonUI implements View.OnClickListener {
     private FCLTextView announcementView;
     private FCLTextView date;
     private FCLButton hide;
+    private FCLTextView watermark;
     private Announcement announcement = null;
 
     private SkinViewer skinViewer;
@@ -66,8 +67,9 @@ public class MainUI extends FCLCommonUI implements View.OnClickListener {
         announcementView = findViewById(R.id.announcement);
         date = findViewById(R.id.date);
         hide = findViewById(R.id.hide);
-        ThemeEngine.getInstance().registerEvent(announcementLayout, () -> announcementLayout.getBackground().setTint(ThemeEngine.getInstance().getTheme().getColor()));
         hide.setOnClickListener(this);
+        watermark = findViewById(R.id.watermark);
+        watermark.setText(getContext().getString(R.string.app_name) + " " + getContext().getString(R.string.app_version));
 
         skinViewer = findViewById(R.id.skin_viewer);
         renderer = new SkinRenderer(getContext());
