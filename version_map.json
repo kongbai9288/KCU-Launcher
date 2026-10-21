@@ -1,6 +1,31 @@
 [
   {
     "type": "release",
+    "versionCode": 23,
+    "versionName": "0.23.0",
+    "date": "2026.10.21",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "API 终点追踪：公告卡底色不在 XML 里而在 MainUI 的 ThemeEngine.registerEvent 中被 setTint(theme.getColor()) 覆盖。只改 XML 无效，已删除该 tint 回调。",
+          "新增纸面色资源两组（亮暗各一套）：kcu_ink / kcu_ink_2 / kcu_ink_3 / kcu_accent / kcu_line / kcu_card / kcu_watermark_bg。卡片底色走 color 资源而非硬编码，避免深色模式下仍是亮块。",
+          "新增 bg_card_paper（10dp 圆角 + 描边）与 bg_watermark（胶囊底）。",
+          "ui_main.xml：公告容器加 constraintWidth_max 560dp、卡底改 bg_card_paper、分隔线 darker_gray 改 kcu_line、链接色 #77FF00 荧光绿改 kcu_accent、新增底部中央水印。",
+          "MainUI.java：删除公告卡主色 tint；绑定 R.id.watermark 并填入 app_name + app_version。",
+          "strings.xml：app_name 由 Fold Craft Launcher 改为 KCU Launcher（translatable=false，仅此一份）。",
+          "审核要点：删除 tint 后 announcementLayout 字段仍被使用故保留声明；ThemeEngine import 仍用于 isCloseSkinModel 故保留；app_version 是 resValue 生成而非 strings 定义，MainActivity 已在使用故引用成立。",
+          "模拟使用逻辑：有公告亮色纸卡墨字、深色深卡浅字、无网络时异常捕获容器保持 GONE、点隐藏容器 GONE 水印不受影响、首页底部显示 KCU Launcher 0.23.0、宽屏公告容器上限 560dp、标题栏显示新名、皮肤预览未改。",
+          "审核 pass。哈希回执：MainUI.java:72 -> water -> SHA-1 6d5a45920a15adea049c8f22d569ff209625a43b。",
+          "冒烟测试：Actions run 39550429538，Build release/列出产物/验证签名 均 success；XML 经 ElementTree 校验。未覆盖真机观感、水印是否被 SkinViewer 遮挡。",
+          "未做：空状态引导页、衣柜视图、上百个页面布局仍是上游结构、深色配色无设计稿依据。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 22,
     "versionName": "0.22.0",
     "date": "2026.10.21",
