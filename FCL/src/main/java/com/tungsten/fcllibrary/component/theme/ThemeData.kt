@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import androidx.core.graphics.ColorUtils
-import com.mio.util.ImageUtil
 import com.tungsten.fcl.FCLApp
 import com.tungsten.fcl.R
 import com.tungsten.fcllibrary.util.ConvertUtils
@@ -112,66 +111,52 @@ data class ThemeData(
     }
 
     companion object {
-        /** 从 DataStore 加载主题（背景缺失时回退内置默认图；首次迁移旧 SharedPreferences 配置） */
+
+        // 纸面观感：配色固定，不提供用户自定义入口
+        private val COLOR = 0xFF3D6B66.toInt()
+        private val COLOR_DARK = 0xFF4F8580.toInt()
+        private val COLOR2 = 0xFF2C2C2A.toInt()
+        private val COLOR2_DARK = 0xFFE4E1D8.toInt()
+        private const val ALPHA = 255
+        private const val ANIMATION_SPEED = 8
+
+        /**
+         * 构建主题。颜色与背景为常量，仅全屏/皮肤模型/动画速度沿用用户偏好。
+         * 不再读取自定义背景文件，也不再迁移旧 SharedPreferences。
+         */
         @JvmStatic
         fun getTheme(context: Context): ThemeData {
-            val pref = runBlocking { context.themeDataStore.data.first() }
-            // 一次性迁移：DataStore 尚未写入过且旧 SharedPreferences 有主题配置时迁移并回写
-            val migrated = pref == ThemePreference() &&
-                    context.getSharedPreferences("theme", Context.MODE_PRIVATE)
-                        .contains("theme_color")
-            val effective = if (migrated) migrateFromSharedPreferences(context) else pref
-            val lt = ImageUtil.load(context.filesDir.absolutePath + "/background/lt.png")
-                .orElse(ConvertUtils.getBitmapFromRes(context, R.drawable.background_light))
-            val dk = ImageUtil.load(context.filesDir.absolutePath + "/background/dk.png")
-                .orElse(ConvertUtils.getBitmapFromRes(context, R.drawable.background_dark))
+            val lt = BitmapDrawable(
+                context.resources,
+                ConvertUtils.getBitmapFromRes(context, R.drawable.background_light)
+            )
+            val dk = BitmapDrawable(
+                context.resources,
+                ConvertUtils.getBitmapFromRes(context, R.drawable.background_dark)
+            )
+            val pref = runCatching {
+                runBlocking { context.themeDataStore.data.first() }
+            }.getOrNull()
             return ThemeData(
-                effective.color, effective.colorDark, effective.color2, effective.color2Dark,
-                effective.fullscreen, effective.closeSkinModel, effective.animationSpeed,
-                effective.colorAlpha,
-                BitmapDrawable(context.resources, lt),
-                BitmapDrawable(context.resources, dk)
+                COLOR, COLOR_DARK, COLOR2, COLOR2_DARK,
+                pref?.fullscreen ?: false,
+                pref?.closeSkinModel ?: false,
+                pref?.animationSpeed ?: ANIMATION_SPEED,
+                ALPHA,
+                lt, dk
             )
         }
 
-        /** 读取旧 SharedPreferences 配置并写入 DataStore（一次性迁移） */
-        private fun migrateFromSharedPreferences(context: Context): ThemePreference {
-            val old = context.getSharedPreferences("theme", Context.MODE_PRIVATE)
-            val migrated = ThemePreference(
-                color = old.getInt("theme_color", ThemePreference().color),
-                colorDark = old.getInt("theme_color_dark", ThemePreference().colorDark),
-                color2 = old.getInt("theme_color2", ThemePreference().color2),
-                color2Dark = old.getInt("theme_color2_dark", ThemePreference().color2Dark),
-                fullscreen = old.getBoolean("fullscreen", ThemePreference().fullscreen),
-                closeSkinModel = old.getBoolean(
-                    "close_skin_model",
-                    ThemePreference().closeSkinModel
-                ),
-                animationSpeed = old.getInt("animation_speed", ThemePreference().animationSpeed)
-            )
-            runBlocking {
-                context.themeDataStore.updateData { migrated }
-            }
-            return migrated
-        }
-
-        /** 持久化主题（仅持久化可配置字段，派生色与背景不保存）。
-         *  异步写入不阻塞调用线程（设置页回调在 UI 线程，同步等待会导致卡顿）；
-         *  写入失败静默忽略（与原 SharedPreferences.apply 语义一致） */
+        /** 颜色不可自定义，仅持久化功能偏好；失败静默忽略 */
         @JvmStatic
         fun saveTheme(context: Context, theme: ThemeData) {
             CoroutineScope(Dispatchers.IO).launch {
                 runCatching {
-                    context.themeDataStore.updateData {
-                        ThemePreference(
-                            color = theme.color,
-                            colorDark = theme.colorDark,
-                            color2 = theme.color2,
-                            color2Dark = theme.color2Dark,
+                    context.themeDataStore.updateData { current ->
+                        current.copy(
                             fullscreen = theme.fullscreen,
                             closeSkinModel = theme.closeSkinModel,
-                            animationSpeed = theme.animationSpeed,
-                            colorAlpha = theme.colorAlpha
+                            animationSpeed = theme.animationSpeed
                         )
                     }
                 }
