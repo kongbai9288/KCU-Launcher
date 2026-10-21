@@ -1172,3 +1172,83 @@ SettingUI → getPageCount() / createPage(int) / getTabTitles()
 Actions run **39620814600**：Build release / 列出产物 / 验证签名 均 success。
 
 遗留：清除标记会连带清年龄声明但页面未提示；5 个页签排布未确认；导入页不写版本 json。**实机未验证。**
+
+## 0.25.0 — 2026-10-21
+
+执行者：**yuanbao**
+
+**【重大】修复谎报成功事故。**
+
+### 事故
+
+严格审核时发现 `KcuDevMode.java:195` 裸用 `OutputStream` 而无 import，与连续多轮"编译 success"矛盾。
+
+注入语法错误 canary 后触发编译：
+
+| 观察项 | 结果 |
+|---|---|
+| job conclusion | **success** |
+| artifacts | **0 个** |
+| 告警 issue | **5 条** |
+
+**编译确实失败，job 却显示成功。**
+
+### 根因
+
+```bash
+./gradlew ... | tee /tmp/build.log
+GE=${PIPESTATUS[0]}
+if [ "$GE" -eq 0 ]; then echo "GRADLE_OK=true"...; else echo "GRADLE_OK=false"...; fi
+```
+
+拿到真实退出码，但**没有一步以非零退出**。step 末条命令是 `echo`，永远成功。`GRADLE_OK=false` 只喂给 issue 上报，与 job 结论脱钩。
+
+### 影响
+
+**自 v0.17.0 起编译一直失败，APK 从未产出**——而 v0.17 至 v0.24 每轮都报 success。
+
+真实错误：
+
+```
+KcuNativeSync.java:153: error: incompatible types: Set<String> cannot be converted to List<String>
+        writeLines(record, kept);
+```
+
+### 修复
+
+- workflow：gradle 非 0 时 `exit 1`；后续步骤加 `GRADLE_OK == 'true'`；补 `pipefail`
+- `KcuNativeSync.prune`：Set 排序转 List
+- `KcuDevMode`：删除 `create()` 死代码（写入内容哈希永不匹配，是陷阱）
+
+**修改中自查抓到的新 bug**：误把 `Grant execute permission` 加上 `GRADLE_OK == 'true'`，该步骤在其赋值前执行 → chmod 不执行 → Permission denied。已恢复。
+
+### 新的验证标准（PROVEN）
+
+**编译是否成功只能以 artifacts 数量为准。**
+
+Actions run **39628208126**，5 个 APK：
+
+| 架构 | 字节 |
+|---|---|
+| all | 326258256 |
+| x86_64 | 174881420 |
+| arm64 | **169188824** |
+| arm | 161929663 |
+| x86 | 155577910 |
+
+无新增失败 issue。**首次有产物为证的编译成功。**
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuNativeSync.java` |
+| 行 | **156** |
+| 5 个不同字母 | `w r i t e` |
+| **SHA-1** | **`e1d0c6c1c29e6ad5164072a5b21340dca7fcb052`** |
+
+### 查出但未修的 8 项
+
+缓存无失效 / 账号名被忽略 / 圆角用像素 / 深色不可读 / 计数虚报 / contains 误判 / 拒中文名 / 非 final 字段
+
+新增规则 172–178。
