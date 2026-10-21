@@ -3,22 +3,22 @@ package com.tungsten.fcllibrary.component.theme
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
+
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import com.mio.util.ImageUtil
+
 import com.tungsten.fcl.R
-import com.tungsten.fclauncher.utils.FCLPath
+
 import com.tungsten.fcllibrary.component.theme.ThemeEngine.registerEvent
-import com.tungsten.fcllibrary.util.ConvertUtils
+
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.io.File
+
 import java.util.WeakHashMap
 
 /**
@@ -127,21 +127,17 @@ object ThemeEngine {
     fun getSystemAutoTint(context: Context): Int =
         if (isNightMode(context)) Color.WHITE else Color.BLACK
 
-    fun applyColor(color: Int) {
-        updateTheme { it.copy(color = color) }
-    }
+    /**
+     * 以下四项已废弃为 no-op。
+     * 纸面观感为固定配色，不再提供用户换色入口；保留签名以免上游调用点编译失败。
+     */
+    fun applyColor(color: Int) = Unit
 
-    fun applyColorDark(color: Int) {
-        updateTheme { it.copy(colorDark = color) }
-    }
+    fun applyColorDark(color: Int) = Unit
 
-    fun applyColor2(color: Int) {
-        updateTheme { it.copy(color2 = color) }
-    }
+    fun applyColor2(color: Int) = Unit
 
-    fun applyColor2Dark(color: Int) {
-        updateTheme { it.copy(color2Dark = color) }
-    }
+    fun applyColor2Dark(color: Int) = Unit
 
     fun applyFullscreen(window: Window?, fullscreen: Boolean) {
         updateTheme { it.copy(fullscreen = fullscreen) }
@@ -168,58 +164,24 @@ object ThemeEngine {
         }
     }
 
-    private fun applyBackground(context: Context, view: View?, ltPath: String?, dkPath: String?) {
-        runCatching {
-            if (ltPath != null && File(ltPath).exists()) {
-                File(ltPath).copyTo(File(FCLPath.LT_BACKGROUND_PATH), overwrite = true)
-            }
-            if (dkPath != null && File(dkPath).exists()) {
-                File(dkPath).copyTo(File(FCLPath.DK_BACKGROUND_PATH), overwrite = true)
-            }
-        }
-        val ltBitmap = ImageUtil.load(FCLPath.LT_BACKGROUND_PATH)
-            .orElse(ConvertUtils.getBitmapFromRes(context, R.drawable.background_light))
-        val dkBitmap = ImageUtil.load(FCLPath.DK_BACKGROUND_PATH)
-            .orElse(ConvertUtils.getBitmapFromRes(context, R.drawable.background_dark))
-        val lt = BitmapDrawable(context.resources, ltBitmap)
-        val dk = BitmapDrawable(context.resources, dkBitmap)
-        updateTheme { it.copy(backgroundLt = lt, backgroundDk = dk) }
-        if (view != null) {
-            val isNight =
-                (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-            ImageUtil.loadInto(view, if (isNight) dk else lt)
-        }
-    }
+    /** 自定义背景已移除：纸面纹理为内置固定资源，不再复制外部图片 */
+    private fun applyBackground(context: Context, view: View?, ltPath: String?, dkPath: String?) = Unit
 
-    fun applyAndSave(context: Context, color: Int) {
-        applyColor(color)
-        ThemeData.saveTheme(context, getTheme())
-    }
+    fun applyAndSave(context: Context, color: Int) = Unit
 
-    fun applyAndSaveDark(context: Context, color: Int) {
-        applyColorDark(color)
-        ThemeData.saveTheme(context, getTheme())
-    }
+    fun applyAndSaveDark(context: Context, color: Int) = Unit
 
-    fun applyAndSave2(context: Context, color: Int) {
-        applyColor2(color)
-        ThemeData.saveTheme(context, getTheme())
-    }
+    fun applyAndSave2(context: Context, color: Int) = Unit
 
-    fun applyAndSave2Dark(context: Context, color: Int) {
-        applyColor2Dark(color)
-        ThemeData.saveTheme(context, getTheme())
-    }
+    fun applyAndSave2Dark(context: Context, color: Int) = Unit
 
     fun applyAndSave(context: Context, window: Window, fullscreen: Boolean) {
         applyFullscreen(window, fullscreen)
         ThemeData.saveTheme(context, getTheme())
     }
 
-    fun applyAndSave(context: Context, view: View, lt: String?, dk: String?) {
-        applyBackground(context, view, lt, dk)
-        ThemeData.saveTheme(context, getTheme())
-    }
+    fun applyAndSave(context: Context, view: View, lt: String?, dk: String?) = Unit
+
 
     /** 关闭皮肤模型开关（替代原 Theme.setiIgnoreSkinContainer 字段直改） */
     fun setCloseSkinModel(closeSkinModel: Boolean) {
@@ -231,9 +193,7 @@ object ThemeEngine {
         updateTheme { it.copy(animationSpeed = animationSpeed) }
     }
 
-    /** 派生色（ltColor/dkColor）透明度 */
-    fun applyColorAlpha(alpha: Int) {
-        updateTheme { it.copy(colorAlpha = alpha) }
-    }
+    /** 派生色透明度固定，不再可调 */
+    fun applyColorAlpha(alpha: Int) = Unit
 
 }
