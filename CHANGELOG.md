@@ -1127,3 +1127,48 @@ MainUI.onCreate → ThemeEngine.registerEvent(announcementLayout) {
 Actions run **39550429538**：Build release / 列出产物 / 验证签名 均 success。
 
 未做：空状态引导页、衣柜视图、上百个页面布局仍是上游结构。**实机观感未验证。**
+
+## 0.24.0 — 2026-10-21
+
+执行者：**yuanbao**
+
+- **开发者模式页接入设置页**（此前只有 API 没有 UI）
+
+### API 终点追踪
+
+```
+SettingUI → getPageCount() / createPage(int) / getTabTitles()
+          → 【终点】FCLMultiPageUI.setupPages(container, tabLayout)
+```
+
+`getPageCount` 共 5 处实现，互不影响；基类内 `return getPageCount()` 供 adapter，无外部硬编码。
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `KcuDevPage`【新】 | 状态 / 路径 / 重新检测 / 令牌 / 校验 / 清除 / 结果 |
+| `page_kcu_dev.xml`【新】 | ScrollView 容器 |
+| `SettingUI` | 4 → 5 页签，`PAGE_ID_SETTING_KCU_DEV = 15035` |
+| strings ×2 | 16 条 |
+
+清除按钮在校验通过前 `setEnabled(false)`。
+
+### 审核移除项
+
+`clearMarks()` 内部已调 `KcuAgeGate.reset()`，页面里再调一次是冗余，已移除。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuDevPage.java` |
+| 行 | **125** |
+| 5 个不同字母 | `b o l e a` |
+| **SHA-1** | **`c78eb644baa42e5a99bc7ad300e14e314c8c8dd9`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39620814600**：Build release / 列出产物 / 验证签名 均 success。
+
+遗留：清除标记会连带清年龄声明但页面未提示；5 个页签排布未确认；导入页不写版本 json。**实机未验证。**
