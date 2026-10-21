@@ -1,6 +1,31 @@
 [
   {
     "type": "release",
+    "versionCode": 24,
+    "versionName": "0.24.0",
+    "date": "2026.10.21",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "API 终点追踪：SettingUI extends FCLMultiPageUI，页面数量由 getPageCount()/createPage(int)/getTabTitles() 三处决定，终点为 FCLMultiPageUI.setupPages(container, tabLayout)。FCLPage 构造器 setContentView(resId) 后调 onCreate()，findViewById 作用于 contentView。",
+          "getPageCount 共 5 处实现（VersionUI/ControllerUI/SettingUI/ManageUI/基类声明），互不影响；基类 277 行 return getPageCount() 供 adapter，无外部硬编码数量。",
+          "新增 KcuDevPage 与 page_kcu_dev.xml，设置页 getPageCount 4 改 5、createPage 加 case 4、标题数组加一项，PAGE_ID_SETTING_KCU_DEV = 15035。",
+          "页面内容：状态行（开启/未开启）、开关文件绝对路径、重新检测按钮、令牌输入框、校验按钮、清除按钮（校验通过前 setEnabled(false)）、结果行。",
+          "线程：校验与清除走 Schedulers.defaultScheduler()（Schedulers.java:62 已核实存在），UI 更新走 Schedulers.androidUIThread()。",
+          "审核移除项：clearMarks() 内部已调 KcuAgeGate.reset()，页面内重复调用冗余，已移除该调用及对应 import。",
+          "其余防护：令牌为空前置校验不发起请求、未校验点清除时 doClear 有兜底判断、网络异常一律返回 false。",
+          "模拟使用逻辑 11 条：第5页签显示、未放文件显示未开启、放对文件显示已开启、重新检测、空令牌提示、错令牌仍禁用、对令牌启用、未校验点不到、校验后清除返回项数、无网络提示未通过、旋屏重建后 verified 归零需重校验（预期）。",
+          "审核 pass。哈希回执：KcuDevPage.java:125 -> bolea -> SHA-1 c78eb644baa42e5a99bc7ad300e14e314c8c8dd9。",
+          "冒烟测试：Actions run 39620814600，Build release/列出产物/验证签名 均 success；XML 经 ElementTree 校验。未覆盖真机点击与页签栏宽度。",
+          "遗留：清除标记会连带清年龄声明但页面未提示；5 个页签在窄屏横屏排布未确认；导入页不写版本 json；其余 switchUI(downloadUI) 入口未全覆盖。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 23,
     "versionName": "0.23.0",
     "date": "2026.10.21",
