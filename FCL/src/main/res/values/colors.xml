@@ -10,4 +10,11 @@
     <color name="primary_text">#2C2C2A</color>
     <!-- 原 FCLLibrary 模块颜色（模块已并入 FCL） -->
     <color name="dialog_background">#FAF8F2</color>
+    <color name="kcu_ink">#2C2C2A</color>
+    <color name="kcu_ink_2">#55534C</color>
+    <color name="kcu_ink_3">#8E8B80</color>
+    <color name="kcu_accent">#3D6B66</color>
+    <color name="kcu_line">#1A282826</color>
+    <color name="kcu_card">#FAF8F2</color>
+    <color name="kcu_watermark_bg">#4DFAF8F2</color>
 </resources>
