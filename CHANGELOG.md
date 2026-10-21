@@ -1087,3 +1087,43 @@ app:auto_text_tint → ThemeData.autoTint
 Actions run **39548569225**：Build release / 列出产物 / 验证签名 均 success。
 
 未做：上百个页面布局仍是上游结构；水印、公告卡未落地；深色配色无设计稿依据。**实机观感未验证。**
+
+## 0.23.0 — 2026-10-21
+
+执行者：**yuanbao**
+
+- **主页舞台纸面化**
+- **`app_name` 改 `KCU Launcher`**
+
+### API 终点追踪
+
+```
+MainUI.onCreate → ThemeEngine.registerEvent(announcementLayout) {
+    announcementLayout.getBackground().setTint(theme.getColor())
+}
+```
+
+**公告卡底色不在 XML 里**，运行时被 tint 成主色。只改 XML 无效，已删除该回调。
+
+### 改动
+
+- `colors.xml` ×2：纸面色资源，亮暗各一套
+- `bg_card_paper` / `bg_watermark`【新】
+- `ui_main.xml`：公告容器限宽 560dp、卡底纸面、分隔线、链接色（`#77FF00` 荧光绿 → 强调色）、水印
+- `MainUI`：删 tint、填水印文本
+- `strings.xml`：`app_name` 此前一直是 `Fold Craft Launcher`
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `MainUI.java` |
+| 行 | **72** |
+| 5 个不同字母 | `w a t e r` |
+| **SHA-1** | **`6d5a45920a15adea049c8f22d569ff209625a43b`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39550429538**：Build release / 列出产物 / 验证签名 均 success。
+
+未做：空状态引导页、衣柜视图、上百个页面布局仍是上游结构。**实机观感未验证。**
