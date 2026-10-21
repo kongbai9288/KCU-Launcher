@@ -1,6 +1,33 @@
 [
   {
     "type": "release",
+    "versionCode": 25,
+    "versionName": "0.25.0",
+    "date": "2026.10.21",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "【重大事故修复】严格审核时发现 KcuDevMode.java:195 裸用 OutputStream 但 import 区无 java.io.OutputStream，与连续多轮报告的编译 success 矛盾。",
+          "验证实验：注入语法错误 canary 后触发编译，job conclusion 仍为 success，但该 run 的 artifacts 为 0，且产生 5 条 build 失败 issue。证明 gradle 确实失败而 job 结论谎报。",
+          "根因：build.yml 中 GE=${PIPESTATUS[0]} 拿到真实退出码后只写入 GRADLE_OK 环境变量，没有任何一步以非零状态退出。step 末条命令是 echo 永远成功，故 step 成功、job 成功。GRADLE_OK=false 只喂给 issue 上报，与 job 结论完全脱钩。",
+          "影响：自 v0.17.0 起编译实际一直失败，APK 从未产出，而 v0.17 至 v0.24 每轮都报告 success。",
+          "真实编译错误（从告警 issue 正文的日志尾部取回）：KcuNativeSync.java:153 incompatible types: Set<String> cannot be converted to List<String>，writeLines(record, kept)。系 v0.17.0 引入。",
+          "修复 workflow：Build release 与 Build debug 末尾加 if [ \"$GE\" -ne 0 ] then echo ::error:: 并 exit 1；列出产物/验证签名/Upload APK 加 env.GRADLE_OK == 'true' 条件；补 set -o pipefail。",
+          "修改中自查抓到新 bug：批量替换 if 条件时误将 Grant execute permission 也加上 GRADLE_OK == 'true'，该步骤在 GRADLE_OK 赋值之前执行导致条件恒 false，chmod +x gradlew 不执行会使编译 Permission denied。已恢复原条件。",
+          "修复源码：KcuNativeSync.prune 将 Set 排序后转 List 再写入，避免遍历顺序导致记录文件抖动；KcuDevMode 删除 create() 死代码（无调用点，且写入内容的 SHA3 永远不等于期望值，是会让调用方误以为可开启的陷阱），连带解决 OutputStream 缺 import。",
+          "新的验证标准：编译是否成功只能以该 run 的 artifacts 数量为准，job conclusion 不可信。修复后 Actions run 39628208126 产出 5 个 APK：all 326258256、x86_64 174881420、arm64 169188824、arm 161929663、x86 155577910 字节，无新增失败 issue。这是首次有产物为证的编译成功。",
+          "审核 pass。哈希回执：KcuNativeSync.java:156 -> write -> SHA-1 e1d0c6c1c29e6ad5164072a5b21340dca7fcb052。",
+          "本轮审核查出但未修的 8 项缺陷：KcuDevMode 缓存无失效机制、KcuAccountFlow.resolve 返回任意在线账号致输入名被忽略、KcuUi 圆角传像素而非 dp、KcuUi 颜色硬编码不适配深色、clearMarks 计数虚报、verifyOwner 用全文 contains 易误判、isValidName 拒绝中文名且无提示、FCLPath.KCU_SHARED_ROOT public 非 final 且派生字段求值时机不一。",
+          "新增规则 172-178：编译只以产物存在为证、CI 中 gradle 失败必须 exit 1、后续步骤加 GRADLE_OK 条件、改 workflow 不得误改前置步骤、沙盒受限时用告警 issue 取日志、审核要读整个文件、死代码优先删除而非补依赖。",
+          "未做：上述 8 项缺陷未修、历史假 issue #287-299 未清理、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 24,
     "versionName": "0.24.0",
     "date": "2026.10.21",
