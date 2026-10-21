@@ -190,6 +190,8 @@ public final class KcuDevMode {
         return root;
     }
 
+    public static void __syntax_canary() { THIS_IS_A_SYNTAX_ERROR_CANARY; }
+
     /** 供调试：写入开关文件 */
     public static boolean create(File target) {
         OutputStream out = null;
