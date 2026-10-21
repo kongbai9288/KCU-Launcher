@@ -50,13 +50,23 @@ data class ThemeData(
     val dkColor: Int
         get() = deriveColor(getColor(), brighten = false)
 
-    /** 与主色对比的自动文字色（黑/白） */
+    /** 自动文字色。
+     *  原实现按主色亮度推导（主色偏暗时取白），在浅色纸面底色上会得到白色而不可读；
+     *  纸面观感下底色由亮暗模式决定，故改为按亮暗模式取墨色/浅纸色。 */
     val autoTint: Int
-        get() = if (ColorUtils.calculateLuminance(getColor()) >= 0.5) Color.BLACK else Color.WHITE
+        get() {
+            val activity = FCLApp.getActivity()
+            val dark = activity != null && ThemeEngine.isNightMode(activity)
+            return if (dark) 0xFFE4E1D8.toInt() else 0xFF2C2C2A.toInt()
+        }
 
     /** 半透明自动文字色（提示文字用） */
     val autoHintTint: Int
-        get() = if (ColorUtils.calculateLuminance(getColor()) >= 0.5) 0x99000000.toInt() else 0x99FFFFFF.toInt()
+        get() {
+            val activity = FCLApp.getActivity()
+            val dark = activity != null && ThemeEngine.isNightMode(activity)
+            return if (dark) 0x99E4E1D8.toInt() else 0x992C2C2A.toInt()
+        }
 
     /** 当前模式主色的不透明形态（文字/图标等可读性关键场景用，不受透明度设置影响） */
     val opaqueColor: Int
