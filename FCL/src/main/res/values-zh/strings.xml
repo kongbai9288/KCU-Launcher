@@ -1503,4 +1503,20 @@
     <string name="quark_promo_message">这是你第 %1$d 次启动游戏！\n\n如果 FCL 对你有帮助，欢迎动动手指打开夸克网盘，注册或登录后点击保存到网盘（不用下载），就是对我们最大的支持，十分感谢～</string>
     <string name="quark_promo_open">打开夸克网盘</string>
     <string name="quark_promo_start">开始游戏</string>
+    <string name="kcu_dev_title">开发者</string>
+    <string name="kcu_dev_state_on">当前：已开启</string>
+    <string name="kcu_dev_state_off">当前：未开启</string>
+    <string name="kcu_dev_refresh">重新检测</string>
+    <string name="kcu_dev_refreshed">已重新检测</string>
+    <string name="kcu_dev_token_hint">清除标记前需校验令牌归属。</string>
+    <string name="kcu_dev_token_placeholder">令牌</string>
+    <string name="kcu_dev_verify">校验</string>
+    <string name="kcu_dev_verifying">校验中…</string>
+    <string name="kcu_dev_verify_ok">校验通过</string>
+    <string name="kcu_dev_verify_fail">校验未通过</string>
+    <string name="kcu_dev_token_empty">请先填写令牌</string>
+    <string name="kcu_dev_need_verify">请先校验</string>
+    <string name="kcu_dev_clear">清除全部标记</string>
+    <string name="kcu_dev_clearing">清除中…</string>
+    <string name="kcu_dev_cleared">已清除 %1$d 项</string>
 </resources>
