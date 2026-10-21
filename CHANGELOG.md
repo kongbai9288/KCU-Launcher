@@ -989,3 +989,50 @@ Actions run **39466009083**：Build release / 列出产物 / 验证签名 均 su
 新增规则 165–171。
 
 未做：主界面三栏结构未换、其余上游页面未替换、`verifyOwner`/`clearMarks` 未接 UI、导入页不写版本 json。
+
+## 0.21.0 — 2026-10-21
+
+执行者：**yuanbao**
+
+- **纸面观感注入**
+
+### API 终点追踪
+
+```
+MainActivity → ImageUtil.loadInto(background, theme.getBackground())
+             → ThemeData.backgroundLt/Dk → 【终点】R.drawable.background_light/dark.jpg
+全体 use_theme_color 控件 → ThemeData.getColor()/getColor2()
+             → 【终点】ThemePreference 默认字段
+```
+
+**观感集中在两处，不在各页面布局里。** 逐页改布局是错的着力点。
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `ThemePreference` | `#3D6B66` / `#4F8580` / `#2C2C2A` / `#E4E1D8` |
+| `colors.xml` ×2 | ui_bg_color `#5CF1EFE8`、primary_text、dialog_background 等 |
+| `background_light/dark.jpg` | 揉纸纹理替换，1600×900 |
+| `MainActivity` | 左栏改透明 |
+
+纹理：多倍频值噪声 + 细颗粒 + 7 条折痕 + 暗角。实测 light 均值 232.7/229.7/222.7，dark 29.2/29.2/27.2。
+
+### 审核回滚项
+
+`icon_background_color` 被 `mipmap-anydpi-v26/ic_launcher.xml` 引用 —— **改它会连带改 App 图标**，已回滚。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `ThemePreference.kt` |
+| 行 | **19** |
+| 5 个不同字母 | `v a l c o` |
+| **SHA-1** | **`e859fd77711571251cfb9b4fd032b7a3ac1ad1fb`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39546878195**：Build release / 列出产物 / 验证签名 均 success。
+
+未做：页面结构仍是上游三栏比例；上百个页面未逐页替换；深色配色无设计稿依据。**实机观感未验证。**
