@@ -1,6 +1,30 @@
 [
   {
     "type": "release",
+    "versionCode": 22,
+    "versionName": "0.22.0",
+    "date": "2026.10.21",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "修复 v0.21.0 引入的严重回归：换浅纸底后未同步检查取色链路。app:auto_text_tint -> ThemeData.autoTint，原实现为 luminance(getColor())>=0.5 ? BLACK : WHITE。主色 #3D6B66 亮度 0.13 故 autoTint 恒为白色，白字落在浅纸上不可读。",
+          "影响面实测：auto_text_tint 引用 71 个文件，use_theme_color 引用 35 个，白字是多数派。",
+          "修法：autoTint/autoHintTint 改按亮暗模式取色（亮 #2C2C2A、暗 #E4E1D8），不再按主色亮度推导。",
+          "安全性论证：autoBackgroundTint（给控件填主色底）在布局中 0 处引用，仅类内与 1 处 Kotlin 调用，因此不存在墨色字压在强调色实心块上的场景。",
+          "主界面骨架按设计稿三栏：左栏 wrap_content -> 64dp；右栏保留 25% 百分比并加 constraintWidth_max=300dp（宽屏不再过宽，窄屏仍按比例收缩）；七个图标补 end 约束使其栏内居中。ConstraintLayout 2.2.0 支持 constraintWidth_max。",
+          "bg_container_white（40 处引用）纯白改 #FAF8F2 纸色高亮；bg_container_transparent_selected 按压态 darker_gray 改 #1A3D6B66 强调色 10%。",
+          "模拟使用逻辑：亮色模式正文墨色、深色模式正文浅纸色、左栏图标可见、宽屏右栏 300dp、窄屏 640dp 时右栏 160dp 内容区 416dp、卡片纸色底、按压淡染、设置页改主色后 autoTint 稳定。",
+          "审核 pass。哈希回执：ThemeData.kt:60 -> retun -> SHA-1 c0781ed3e29ec775c6bb8dc4be2015a32ea8593b。",
+          "冒烟测试：Actions run 39548569225，Build release/列出产物/验证签名 均 success；XML 经 ElementTree 解析校验通过。未覆盖真机观感与深色模式实际效果。",
+          "未做：上百个页面布局仍是上游结构、设计稿水印与公告卡未落地、深色配色无设计稿依据。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 21,
     "versionName": "0.21.0",
     "date": "2026.10.21",
