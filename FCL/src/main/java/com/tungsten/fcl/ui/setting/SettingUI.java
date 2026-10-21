@@ -17,6 +17,7 @@ public class SettingUI extends FCLMultiPageUI {
     public static final int PAGE_ID_SETTING_LAUNCHER = 15031;
     public static final int PAGE_ID_SETTING_PLUGIN = 15032;
     public static final int PAGE_ID_SETTING_ABOUT = 15034;
+    public static final int PAGE_ID_SETTING_KCU_DEV = 15035;
 
     private FCLUILayout container;
     public FCLTabLayout tabLayout;
@@ -36,7 +37,7 @@ public class SettingUI extends FCLMultiPageUI {
 
     @Override
     public int getPageCount() {
-        return 4;
+        return 5;
     }
 
     @Override
@@ -48,6 +49,8 @@ public class SettingUI extends FCLMultiPageUI {
                 return new PluginManagePage(getContext(), PAGE_ID_SETTING_PLUGIN);
             case 3:
                 return new AboutPage(getContext(), PAGE_ID_SETTING_ABOUT);
+            case 4:
+                return new KcuDevPage(getContext(), PAGE_ID_SETTING_KCU_DEV, R.layout.page_kcu_dev);
             default:
                 return new VersionSettingPage(getContext(), PAGE_ID_SETTING_GAME, true);
         }
@@ -59,7 +62,8 @@ public class SettingUI extends FCLMultiPageUI {
                 getContext().getString(R.string.settings_type_global_manage),
                 getContext().getString(R.string.settings_launcher),
                 getContext().getString(R.string.settings_plugin),
-                getContext().getString(R.string.about)
+                getContext().getString(R.string.about),
+                getContext().getString(R.string.kcu_dev_title)
         };
     }
 
