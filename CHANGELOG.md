@@ -1036,3 +1036,54 @@ MainActivity → ImageUtil.loadInto(background, theme.getBackground())
 Actions run **39546878195**：Build release / 列出产物 / 验证签名 均 success。
 
 未做：页面结构仍是上游三栏比例；上百个页面未逐页替换；深色配色无设计稿依据。**实机观感未验证。**
+
+## 0.22.0 — 2026-10-21
+
+执行者：**yuanbao**
+
+- **修复上轮引入的严重回归**
+- **主界面骨架按设计稿三栏**
+
+### 回归成因
+
+```
+app:auto_text_tint → ThemeData.autoTint
+  → 原：luminance(getColor()) >= 0.5 ? BLACK : WHITE
+```
+
+主色 `#3D6B66` 亮度 0.13 → autoTint **恒为白色**。上轮把底换成浅纸后，白字落在浅纸上不可读。
+
+影响面：**71** 个文件（`use_theme_color` 仅 35 个）。
+
+### 修法
+
+改按亮暗模式取色：亮 `#2C2C2A` / 暗 `#E4E1D8`。
+
+安全性：`autoBackgroundTint` 在布局中 **0 处引用**，不存在墨色字压主色实心块的场景。
+
+### 骨架
+
+| 项 | 设计稿 | 改后 |
+|---|---|---|
+| 左栏 | 64px | **64dp** |
+| 右栏 | 300px | 25% + 上限 **300dp** |
+| 图标 | 居中 | 补 end 约束 |
+
+窄屏保留百分比收缩，不会挤没内容区。
+
+卡片底（40 处）纯白 → `#FAF8F2`；按压态 → `#1A3D6B66`。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `ThemeData.kt` |
+| 行 | **60** |
+| 5 个不同字母 | `r e t u n` |
+| **SHA-1** | **`c0781ed3e29ec775c6bb8dc4be2015a32ea8593b`** |
+
+### 编译验证（PROVEN）
+
+Actions run **39548569225**：Build release / 列出产物 / 验证签名 均 success。
+
+未做：上百个页面布局仍是上游结构；水印、公告卡未落地；深色配色无设计稿依据。**实机观感未验证。**
