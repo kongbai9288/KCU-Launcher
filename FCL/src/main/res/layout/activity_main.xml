@@ -15,7 +15,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/left_menu"
-        android:layout_width="wrap_content"
+        android:layout_width="64dp"
         android:layout_height="0dp"
         android:background="@drawable/bg_game_menu"
         android:clipChildren="false"
@@ -36,6 +36,7 @@
             android:src="@drawable/ic_baseline_home_24"
             app:layout_constraintBottom_toTopOf="@id/manage"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.tungsten.fcllibrary.component.view.FCLMenuView
@@ -46,6 +47,7 @@
             android:src="@drawable/ic_baseline_build_24"
             app:layout_constraintBottom_toTopOf="@id/download"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/home" />
 
         <com.tungsten.fcllibrary.component.view.FCLMenuView
@@ -56,6 +58,7 @@
             android:src="@drawable/ic_baseline_cloud_download_24"
             app:layout_constraintBottom_toTopOf="@id/controller"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/manage" />
 
         <com.tungsten.fcllibrary.component.view.FCLMenuView
@@ -66,6 +69,7 @@
             android:src="@drawable/ic_baseline_videogame_asset_24"
             app:layout_constraintBottom_toTopOf="@id/multiplayer"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/download" />
 
         <com.tungsten.fcllibrary.component.view.FCLMenuView
@@ -76,6 +80,7 @@
             android:src="@drawable/ic_outline_account_tree_24"
             app:layout_constraintBottom_toTopOf="@id/setting"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/controller" />
 
         <com.tungsten.fcllibrary.component.view.FCLMenuView
@@ -86,6 +91,7 @@
             android:src="@drawable/ic_baseline_settings_24"
             app:layout_constraintBottom_toTopOf="@id/back"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/multiplayer" />
 
         <com.tungsten.fcllibrary.component.view.FCLMenuView
@@ -96,6 +102,7 @@
             android:src="@drawable/ic_baseline_arrow_back_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/setting" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -109,6 +116,7 @@
         android:clipToPadding="false"
         android:elevation="100dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_max="300dp"
         app:layout_constraintWidth_percent="0.25">
 
         <androidx.constraintlayout.widget.ConstraintLayout
