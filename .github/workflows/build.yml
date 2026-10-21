@@ -78,31 +78,42 @@ jobs:
           fi
 
       - name: Grant execute permission
-        if: steps.guard.outputs.has_source == 'true'
+        if: ${{ steps.guard.outputs.has_source == 'true' }}
         run: chmod +x gradlew
 
       - name: Build release
         if: ${{ steps.guard.outputs.has_source == 'true' && github.event_name != 'pull_request' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         id: gradle
         run: |
+          set -o pipefail
           ./gradlew assembleRelease -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
           GE=${PIPESTATUS[0]}
           echo "gradle_exit=$GE"
           if [ "$GE" -eq 0 ]; then echo "GRADLE_OK=true" >> "$GITHUB_ENV"; else echo "GRADLE_OK=false" >> "$GITHUB_ENV"; fi
+          # gradle 失败必须让本步骤失败，否则 job 仍显示 success（谎报成功）
+          if [ "$GE" -ne 0 ]; then
+            echo "::error::gradle assembleRelease 失败，退出码 $GE"
+            exit 1
+          fi
           { echo "BUILD_LOG<<EOF_DELIM"; tail -c 4000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: Build debug
         if: ${{ steps.guard.outputs.has_source == 'true' && github.event_name == 'pull_request' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         id: gradle_debug
         run: |
+          set -o pipefail
           ./gradlew assembleDebug -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
           GE=${PIPESTATUS[0]}
           echo "gradle_exit=$GE"
           if [ "$GE" -eq 0 ]; then echo "GRADLE_OK=true" >> "$GITHUB_ENV"; else echo "GRADLE_OK=false" >> "$GITHUB_ENV"; fi
+          if [ "$GE" -ne 0 ]; then
+            echo "::error::gradle assembleDebug 失败，退出码 $GE"
+            exit 1
+          fi
           { echo "BUILD_LOG<<EOF_DELIM"; tail -c 4000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: 列出产物
-        if: ${{ steps.guard.outputs.has_source == 'true' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
+        if: ${{ steps.guard.outputs.has_source == 'true' && env.GRADLE_OK == 'true' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         run: |
           APK_TXT=/tmp/apk.txt
           {
@@ -115,7 +126,7 @@ jobs:
 
       # 签名是否真的生效，必须由产物自己证明，不能只看"恢复签名库"步骤成功
       - name: 验证签名
-        if: ${{ steps.guard.outputs.has_source == 'true' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
+        if: ${{ steps.guard.outputs.has_source == 'true' && env.GRADLE_OK == 'true' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         run: |
           {
             echo "### APK 签名验证 (${{ matrix.arch }})"
@@ -156,7 +167,7 @@ jobs:
           { echo "APK_LISTING<<EOF_DELIM"; head -c 6000 /tmp/apk.txt; echo; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: Upload APK
-        if: steps.guard.outputs.has_source == 'true'
+        if: ${{ steps.guard.outputs.has_source == 'true' && env.GRADLE_OK == 'true' }}
         uses: actions/upload-artifact@v6
         with:
           name: app-${{ matrix.arch }}
