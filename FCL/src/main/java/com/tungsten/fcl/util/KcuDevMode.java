@@ -189,30 +189,4 @@ public final class KcuDevMode {
         root.addView(card);
         return root;
     }
-
-    public static void __syntax_canary() { THIS_IS_A_SYNTAX_ERROR_CANARY; }
-
-    /** 供调试：写入开关文件 */
-    public static boolean create(File target) {
-        OutputStream out = null;
-        try {
-            File parent = target.getParentFile();
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs();
-            }
-            out = new java.io.FileOutputStream(target, false);
-            out.write("# developer mode\n".getBytes(StandardCharsets.UTF_8));
-            out.flush();
-            return true;
-        } catch (Throwable e) {
-            return false;
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (Throwable ignored) {
-                }
-            }
-        }
-    }
 }
