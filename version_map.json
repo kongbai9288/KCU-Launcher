@@ -1,6 +1,30 @@
 [
   {
     "type": "release",
+    "versionCode": 21,
+    "versionName": "0.21.0",
+    "date": "2026.10.21",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "API 终点追踪确认：观感集中在两处——背景图 R.drawable.background_light/dark.jpg（ThemeData.getTheme 读取），以及 ThemePreference 默认色（全体 use_theme_color 控件取用）。逐页改布局是错的着力点。",
+          "ThemePreference 默认色改为设计稿配色：color #3D6B66、colorDark #4F8580、color2 #2C2C2A、color2Dark #E4E1D8。",
+          "colors.xml 改 default_theme_color / ui_bg_color(#5CF1EFE8) / right_menu_color / primary_text / dialog_background；values-night 改 primary_text / dialog_background。",
+          "生成揉纸纹理背景图 1600x900 替换原 jpg：多倍频值噪声 + 像素细颗粒 + 7 条随机折痕 + 暗角。实测 light 均值 RGB 232.7/229.7/222.7 标准差 5.6，dark 29.2/29.2/27.2 标准差 5.2。",
+          "MainActivity 左栏背景由主色实心块改为透明，透出纸面。",
+          "审核抓出并回滚：icon_background_color 被 mipmap-anydpi-v26/ic_launcher.xml 引用，改它会连带改变 App 图标背景，已回滚为原值 #FFFFFF。",
+          "模拟用户使用逻辑：首次冷启动走新默认值（新包名 DataStore 隔离）、深色模式取 dark 组、左栏图标对比充足、右栏半透明纸色、对话框纸色高亮、设置页改色后用户优先、App 图标未受影响。",
+          "审核 pass。哈希回执：ThemePreference.kt:19 -> valco -> SHA-1 e859fd77711571251cfb9b4fd032b7a3ac1ad1fb。",
+          "冒烟测试：Actions run 39546878195，Build release/列出产物/验证签名 均 success。未覆盖真机观感与深色模式实际效果。",
+          "未做：页面结构仍是上游三栏比例、上百个页面未逐页替换、深色配色无设计稿依据。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 20,
     "versionName": "0.20.0",
     "date": "2026.10.21",
