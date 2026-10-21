@@ -138,6 +138,7 @@ public final class KcuNativeSync {
      * 不清理其他机制放入该目录的文件，避免误删。
      */
     private static void prune(File dstDir, Set<String> kept) {
+        // 记录文件按名排序，避免集合遍历顺序导致每次写入内容抖动
         File record = new File(dstDir, RECORD);
         List<String> previous = readLines(record);
         for (String name : previous) {
@@ -150,7 +151,9 @@ public final class KcuNativeSync {
                 stale.delete();
             }
         }
-        writeLines(record, kept);
+        List<String> sorted = new ArrayList<>(kept);
+        java.util.Collections.sort(sorted);
+        writeLines(record, sorted);
     }
 
     private static List<String> readLines(File file) {
