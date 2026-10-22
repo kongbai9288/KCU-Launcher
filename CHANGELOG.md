@@ -1577,3 +1577,47 @@ run **39801897300**，arm64 **169177735 B**，无新增失败 issue。
 ### 新增防错规则 185–189
 
 空壳对象删到底 / 先改调用方再删被调方 / legacy 文件名不跟着删 / 删数据类三处一起 / 平铺 lambda 校验括号。
+
+## 0.34.0 — 2026-10-23
+
+执行者：**yuanbao**
+
+- **首页舞台版本卡片**
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `ui_main.xml` | 新增 `stage_card`；`skin_viewer` top 约束改指它，0.8 → 0.7 |
+| `MainUI` | 新增 `refreshSelectedVersion()` |
+| `values`、`values-zh` | 2 个新字符串 |
+
+### 审核抓到两个必错项
+
+**① `@Override onStart()` 会编译失败**
+
+源码注释写着「替代原 onStart/onStop 生命周期」——`FCLCommonUI` 根本没这两个方法。已改挂 `onViewAttachedToWindow`。
+
+**② ElementTree 写回是追加不是替换**
+
+SkinViewer 同时出现 `Top_toTopOf` 和 `Top_toBottomOf` 两个互斥约束。手工重写 XML 修正，校验 top 约束数 = 1。
+
+**这是第二次踩 ElementTree 的坑**（v0.28.0 是命名空间）。
+
+### 已知局限
+
+`onViewAttachedToWindow` 只在挂载时触发，版本页切回首页若不重建视图则不刷新 —— **需实机确认**。
+
+### 审核：pass
+
+`MainUI.java:139` 取字 `publi` 与 v0.28.0 碰撞（都以 `public` 开头），改取 143 行。
+
+| 项 | 值 |
+|---|---|
+| 行 | **143** |
+| 5 个不同字母 | `S t r i n` |
+| **SHA-1** | **`ec521013a367936602eaed033e7b2e3e2136db11`** |
+
+### 编译验证（PROVEN）
+
+run **39809825125**，arm64 **169178364 B**，无新增失败 issue。
