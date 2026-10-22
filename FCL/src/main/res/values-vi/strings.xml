@@ -125,8 +125,6 @@
     <string name="action_share">Chia sẻ</string>
     <string name="action_upload">Tải lên nhật ký</string>
     <string name="action_skip">Bỏ qua</string>
-    <string name="announcement">Thông báo: %s</string>
-    <string name="announcement_significant">Đây là thông báo quan trọng. Vui lòng xác nhận rằng bạn đã đọc thông báo này trước khi ẩn nó. Bạn có muốn tiếp tục ẩn nó không?</string>
     <string name="archive_author">Tác giả</string>
     <string name="archive_date">Ngày xuất bản</string>
     <string name="archive_game_version">Phiên bản trò chơi</string>
