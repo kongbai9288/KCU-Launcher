@@ -1675,3 +1675,54 @@ Android (13691557, +pgo, +bolt, +lto, +mlgo) clang 18.0.4, LLD 18.0.4
 | **SHA-1** | **`ecf3d5183863d2320d33fd5ec27a4d14333214e8`** |
 
 **本轮无代码改动，未触发编译。**
+
+## 0.36.0 — 2026-10-23
+
+执行者：**yuanbao**
+
+- **移除主页皮肤预览**（`com/mio/skin` 包代码保留）
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `ui_main.xml` | 删 `SkinViewer` |
+| `MainUI` | **161 → 61 行** |
+| `MainActivity` | 删 `fixSkinViewerPosition` 及 3 处调用 |
+| `AccountListItem` | 删跨界调用（补漏） |
+
+### 编译失败事故
+
+run **39819890952 失败**。
+
+`refreshSkin()` 不是死代码 —— `AccountListItem.kt:199` 在调它，`AccountListAdapter` 与两个账号皮肤 Dialog 都会触发。
+
+**为什么会漏：我在本地目录 grep，那不是全仓，本地为 0 是假象。**
+
+### 连带修掉两个 CI 缺陷
+
+| # | 缺陷 |
+|---|---|
+| 1 | `BUILD_LOG` 写在 `exit 1` **之后** → 失败永远拿不到日志 |
+| 2 | 上报 `if` 依赖 `env.GRADLE_OK`（由失败步骤写入，不可靠）→ skipped |
+
+修复后上报步骤由 skipped → **success**，确认有效。
+
+### 一个发现
+
+`dialog_offline_account_skin.xml` / `dialog_microsoft_account_skin.xml` **本身就有 `SkinViewer`**。
+
+**"皮肤预览 + 角色切换"在账号皮肤对话框里已天然存在**，不用新造容器。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `AccountListItem.kt` |
+| 行 | **198** |
+| 5 个不同字母 | `M a i n c` |
+| **SHA-1** | **`0f630ba2b89fa71505f5d7b2a156d70b892d21dd`** |
+
+### 编译验证（PROVEN）
+
+run **39821739010**，5 个产物：all 326244770 / x86_64 174871839 / **arm64 169176801** / arm 161916743 / x86 155565108 B。
