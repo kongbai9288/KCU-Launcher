@@ -5,7 +5,6 @@ import android.content.Context;
 import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.widget.LinearLayoutCompat;
 
 import com.mio.skin.AnimationDialog;
 import com.mio.skin.SkinAnimations;
@@ -21,22 +20,14 @@ import com.tungsten.fclcore.auth.Account;
 import com.tungsten.fclcore.fakefx.beans.InvalidationListener;
 import com.tungsten.fclcore.task.Schedulers;
 
-import com.tungsten.fcllibrary.component.dialog.FCLAlertDialog;
 import com.tungsten.fcllibrary.component.theme.ThemeEngine;
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI;
-import com.tungsten.fcllibrary.component.view.FCLButton;
+
 import com.tungsten.fcllibrary.component.view.FCLTextView;
 
-public class MainUI extends FCLCommonUI implements View.OnClickListener {
+public class MainUI extends FCLCommonUI {
 
-    private LinearLayoutCompat announcementContainer;
-    private LinearLayoutCompat announcementLayout;
-    private FCLTextView title;
-    private FCLTextView announcementView;
-    private FCLTextView date;
-    private FCLButton hide;
     private FCLTextView watermark;
-    private Announcement announcement = null;
 
     private SkinViewer skinViewer;
     private SkinRenderer renderer;
@@ -53,13 +44,6 @@ public class MainUI extends FCLCommonUI implements View.OnClickListener {
     @Override
     public void onCreate() {
         super.onCreate();
-        announcementContainer = findViewById(R.id.announcement_container);
-        announcementLayout = findViewById(R.id.announcement_layout);
-        title = findViewById(R.id.title);
-        announcementView = findViewById(R.id.announcement);
-        date = findViewById(R.id.date);
-        hide = findViewById(R.id.hide);
-        hide.setOnClickListener(this);
         watermark = findViewById(R.id.watermark);
         watermark.setText(getContext().getString(R.string.app_name) + " " + getContext().getString(R.string.app_version));
 
@@ -86,7 +70,6 @@ public class MainUI extends FCLCommonUI implements View.OnClickListener {
                 }).show();
             }
         });
-        checkAnnouncement();
 
         // 皮肤渲染随页面挂载/回收恢复与暂停（替代原 onStart/onStop 生命周期）
         getContentView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
@@ -142,22 +125,6 @@ public class MainUI extends FCLCommonUI implements View.OnClickListener {
         }
     }
 
-    /**
-     * 上游远程公告已移除。
-     * 原实现启动时向 FCL 官方仓库（GitHub raw / Gitee）拉取公告文本，
-     * 属于对上游域名的隐式联网；本项目不再请求，容器保持隐藏。
-     */
-    private void checkAnnouncement() {
-        announcementContainer.setVisibility(View.GONE);
-    }
-
-    private void hideAnnouncement() {
-        announcementContainer.setVisibility(View.GONE);
-        if (announcement != null) {
-            announcement.hide(getContext());
-        }
-    }
-
     public void refreshSkin(Account account) {
         Schedulers.androidUIThread().execute(() -> {
             if (skinLoader != null) {
@@ -166,20 +133,4 @@ public class MainUI extends FCLCommonUI implements View.OnClickListener {
         });
     }
 
-    @Override
-    public void onClick(View view) {
-        if (view == hide) {
-            if (announcement != null && announcement.isSignificant()) {
-                FCLAlertDialog.Builder builder = new FCLAlertDialog.Builder(getContext());
-                builder.setAlertLevel(FCLAlertDialog.AlertLevel.ALERT);
-                builder.setCancelable(false);
-                builder.setMessage(getContext().getString(R.string.announcement_significant));
-                builder.setPositiveButton(this::hideAnnouncement);
-                builder.setNegativeButton(null);
-                builder.create().show();
-            } else {
-                hideAnnouncement();
-            }
-        }
-    }
 }
