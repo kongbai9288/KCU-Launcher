@@ -73,9 +73,25 @@ if (isInPluginApp == 0 && fclVersion == 0 && zlVersion == 0
 
 **这段字符串在本 APK 的 so 里也能找到，说明它是官方逻辑，不是修改版加的。**
 
-### 对 KCU 的影响（重要）
+### 对 KCU 的影响 —— 实测：无影响
 
-KCU 已把包名从 `com.tungsten.fcl` 改为 `com.kcu.launcher`。若启动器不向 MG 进程传递上述任一环境变量，且未设 `MG_DIR_PATH`，MobileGlues 会：
+`FCL/src/main/java/com/tungsten/fclauncher/FCLauncher.java`：
+
+```java
+FCL_VERSION_CODE = packageInfo.versionCode;      // 行 65
+...
+if (FCL_VERSION_CODE != -1) {                     // 行 205
+    envMap.put("FCL_VERSION_CODE", FCL_VERSION_CODE + "");   // 行 206
+}
+```
+
+`packageInfo.versionCode` 取的是**本应用**的 versionCode（KCU 当前 32），非 0。
+
+所以 `fclVersion != 0`，白名单判据不成立，**MobileGlues 不会判定 KCU 为 unsupported，配置不会被忽略**。
+
+**该环境变量在 KCU 改包名后仍然生效**——它读的是自身的 versionCode，与包名无关。上一轮文档中"改包名后配置可能失效"的担忧，经查证**不成立**。
+
+（若未来 versionCode  pernah 为 -1 的异常路径，才会触发回落。）
 
 1. 判定为 **Unsupported launcher**
 2. **忽略 `/sdcard/MG/config.json` 里的全部用户配置**
@@ -83,10 +99,11 @@ KCU 已把包名从 `com.tungsten.fcl` 改为 `com.kcu.launcher`。若启动器�
 
 **这是"改了包名后渲染器配置 mysteriously 不生效"的根因。**
 
-### 绕过方式（两种，都是官方支持的）
+### 绕过方式（当前已天然满足）
 
-- 传 `MG_PLUGIN_STATUS=1`，或任一 `*_VERSION_CODE` 为非 0
-- 或设置 `MG_DIR_PATH` 指向自定义目录（`is_custom_mg_dir` 为真即不触发）
+`FCL_VERSION_CODE` 已被传递且非 0。无需额外处理。
+
+备用手段（官方支持，当前不需要）：传 `MG_PLUGIN_STATUS=1`，或设 `MG_DIR_PATH` 指向自定义目录。
 
 ---
 
@@ -147,6 +164,19 @@ bool isANGLESupported = checkIfANGLESupported(gpu_cstr);
 
 ---
 
+## 5b. 这个修改版改了什么 —— 无法确认
+
+用户要求「找出他的逻辑」。我做了能做的比对，**结论是确认不了**：
+
+| 比对项 | 结果 |
+|---|---|
+| 配置项 | 修改版 so 内含 13 个 Setting 键，其中 `multidrawMode` / `bufferCoherentAsFlush` / `ignoreError` 经搜索**在官方 `settings.cpp` 中均存在** → 配置层与官方一致 |
+| 官方同版本二进制 | 官方仓库 **无 tags、无 releases**，`MobileGlues-release` 仓库 main 分支为空 → **取不到官方 1.3.4 的 so 做二进制比对** |
+| Mali 逻辑 | so 内 21354 个字符串中，"mali" 仅命中 GLSL 的 `normalize` 注释与 FSR 着色器源码，**无设备适配分支** |
+| APK 名 `ap` 后缀 | 含义未确认 |
+
+**在无法确认差异的前提下，"按他的逻辑重写"缺少对象**——我不知道要复现什么。
+
 ## 6. 法律判断（必须写明）
 
 用户要求：「找出他的逻辑并以不同的代码实现（避免法律风险）」。
@@ -187,6 +217,18 @@ LGPL-2.1 对"通过动态链接使用库"是允许的，义务只有三条：
 **这条路达成的效果与"内置一个 Mali 专用渲染器"一致，且不产生任何衍生作品问题。**
 
 ---
+
+## 7b. KCU 侧真正要做的事（零渲染器代码）
+
+按 §7 的合法路径，"Mali 专用选项"在 KCU 侧是三件事：
+
+| # | 事项 | 现状 |
+|---|---|---|
+| 1 | 渲染器列表增加 MobileGlues 项 | FCL 已有 `custom_renderer.json` 契约（包名 / 渲染器三元组 / boat 与 pojav 两套环境变量 / MC 版本区间），可复用 |
+| 2 | 传 `MG_PLUGIN_STATUS` 或确认 `FCL_VERSION_CODE` | **已天然满足**（§3 实测） |
+| 3 | 按 GPU 生成 `/sdcard/MG/config.json` | 待做。Mali 保守档建议 `enableANGLE=2`（ForceDisable），因官方 `checkIfANGLESupported` 在非 Adreno 上退化为 `hasVulkan12()`，而 Mali 的 Vulkan 驱动质量参差 |
+
+**第 3 条才是"Mali 支持"的实质**：不是改渲染器，是在启动器侧按 GPU 型号选一套保守配置。
 
 ## 8. 本轮未做的事
 
