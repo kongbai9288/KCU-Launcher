@@ -125,8 +125,6 @@
     <string name="action_share">Bagikan</string>
     <string name="action_upload">Unggah log</string>
     <string name="action_skip">Melewati</string>
-    <string name="announcement">Pengumuman: %s</string>
-    <string name="announcement_significant">Pengumuman ini adalah pengumuman penting. Mohon konfirmasi bahwa Anda telah membaca pengumuman ini sebelum menyembunyikannya. Apakah Anda ingin melanjutkan menyembunyikannya?</string>
     <string name="archive_author">Penulis(s)</string>
     <string name="archive_date">Tanggal Publikasi</string>
     <string name="archive_game_version">Versi Permainan</string>
