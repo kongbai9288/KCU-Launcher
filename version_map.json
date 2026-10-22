@@ -1,6 +1,33 @@
 [
   {
     "type": "release",
+    "versionCode": 28,
+    "versionName": "0.28.0",
+    "date": "2026.10.22",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "v0.27.0 只移除远程拉取，视图与字段仍在。完整链路：ui_main.xml 的 announcement_container 含 announcement_layout 及 title/announcement/date/hide 四个子视图与两条分隔线；MainUI 有 6 个字段加 Announcement 对象加 6 处 findViewById 及 checkAnnouncement/hideAnnouncement/onClick 三方法；Announcement.java 仅被 MainUI 引用。",
+          "全局搜索 Announcement 命中 16 处，Java 源码仅 Announcement.java 自身与 MainUI.java，其余为各语言 strings 与隐私政策文本。R.id.hide/title/date/announcement 全局无其他引用，确认可安全删。",
+          "第一个 XML 踩坑：按字符串索引找闭合位置误判，残留 hide 按钮与多余闭合标签，ElementTree 解析报 mismatched tag: line 16。重拉原文件改用 ET root.remove()。",
+          "第二个 XML 踩坑：ElementTree 写回后命名空间前缀变成 ns0/ns1 且全部压成单行。手工重写恢复 android 与 app 前缀及缩进格式。",
+          "MainUI.java 从 520 行降至 137 行：删 6 个视图字段、Announcement 对象、6 处 findViewById、checkAnnouncement、hideAnnouncement、onClick 方法，同步移除 implements View.OnClickListener（否则抽象方法未实现会编译失败）。清理 import 5 个：LinearLayoutCompat、FCLButton、FCLAlertDialog、View、FCLTextView。",
+          "ui_main.xml 删除 announcement_container 整块后仅剩 watermark 与 skin_viewer 两个元素。删除 Announcement.java 文件。",
+          "审核确认：watermark 的约束指向 parent 不依赖被删元素，aapt 不会报错。",
+          "对用户使用逻辑的影响：首页只有水印与皮肤预览无公告卡、原隐藏公告按钮已不存在、启动无公告网络请求、皮肤预览未受影响。",
+          "对未来的影响：首页结构大幅简化为后续重做舞台腾出空间；announcement/update_date/announcement_significant/button_hide 四个字符串各语言版本已无引用待清；若将来要自建公告需新建视图与端点不能复用上游。",
+          "审核 pass。哈希回执：MainUI.java:28 -> publi -> SHA-1 a2b01af26284f72d80bc330e266a55b876dd7ebd。",
+          "冒烟测试：Actions run 39727655022，arm64 169179021 字节，无新增失败 issue。",
+          "本轮额外完成：清理历史假 issue 69 条，此前因 workflow 缺陷产生的 build 失败噪声，此前 API 403 本次重试成功。",
+          "未做：四个公告相关字符串各语言版本未清、首页舞台未重做、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 27,
     "versionName": "0.27.0",
     "date": "2026.10.22",
