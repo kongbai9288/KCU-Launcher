@@ -16,15 +16,9 @@ import java.io.OutputStream
 @OptIn(kotlinx.serialization.InternalSerializationApi::class)
 @Serializable
 data class ThemePreference(
-    val color: Int = 0xFF3D6B66.toInt(),
-    val colorDark: Int = 0xFF4F8580.toInt(),
-    val color2: Int = 0xFF2C2C2A.toInt(),
-    val color2Dark: Int = 0xFFE4E1D8.toInt(),
     val fullscreen: Boolean = false,
     val closeSkinModel: Boolean = false,
-    val animationSpeed: Int = 8,
-    /** 派生色（ltColor/dkColor）透明度，0 完全透明 ~ 255 完全不透明，独立于主要主题色的 alpha */
-    val colorAlpha: Int = 255
+    val animationSpeed: Int = 8
 )
 
 val Context.themeDataStore: DataStore<ThemePreference> by dataStore(
