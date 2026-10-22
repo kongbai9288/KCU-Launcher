@@ -1,6 +1,34 @@
 [
   {
     "type": "release",
+    "versionCode": 29,
+    "versionName": "0.29.0",
+    "date": "2026.10.22",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "追溯：UpdateChecker.check() 拉取 FCL 的 version_map.json（GitHub raw 与 gitee 两个来源），调用点 5 处——UpdateChecker、QuarkPromo、LauncherSettingPage、UpdateDialog、MainActivity。",
+          "发现必然发生的问题：判据为 version.getVersionCode() > getCurrentVersionCode(context)，后者取本应用 versionCode（KCU 现为 28），而 FCL 版本表 versionCode 远高。结果任何 FCL 版本都比 KCU 新，必定弹更新框，用户点确定即下载并安装 FCL 的 APK。同时 check() 还把 FCL 的夸克网盘链接缓存进 QuarkPromo。",
+          "UpdateDialog 另有两处上游依赖：长按确定按钮打开 FCL releases 页面；确定后下载 url 经 -all 替换为 -arm64-v8a 再落 CACHE_DIR/FoldCraftLauncher.apk 并拉起安装。",
+          "为什么没改成指向自己的仓库：比对 schema 后放弃。RemoteVersion.description[].text 期望 String 而我们的 version_map.json 是 String[]，GSON 会解析失败；url 与 netdiskUrl 我们没有；UpdateDialog 用 getUrl() 做替换后下载，url 为 null 直接 NPE。产物目前只是 Actions artifacts 无稳定直链。现阶段没有自有更新源，联网检查无从谈起。",
+          "UpdateChecker 改动：删两个 FCL URL 常量，check 与 showCurrentChangelog 改为不联网的空任务，清理 8 个失效 import（NetworkUtils/JsonUtils/LocaleUtils/TypeToken/ArrayList/Comparator/QuarkPromo/Toast），150 行降至 89 行。",
+          "UpdateDialog 改动：长按链接改为 https://github.com/kongbai9288/KCU-Launcher/releases/latest，下载缓存文件名 FoldCraftLauncher.apk 改为 KCU-Launcher.apk，task.setName 同步。",
+          "保留 RemoteVersion、ChangelogDialog、UpdateDialog 全部类与 setIgnore/isIgnore/getCurrentVersionCode，将来接自有更新源直接复用不必重写。",
+          "已知代价：设置页检查更新与查看更新内容目前是静默无反馈的空操作。这是诚实状态，没有更新源就是没有，不拿上游的糊弄。",
+          "同时完成：删除已无引用的公告字符串 announcement 与 announcement_significant，覆盖 13 个 values 目录中的 11 个，ja 与 zh-rTW 本就没有这两个键。",
+          "审核拦下的误删：update_date 看似与公告相关，实际被 UpdateDialog.java:75 与 ChangelogDialog.java:42 使用，必须保留。button_hide 无法确认无引用，保守保留。",
+          "审核 pass。哈希回执主取 UpdateDialog.java:89 -> Andro -> SHA-1 171cc53728d2b87f88b2007270ebbb3765bbcb94。",
+          "主动披露哈希碰撞：UpdateChecker.java:64 取出的 5 个字母也是 publi，与上轮 MainUI.java:28 的哈希 a2b01af26284f72d80bc330e266a55b876dd7ebd 相同，因为两行都以 public 开头前 5 个不同字母必然是 p/u/b/l/i。这是取字规则的真实碰撞而非复用旧值，故改用 UpdateDialog 那行作主回执。",
+          "冒烟测试：Actions run 39729632413 产出 5 个 APK——all 326250279、x86_64 174875471、arm64 169178831、arm 161919056、x86 155568030 字节，无新增失败 issue。",
+          "未做：QuarkPromo 夸克网盘推广仍有独立入口未处理、自建更新源未建、button_hide 引用未确认、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 28,
     "versionName": "0.28.0",
     "date": "2026.10.22",
