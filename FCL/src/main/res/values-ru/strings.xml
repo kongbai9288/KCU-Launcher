@@ -107,8 +107,6 @@
     <string name="action_retry">Повторить попытку</string>
     <string name="action_share">Поделиться</string>
     <string name="action_skip">Пропустить</string>
-    <string name="announcement">Объявление: %s</string>
-    <string name="announcement_significant">Это объявление является важным. Пожалуйста, подтвердите, что вы прочитали это объявление, прежде чем скрывать его.</string>
     <string name="archive_author">Авторы</string>
     <string name="archive_date">Дата публикации</string>
     <string name="archive_game_version">Версия игры</string>
