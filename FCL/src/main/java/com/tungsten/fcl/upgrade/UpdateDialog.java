@@ -86,7 +86,7 @@ public class UpdateDialog extends FCLDialog implements View.OnClickListener {
         netdisk.setOnClickListener(this);
 
         positive.setOnLongClickListener(view -> {
-            AndroidUtilKt.openLink(getContext(),"https://github.com/FCL-Team/FoldCraftLauncher/releases/latest");
+            AndroidUtilKt.openLink(getContext(), "https://github.com/kongbai9288/KCU-Launcher/releases/latest");
             return true;
         });
 
@@ -118,13 +118,13 @@ public class UpdateDialog extends FCLDialog implements View.OnClickListener {
             dialog.setTitle(getContext().getString(R.string.update_launcher));
             Schedulers.androidUIThread().execute(() -> {
                 TaskExecutor executor = Task.composeAsync(() -> {
-                    FileDownloadTask task = new FileDownloadTask(NetworkUtils.toURL(getTargetArchUrl()), new File(FCLPath.CACHE_DIR, "FoldCraftLauncher.apk"));
-                    task.setName("FoldCraftLauncher");
+                    FileDownloadTask task = new FileDownloadTask(NetworkUtils.toURL(getTargetArchUrl()), new File(FCLPath.CACHE_DIR, "KCU-Launcher.apk"));
+                    task.setName("KCU-Launcher");
                     return task.whenComplete(Schedulers.androidUIThread(), exception -> {
                         if (exception == null) {
                             Intent intent = new Intent(Intent.ACTION_VIEW);
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            Uri apkUri = FileProvider.getUriForFile(getContext(), getContext().getString(com.tungsten.fcl.R.string.file_browser_provider), new File(FCLPath.CACHE_DIR, "FoldCraftLauncher.apk"));
+                            Uri apkUri = FileProvider.getUriForFile(getContext(), getContext().getString(com.tungsten.fcl.R.string.file_browser_provider), new File(FCLPath.CACHE_DIR, "KCU-Launcher.apk"));
                             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                             intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
                             getContext().startActivity(intent);
