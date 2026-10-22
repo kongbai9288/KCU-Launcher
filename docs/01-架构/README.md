@@ -73,8 +73,9 @@ Android 不允许从公共目录加载可执行代码：
 | 主题引擎（`ThemeEngine` / `ThemeData`） | **拆解** | 87 个 View 依赖其 API，不删类；改为配色常量化，换色/换背景接口 no-op。保留亮暗模式、全屏、皮肤模型、动画速度 |
 | 上游公告（`Announcement` / `MainUI` 公告区） | **删除** | 原启动即请求 FCL 官方仓库公告文本，属隐式联网 |
 | 上游更新源（`UpdateChecker`） | **停用** | KCU versionCode 与 FCL 不同源，不停用会把 FCL 的 APK 推给用户 |
-| 上游网盘推广（`QuarkPromo`） | **停用** | 原按启动次数掷骰子弹窗，第 90 次必弹，中签会取消本次启动 |
+| 上游网盘推广（`QuarkPromo`） | **删除** | 原按启动次数掷骰子弹窗，第 90 次必弹，中签会取消本次启动。v0.30.0 停用，v0.32.0 连同 `com.mio.promo` 包整体删除；`MainActivity` 启动路径已平铺 |
 | 下载入口 | **默认改为导入** | 默认不提供 MC 下载，由用户提供 URL 或本地 jar；原下载页仅在开发者模式（`dev_mode` 哈希校验）下出现 |
 | 账号流程 | **合并** | 离线与正版合并为"输入名称"入口 |
+| 启动计数（`LaunchCountSetting`） | **删除** | 仅被推广机制使用，随之删除。`LEGACY_FILE_NAMES` 中对应文件名**保留**，用于识别并清理旧文件 |
 
 **保留但暂不启用**：`RemoteVersion` / `ChangelogDialog` / `UpdateDialog` —— 将来接自有更新源时直接复用。
