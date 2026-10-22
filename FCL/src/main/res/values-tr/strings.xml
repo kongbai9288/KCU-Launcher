@@ -109,8 +109,6 @@
     <string name="action_share">Paylaş</string>
     <string name="action_upload">Günlük yükle</string>
     <string name="action_skip">Atla</string>
-    <string name="announcement">Duyuru: %s</string>
-    <string name="announcement_significant">Bu duyuru önemli bir duyurudur. Gizlemeden önce bu duyuruyu okuduğunuzu onaylayın. Gizlemeye devam etmek istiyor musunuz?</string>
     <string name="archive_author">Yazar(lar)</string>
     <string name="archive_date">Yayınlanma Tarihi</string>
     <string name="archive_game_version">Oyun Sürümü</string>
