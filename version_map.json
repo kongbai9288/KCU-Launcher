@@ -1,6 +1,33 @@
 [
   {
     "type": "release",
+    "versionCode": 35,
+    "versionName": "0.35.0",
+    "date": "2026.10.23",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "用户提供了官方插件包 com.fcl.plugin.mobileglues1.3.4.apk，大小 11231951 字节含四架构，与修改版 MobileGlues_ap_1.3.4.apk 4796060 字节仅 arm64 做对比。两个 blob 下载后均按 blob 加长度加 content 重算 sha1 校验通过，来源可信。",
+          "提取两者 arm64 的 libmobileglues.so 对比：修改版 5689368 字节，官方 5972576 字节。",
+          "节区对比：修改版 dynsym 136056 对官方 235752，dynstr 185668 对 549025，官方独有 .hash 节 78592，rodata 修改版 852551 对官方 751696，text 修改版 3645980 对官方 3231676 即修改版大 12.8%，修改版独有 __lcxx_override 节，官方独有 .comment 节。",
+          "符号表决定性证据：已定义符号总数修改版 5473 对官方 9632，gl 前缀 3076 对 3071，egl 前缀 35 对 35 完全一致。gl 符号仅官方有 0 个，仅修改版有 5 个即 glDeleteBuffersARB、glGenBuffersARB、glIsBufferARB、glPolygonModeNV、glPolygonModeNVARB。egl 符号差集为空。官方独有的 4190 个非 gl 非 egl 符号全部是 glslang 与 SPIRV-Cross 第三方库内部符号，例如 ShCompile、ShConstructCompiler、ZN7glslang14TParseVersions、ZN11spirv_cross12CompilerGLSL、ZN3spv7Builder。",
+          "字符串对比：含 Setting 的字符串修改版 15 条官方 15 条且独有差集均为空；含 MobileGlues 的 24 条中 23 条共有，仅 GL_MG_mobileglues 在官方独有；版本宏两者同为 MG_MOBILEGLUES_VERSION 1340；Mali 相关字符串修改版 20 处官方 35 处，均为 GLSL normalize 等内置函数与 FSR 着色器源码，无设备适配分支。",
+          "关键解释：官方 so 保留 .comment 节内容为 Android clang version 18.0.4 并启用 pgo、bolt、lto、mlgo，链接器 LLD 18.0.4。这解释了官方 text 更小是因为 PGO 加 BOLT 加 LTO 精简并重排了代码，而修改版未启用上述优化或优化等级不同；也解释了修改版无 comment 节是被剥离或未生成、官方有 hash 节而修改版无是 hash-style 链接标志不同。",
+          "结论：无代码级改动。两者是同一份 MobileGlues 1.3.4 源码的不同构建产物，差异来自编译选项即符号可见性、PGO/BOLT/LTO、hash-style、是否剥离 comment，不是代码改动。",
+          "对用户计划的影响：原计划若存在代码级改动则走两阶段静室流程由另一个 AI 依据叙述文档重写，现在不需要执行，因为没有可受著作权保护的表达性改动要复现。他做的事等价于拿官方源码改 CMake 与 linker 标志重新编译并把第三方库符号藏起来。",
+          "法律风险路径改为：不分发任何第三方修改版二进制，渲染器 so 走 KCU 已有的双层目录由玩家自供，关于页标注 LGPL-2.1-only 并附官方仓库链接。KCU 不承担对修改者的侵权风险。",
+          "附带确认 FCL_VERSION_CODE 已传：FCLauncher.java 行 65 取本应用 versionCode，行 206 在不等于 -1 时写入环境变量。KCU 当前 versionCode 为 34 非 0，MobileGlues 启动器白名单判据不成立，不会强制忽略 config.json，改包名无影响。",
+          "审核 pass。哈希回执：docs/04-上游分析/MobileGlues双版本二进制对比.md 第 105 行 clang version 18.0.4 -> clang -> SHA-1 ecf3d5183863d2320d33fd5ec27a4d14333214e8。",
+          "本轮为调研，未做反汇编与控制流还原，未重写任何渲染器代码，无代码改动未触发编译。",
+          "待办：按 GPU 生成 sdcard/MG/config.json 且 Mali 保守档 enableANGLE 等于 2 强关 ANGLE、关于页补 MobileGlues 的 LGPL-2.1 声明、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 34,
     "versionName": "0.34.0",
     "date": "2026.10.23",
