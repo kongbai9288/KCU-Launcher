@@ -104,8 +104,6 @@
     <string name="action_retry">Erneut versuchen</string>
     <string name="action_share">Teilen</string>
     <string name="action_skip">Überspringen</string>
-    <string name="announcement">Ankündigung: %s</string>
-    <string name="announcement_significant">Diese Ankündigung ist wichtig. Bitte bestätigen Sie, dass Sie sie gelesen haben, bevor Sie sie ausblenden.</string>
     <string name="archive_author">Autoren</string>
     <string name="archive_date">Veröffentlichungsdatum</string>
     <string name="archive_game_version">Spielversion</string>
