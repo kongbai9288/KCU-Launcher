@@ -1440,3 +1440,52 @@ schema 对不上：`description[].text` 期望 String，我们是 String[]；`ur
 ### 编译验证（PROVEN）
 
 run **39729632413**，arm64 **169178831 B**，5 个产物，无新增失败 issue。
+
+## 0.30.0 — 2026-10-22
+
+执行者：**yuanbao**
+
+- **上游网盘推广拦截停用**
+
+### 追溯
+
+```
+interceptLaunch → 中文大陆才参与
+  ├─ 有缓存链接 → 弹窗
+  └─ 掷骰子 popupProbability：基础 0.6%，第 80 次起 +10%/次，第 90 次必弹
+       └─ 中签弹窗：点「打开网盘」跳浏览器并取消本次启动
+```
+
+### 现状：半死但风险在
+
+停用 `UpdateChecker` 后缓存链接恒 null，推演下来**当前不会弹窗**。但：
+
+1. 每次启动仍在掷骰子 + 写 DataStore
+2. `pendingPopup` 一置 true 就永远 true（脏状态）
+3. **只要有任何路径写入 `quark_netdisk_url`，第 90 次必弹立刻复活**
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `QuarkPromo` | **92 → 22 行**；两个方法改直通；删 `showDialog`/`popupProbability`/常量；清 11 import |
+| `values`、`values-zh` | 删 4 个 `quark_promo_*` |
+
+保留对象与方法签名，`MainActivity` 零改动。
+
+### 最实质的收益
+
+启动行为**确定化**——原来"这次启动会不会被弹窗打断"是随机的，现在必然不会。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `QuarkPromo.kt` |
+| 行 | **20** |
+| 5 个不同字母 | `f u n i t` |
+| **SHA-1** | **`331f8d3f604e5012ed37182d8054787450e1df6e`** |
+
+### 编译验证（PROVEN）
+
+run **39795067414**，arm64 **169178395 B**，5 个产物，无新增失败 issue。
