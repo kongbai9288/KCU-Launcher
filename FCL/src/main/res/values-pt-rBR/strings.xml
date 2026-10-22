@@ -102,8 +102,6 @@
     <string name="action_retry">Tentar novamente</string>
     <string name="action_share">Compartilhar</string>
     <string name="action_skip">Pular</string>
-    <string name="announcement">Anúncio: %s</string>
-    <string name="announcement_significant">Este anúncio é importante. Por favor certifique que você leu o anúncio antes de desativar. Você deseja desativar-lo?</string>
     <string name="archive_author">Autor(es)</string>
     <string name="archive_date">Data de publicação</string>
     <string name="archive_game_version">Versão do jogo</string>
