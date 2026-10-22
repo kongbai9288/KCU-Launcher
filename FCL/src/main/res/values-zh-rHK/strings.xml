@@ -106,8 +106,6 @@
     <string name="action_retry">重試</string>
     <string name="action_share">分享</string>
     <string name="action_skip">跳過</string>
-    <string name="announcement">公告：%s</string>
-    <string name="announcement_significant">此公告為重要公告，隱藏前請確認你已閱讀此公告，是否繼續隱藏？</string>
     <string name="archive_author">作者</string>
     <string name="archive_date">發佈時間</string>
     <string name="archive_game_version">遊戲版本</string>
