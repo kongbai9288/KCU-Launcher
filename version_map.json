@@ -1,6 +1,33 @@
 [
   {
     "type": "release",
+    "versionCode": 27,
+    "versionName": "0.27.0",
+    "date": "2026.10.22",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "追溯确认：fetchPrimaryColor/fetchBackgroundColor/resetBackground/showColorPicker 跨文件搜索均 total=1 仅 LauncherSettingPage 引用，可安全删。",
+          "删除 6 个死方法共 86 行：showColorPicker 20 行、selectImage 12 行、fetchBackgroundColor 24 行、fetchPrimaryColor 12 行、fetchSecondaryColor 8 行、resetBackground 10 行。",
+          "删除 14 个死 case 分支：THEME_COLOR_SET/DARK_SET/COLOR2_SET/COLOR2_DARK_SET、四个 _FETCH、四个 THEME_COLOR*_RESET、BACKGROUND_LT_SET/DK_SET/LT_RESET/DK_RESET、SEEKBAR_COLOR_ALPHA。",
+          "保留 selectLiveBackground/deleteCursorFile/deleteMenuIconFile 及其分支：视频背景、光标、菜单图标仍为活跃功能。",
+          "移除失效 import 6 个（Page）：IntConsumer、FCLColorPickerDialog、BitmapDrawable、Bitmap、Color、Palette。LauncherSettingPage 从 520 行降至 378 行。",
+          "ThemePreference 精简为 3 个功能字段 fullscreen/closeSkinModel/animationSpeed。旧 theme.json 含未知字段时 kotlinx.serialization 默认忽略并走 defaultValue，SerializationException 已捕获回退。",
+          "MainUI 移除远程公告拉取：原实现启动即请求 raw.githubusercontent.com/FCL-Team/FCL-Repo 与 gitee 镜像的 announcement_v2.txt，全局搜索 total=1 仅此一处。改为容器直接 GONE，删除两个 URL 常量与 6 个失效 import（Task/HttpRequest/Logging/Level/LocaleUtils）。",
+          "关键判断：ThemeData 的 color2 与 colorAlpha 字段不能删，87 个 View 通过 getColor2() 等派生方法使用，删字段等于删运行时 API。",
+          "对用户使用逻辑的影响：设置页主题区无残留空分组、背景区仅视频背景与音量、光标与菜单图标仍在、首页不再显示上游公告且无请求、全屏皮肤模型动画速度与亮暗模式仍生效。",
+          "对未来的影响：首页若需自建公告应走自有端点而非复用上游域名；ui_main.xml 中公告容器与四个子视图已成死视图待清；Announcement 类与相关 strings 待清。",
+          "审核 pass。哈希回执：ThemePreference.kt:21 -> valni -> SHA-1 b07e1a3b63f3c0afd7338ed6ba3aa811176c83fe。",
+          "冒烟测试按 artifacts 数量标准：run 39722035464 arm64 169179610 字节、run 39723204239 arm64 169180087 字节，均 count=5 且无新增失败 issue。",
+          "未做：ui_main.xml 公告死视图未清、Announcement 类与 strings 未清、FCLColorPickerDialog 其他调用点未确认、历史假 issue 清理遇 403 未成、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 26,
     "versionName": "0.26.0",
     "date": "2026.10.22",
