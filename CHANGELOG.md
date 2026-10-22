@@ -1303,3 +1303,46 @@ private const val COLOR = 0xFF3D6B66.toInt()   // const 不能调 .toInt()
 | **39632971157** | **169186090 B** |
 
 下轮待清：`LauncherSettingPage` 中 6 个方法已成死代码，6 个 case 已成死分支。
+
+## 0.27.0 — 2026-10-22
+
+执行者：**yuanbao**
+
+- **主题死代码清理**（6 方法 86 行 + 14 个死分支）
+- **移除上游远程公告拉取**
+
+### 追溯
+
+跨文件搜索确认 6 个方法均 total=1，仅本文件引用。`announcement_v2` 同样仅 MainUI 一处。
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `LauncherSettingPage` | 520 → **378 行**；删 6 方法 + 14 分支 + 6 import |
+| `ThemePreference` | 3 个功能字段 |
+| `MainUI` | 公告不再联网；删 2 URL + 6 import |
+
+**保留**：视频背景、光标、菜单图标三项及其分支。
+
+### 关键判断
+
+`ThemeData` 的 `color2` / `colorAlpha` **不能删**——87 个 View 通过 `getColor2()` 使用，删字段等于删运行时 API。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `ThemePreference.kt` |
+| 行 | **21** |
+| 5 个不同字母 | `v a l n i` |
+| **SHA-1** | **`b07e1a3b63f3c0afd7338ed6ba3aa811176c83fe`** |
+
+### 编译验证（PROVEN）
+
+| run | arm64 |
+|---|---|
+| 39722035464 | 169179610 B |
+| **39723204239** | **169180087 B** |
+
+均 artifacts count=5，无新增失败 issue。
