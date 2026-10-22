@@ -1666,4 +1666,6 @@
     <string name="kcu_dev_clear">清除全部标记</string>
     <string name="kcu_dev_clearing">清除中…</string>
     <string name="kcu_dev_cleared">已清除 %1$d 项</string>
+    <string name="kcu_stage_version">Current version</string>
+    <string name="kcu_stage_version_none">Not selected</string>
 </resources>
