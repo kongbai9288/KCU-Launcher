@@ -1384,3 +1384,59 @@ run **39727655022**，arm64 **169179021 B**，无新增失败 issue。
 ### 额外完成
 
 清理历史假 issue **69 条**（workflow 缺陷产生的噪声）。
+
+## 0.29.0 — 2026-10-22
+
+执行者：**yuanbao**
+
+- **【重要】停用上游更新源**
+- **删公告字符串**（11 个语言文件）
+
+### 发现：会把 FCL 的更新推给 KCU 用户
+
+```java
+if (version.getVersionCode() > getCurrentVersionCode(context))
+```
+
+`getCurrentVersionCode` 取**本应用** versionCode（KCU = 28），FCL 版本表远高于此。
+
+**任何 FCL 版本都"比 KCU 新" → 必定弹更新框 → 用户点确定就装 FCL 的 APK。**
+
+不是理论风险，是必然行为。
+
+### 为什么没改成"指向自己的仓库"
+
+schema 对不上：`description[].text` 期望 String，我们是 String[]；`url`/`netdiskUrl` 我们没有；`getUrl()` 为 null 会 NPE。产物只是 Actions artifacts，无稳定直链。
+
+**现阶段没有自有更新源，联网检查无从谈起。**
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `UpdateChecker` | 删 2 个 FCL URL；两个方法改空任务；150 → 89 行 |
+| `UpdateDialog` | 链接指 KCU releases；缓存文件名改 KCU |
+| 11 个 strings.xml | 删 `announcement` / `announcement_significant` |
+
+**保留** `RemoteVersion`/`ChangelogDialog`/`UpdateDialog` —— 接自有源时直接复用。
+
+**已知代价**："检查更新"目前静默无反馈。没有更新源就是没有，不拿上游的糊弄。
+
+### 审核拦下的误删
+
+`update_date` 看似与公告相关，实际被 `UpdateDialog:75` 与 `ChangelogDialog:42` 使用 —— **必须保留**。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `UpdateDialog.java` |
+| 行 | **89** |
+| 5 个不同字母 | `A n d r o` |
+| **SHA-1** | **`171cc53728d2b87f88b2007270ebbb3765bbcb94`** |
+
+**主动披露**：`UpdateChecker.java:64` 取出的 5 个字母也是 `publi`，与上轮 `MainUI.java:28` 哈希相同（`a2b01af2…`）——两行都以 `public` 开头，前 5 个不同字母必然是 p/u/b/l/i。是取字规则的真实碰撞，不是复用旧值，故本轮改取 `UpdateDialog` 那行。
+
+### 编译验证（PROVEN）
+
+run **39729632413**，arm64 **169178831 B**，5 个产物，无新增失败 issue。
