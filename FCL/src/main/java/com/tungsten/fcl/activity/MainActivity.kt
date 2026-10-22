@@ -23,7 +23,6 @@ import android.view.animation.OvershootInterpolator
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
@@ -65,7 +64,6 @@ import com.tungsten.fcl.setting.Profile
 import com.tungsten.fcl.setting.Profiles
 import com.tungsten.fcl.ui.UIManager
 import com.tungsten.fcl.ui.download.modpack.LocalModpackPage
-import com.tungsten.fcl.ui.main.MainUI
 import com.tungsten.fcl.ui.version.VersionListViewModel
 import com.tungsten.fcl.ui.version.Versions
 import com.tungsten.fcl.upgrade.UpdateChecker
@@ -125,7 +123,6 @@ class MainActivity : FCLActivity(), OnSelectListener, View.OnClickListener {
     lateinit var permissionResultLauncher: ActivityResultLauncher<String>
     private lateinit var sharedPreferences: SharedPreferences
     private var rightMenuWidth = 0
-    private var skinViewerWidth = 0
 
     /** 右菜单显示/隐藏手势：双指在 right_menu 区域内水平滑动切换（左滑显示、右滑隐藏），不消费事件 */
     private var twoFingerStartX = 0f
@@ -244,10 +241,6 @@ class MainActivity : FCLActivity(), OnSelectListener, View.OnClickListener {
                         0 -> {
                             refreshMenuView(home)
                             home.setSelected(true)
-                            // 主页重建/重新进入时应用皮肤位置状态（right_menu 隐藏则固定；
-                            // skinViewerWidth 仅在隐藏右菜单时捕获，未捕获过（为 0）时保持默认百分比布局，
-                            // 否则会把皮肤宽度设为 0 导致模型消失
-                            fixSkinViewerPosition(binding.rightMenu.visibility != View.VISIBLE && skinViewerWidth > 0)
                         }
 
                         1 -> {
@@ -602,43 +595,15 @@ class MainActivity : FCLActivity(), OnSelectListener, View.OnClickListener {
         menu.visibility = View.VISIBLE
         menu.translationX = rightMenuWidth.toFloat()
         menu.animate().translationX(0f).setDuration(200).start()
-        fixSkinViewerPosition(false)
     }
 
     private fun hideRightMenu() {
         val menu = binding.rightMenu
         rightMenuWidth = menu.width
-        // 记录皮肤当前宽度（隐藏后内容区扩展，用于固定皮肤位置）
-        val ui = UIManager.instance.currentUI
-        if (ui is MainUI) {
-            skinViewerWidth = ui.contentView.findViewById<View>(R.id.skin_viewer).width
-        }
         menu.animate().translationX(rightMenuWidth.toFloat()).setDuration(200).withEndAction {
             menu.visibility = View.GONE
             menu.translationX = 0f
-            fixSkinViewerPosition(true)
         }.start()
-    }
-
-    /**
-     * right_menu 隐藏时内容区扩展为全宽，但皮肤预览固定在原位置：
-     * 宽度保持原值，end 侧留出菜单宽度。
-     */
-    private fun fixSkinViewerPosition(fix: Boolean) {
-        val ui = UIManager.instance.currentUI
-        if (ui !is MainUI) return
-        val skin = ui.contentView.findViewById<View>(R.id.skin_viewer)
-        val params = skin.layoutParams as ConstraintLayout.LayoutParams
-        if (fix) {
-            params.width = skinViewerWidth
-            params.matchConstraintPercentWidth = -1f
-            params.marginEnd = rightMenuWidth
-        } else {
-            params.width = 0
-            params.matchConstraintPercentWidth = 0.5f
-            params.marginEnd = 0
-        }
-        skin.layoutParams = params
     }
 
     /** 展开下载面板：常规内容向下滑出、面板自上方滑入；右菜单隐藏或尚未布局时静态切换 */
