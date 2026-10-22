@@ -400,3 +400,15 @@
 191. **覆写生命周期方法前必须确认父类有该方法**：`FCLCommonUI` 没有 `onStart`/`onStop`（源码注释明示"替代原 onStart/onStop 生命周期"），加 `@Override` 会直接编译失败。页面恢复刷新应挂 `OnAttachStateChangeListener.onViewAttachedToWindow`。
 192. **优先用静态无参 API 而非实例属性**：`Profiles.getSelectedVersion()`（静态）比 `Profiles.getSelectedProfile().selectedVersion`（依赖 getter 形式）稳，后者在 Kotlin/Java 互调时形式可能不同。
 193. **取哈希回执时注意取字碰撞**：以 `public` 开头的方法声明行，前 5 个不同字母恒为 p/u/b/l/i，会与所有同类行碰撞。取字行应选含特征标识符的那一行。
+
+---
+
+## 29. 追加硬规则（v36，2026-10-23 01:3x）
+
+194. **删除方法前必须用 GitHub code search API 做全仓检索，禁止只在本地工作目录 grep**：本地 `raw/` 只含下载过的少数文件，本地为 0 是假象。实例：删 `MainUI.refreshSkin()` 时本地 grep 无调用点，实际 `AccountListItem.kt:199` 在调它，编译直接失败。
+195. **code search 索引会滞后，但仍是唯一的全仓检索手段**：命中结果可能包含已删除的旧内容，需结合本地文件二次确认；不能因为"可能滞后"就不用。
+196. **删除类/方法时要区分"本地定义"与"跨界调用"**：同名方法可能存在于多个类（如 `OfflineAccountSkinDialog.refreshSkin()` 是它自己的私有方法），只有指向目标类型的那处才是真调用点，需逐条看上下文确认。
+197. **GITHUB_ENV 的写入必须在 `exit` 之前**：步骤 `exit 1` 之后写入 GITHUB_ENV 的内容不会被保留。日志上报必须放在失败判定之前，否则失败时永远拿不到日志尾部。
+198. **上报步骤的 `if` 不要依赖失败步骤写入 `env.*` 变量**：该值在后续 step 级 `if` 中不可靠（实测导致上报 skipped）。改用 `always() && steps.<id>.outcome == 'failure'`。
+199. **空覆写（只剩 `super.xxx()`）应整体删除**：走父类默认等价，保留反而误导读者以为有自定义行为。
+200. **判断"是否是死代码"不能只看定义处有无调用**：要沿调用链向上追——`Adapter → Item → 目标方法`、`Dialog → Item → 目标方法` 这类间接链很容易漏。
