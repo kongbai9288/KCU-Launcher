@@ -41,7 +41,6 @@ import com.mio.device.supportFor
 import com.mio.download.DownloadManager
 import com.mio.manager.RendererManager
 import com.mio.plugin.DriverPlugin
-import com.mio.promo.QuarkPromo
 import com.mio.ui.dialog.RendererSelectDialog
 import com.mio.ui.dialog.VulkanCheckDialog
 import com.mio.ui.popup.VersionSwitchPopup
@@ -770,17 +769,15 @@ class MainActivity : FCLActivity(), OnSelectListener, View.OnClickListener {
                 .interpolator(OvershootInterpolator()).start()
             return
         }
-        QuarkPromo.interceptLaunch(this) {
-            val selectedProfile = Profiles.getSelectedProfile()
-            DriverPlugin.selected = runCatching {
-                DriverPlugin.driverList.find {
-                    it.driver == selectedProfile.getVersionSetting(versionId).driver
-                }
-            }.getOrNull() ?: DriverPlugin.driverList[0]
-            refreshScreenSize()
-            DisplayUtil.refreshDisplayMetrics(this)
-            checkVulkanThenLaunch(selectedProfile, versionId)
-        }
+        val selectedProfile = Profiles.getSelectedProfile()
+        DriverPlugin.selected = runCatching {
+            DriverPlugin.driverList.find {
+                it.driver == selectedProfile.getVersionSetting(versionId).driver
+            }
+        }.getOrNull() ?: DriverPlugin.driverList[0]
+        refreshScreenSize()
+        DisplayUtil.refreshDisplayMetrics(this)
+        checkVulkanThenLaunch(selectedProfile, versionId)
     }
 
     /**
