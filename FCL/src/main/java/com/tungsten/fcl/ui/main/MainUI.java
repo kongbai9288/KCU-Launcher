@@ -20,22 +20,14 @@ import com.tungsten.fcl.setting.Accounts;
 import com.tungsten.fclcore.auth.Account;
 import com.tungsten.fclcore.fakefx.beans.InvalidationListener;
 import com.tungsten.fclcore.task.Schedulers;
-import com.tungsten.fclcore.task.Task;
-import com.tungsten.fclcore.util.Logging;
-import com.tungsten.fclcore.util.io.HttpRequest;
+
 import com.tungsten.fcllibrary.component.dialog.FCLAlertDialog;
 import com.tungsten.fcllibrary.component.theme.ThemeEngine;
 import com.tungsten.fcllibrary.component.ui.FCLCommonUI;
 import com.tungsten.fcllibrary.component.view.FCLButton;
 import com.tungsten.fcllibrary.component.view.FCLTextView;
-import com.tungsten.fcllibrary.util.LocaleUtils;
-
-import java.util.logging.Level;
 
 public class MainUI extends FCLCommonUI implements View.OnClickListener {
-
-    public static final String ANNOUNCEMENT_URL = "https://raw.githubusercontent.com/FCL-Team/FCL-Repo/refs/heads/main/res/announcement_v2.txt";
-    public static final String ANNOUNCEMENT_URL_CN = "https://gitee.com/fcl-team/FCL-Repo/raw/main/res/announcement_v2.txt";
 
     private LinearLayoutCompat announcementContainer;
     private LinearLayoutCompat announcementLayout;
@@ -150,23 +142,13 @@ public class MainUI extends FCLCommonUI implements View.OnClickListener {
         }
     }
 
-
+    /**
+     * 上游远程公告已移除。
+     * 原实现启动时向 FCL 官方仓库（GitHub raw / Gitee）拉取公告文本，
+     * 属于对上游域名的隐式联网；本项目不再请求，容器保持隐藏。
+     */
     private void checkAnnouncement() {
-        try {
-            String url = LocaleUtils.isChinese(getContext()) ? ANNOUNCEMENT_URL_CN : ANNOUNCEMENT_URL;
-            Task.supplyAsync(() -> HttpRequest.HttpGetRequest.GET(url).getJson(Announcement.class))
-                    .thenAcceptAsync(Schedulers.androidUIThread(), announcement -> {
-                        this.announcement = announcement;
-                        if (!announcement.shouldDisplay(getContext()))
-                            return;
-                        announcementContainer.setVisibility(View.VISIBLE);
-                        title.setText(getContext().getString(R.string.announcement, announcement.getDisplayTitle(getContext())));
-                        announcementView.setText(announcement.getDisplayContent(getContext()));
-                        date.setText(getContext().getString(R.string.update_date, announcement.getDate()));
-                    }).start();
-        } catch (Exception e) {
-            Logging.LOG.log(Level.WARNING, "Failed to get announcement!", e);
-        }
+        announcementContainer.setVisibility(View.GONE);
     }
 
     private void hideAnnouncement() {
