@@ -1346,3 +1346,41 @@ private const val COLOR = 0xFF3D6B66.toInt()   // const 不能调 .toInt()
 | **39723204239** | **169180087 B** |
 
 均 artifacts count=5，无新增失败 issue。
+
+## 0.28.0 — 2026-10-22
+
+执行者：**yuanbao**
+
+- **公告残留清理**（v0.27.0 只移了远程拉取，视图字段仍在）
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `MainUI.java` | **520 → 137 行** |
+| `ui_main.xml` | 删公告容器整块 |
+| `Announcement.java` | **删除** |
+
+移除 `implements View.OnClickListener`——不移除会因抽象方法未实现编译失败。
+
+### 两个 XML 踩坑
+
+1. 按字符串索引找闭合位置误判 → 残留 `hide` 与多余闭合标签 → `mismatched tag`。重拉改用 ET `root.remove()`。
+2. ET 写回把前缀变成 `ns0:`/`ns1:` 且压成单行 → **手工重写**恢复格式。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `MainUI.java` |
+| 行 | **28** |
+| 5 个不同字母 | `p u b l i` |
+| **SHA-1** | **`a2b01af26284f72d80bc330e266a55b876dd7ebd`** |
+
+### 编译验证（PROVEN）
+
+run **39727655022**，arm64 **169179021 B**，无新增失败 issue。
+
+### 额外完成
+
+清理历史假 issue **69 条**（workflow 缺陷产生的噪声）。
