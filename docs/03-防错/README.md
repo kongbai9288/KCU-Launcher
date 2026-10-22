@@ -391,3 +391,12 @@
 187. **legacy 文件名列表不能跟着数据类一起删**：该列表有两个职责——供 `readLegacy<T>()` 读取，以及供 `legacyFiles()` 判断"旧文件是否全部消失"从而驱动 `shouldMigrate` 与 `cleanUp`。删掉文件名会让设备上残留的旧 json 不再被识别为待清理文件，永久残留。**正确做法是删读取、保留文件名。**
 188. **删数据类要三处一起删**：类定义、`Preference` 字段、`Migration` 读取行。漏任何一处都会编译失败。
 189. **平铺 lambda 后必须校验括号配对**：把 `Xxx.callback(this) { ... }` 的 lambda 体提取为顺序语句时，最容易漏掉末尾的闭括号。改完立即统计 `{`/`}` 与 `(`/`)` 数量是否相等。
+
+---
+
+## 28. 追加硬规则（v34，2026-10-23 00:1x）
+
+190. **不要用 ElementTree 写回 Android 布局 XML**：它会把属性**追加**而非替换，导致同一元素出现两个互斥约束（如同时有 `layout_constraintTop_toTopOf` 与 `layout_constraintTop_toBottomOf`），并压成单行、可能改写命名空间前缀。**删除元素可用 ET，新增/修改属性一律手工重写整个文件**，改完校验关键属性的出现次数。这是本项目第二次踩（v0.28.0 是前缀丢失）。
+191. **覆写生命周期方法前必须确认父类有该方法**：`FCLCommonUI` 没有 `onStart`/`onStop`（源码注释明示"替代原 onStart/onStop 生命周期"），加 `@Override` 会直接编译失败。页面恢复刷新应挂 `OnAttachStateChangeListener.onViewAttachedToWindow`。
+192. **优先用静态无参 API 而非实例属性**：`Profiles.getSelectedVersion()`（静态）比 `Profiles.getSelectedProfile().selectedVersion`（依赖 getter 形式）稳，后者在 Kotlin/Java 互调时形式可能不同。
+193. **取哈希回执时注意取字碰撞**：以 `public` 开头的方法声明行，前 5 个不同字母恒为 p/u/b/l/i，会与所有同类行碰撞。取字行应选含特征标识符的那一行。
