@@ -1,6 +1,34 @@
 [
   {
     "type": "release",
+    "versionCode": 34,
+    "versionName": "0.34.0",
+    "date": "2026.10.23",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "追溯：v0.28.0 删公告后 ui_main.xml 只剩 watermark 与 skin_viewer 两个元素，首页没有任何版本信息。Profiles 用法在 MainActivity.kt 中确认三处——549 行 Profiles.getSelectedProfile().selectedVersion、789 行 Profiles.getSelectedVersion()、65 行 import com.tungsten.fcl.setting.Profiles。",
+          "选 Profiles.getSelectedVersion() 静态方法而非 getSelectedProfile().selectedVersion，因后者依赖 Profile 实例的 getter 形式在 Kotlin 与 Java 间可能不同。",
+          "ui_main.xml 改动：新增 stage_card 容器含标题与 stage_version 两个 TextView；skin_viewer 的 top 约束从 parent 改为 stage_card，height_percent 由 0.8 降为 0.7 让位。",
+          "MainUI 改动：新增 stageVersion 字段与 refreshSelectedVersion 方法，在 onCreate 与 onViewAttachedToWindow 各调用一次。",
+          "values 与 values-zh 新增 kcu_stage_version 与 kcu_stage_version_none 两个字符串。",
+          "审核抓到两个必错项。第一版加了 Override public void onStart，但 FCLCommonUI 没有 onStart/onStop 方法，源码注释明写皮肤渲染随页面挂载与回收恢复暂停是替代原 onStart/onStop 生命周期，覆写会编译失败，已改为挂在已有的 OnAttachStateChangeListener.onViewAttachedToWindow 里。",
+          "第二个必错项：ElementTree 写回是在原属性上追加而非替换，导致 SkinViewer 同时存在 layout_constraintTop_toTopOf 与 layout_constraintTop_toBottomOf 两个互斥约束。已手工重写整个 XML 并校验 top 约束数等于 1。这是继 v0.28.0 之后第二次踩 ElementTree 写回的坑。",
+          "其余校验：getSelectedVersion 返回 null 或空时显示未选择避免 NPE；stage_card 与 stage_version 无同名 id 冲突；新增视图 3 个低于单次搬入不超过 4 个的硬规则。",
+          "对用户使用逻辑的影响：打开首页顶部卡片显示当前版本 id，未选版本时显示未选择；旋屏与切后台再回来因视图重建走 attach 会刷新；皮肤预览高度从 80% 降到 70% 不遮挡。",
+          "已知局限：onViewAttachedToWindow 只在视图挂载时触发，若版本页切回首页不重建首页视图则不会刷新，是否成立需实机确认。",
+          "对未来影响：首页有了信息承载点后续加实例名与加载器图标有了落位；refreshSelectedVersion 是 public 可被 MainActivity 主动调用已预留实时刷新入口；skin_viewer 高度若用户觉得模型变小可调回。",
+          "审核 pass。哈希说明：MainUI.java:139 那行 public void refreshSelectedVersion 取字为 publi，与 v0.28.0 的 MainUI.java:28 哈希碰撞，两行都以 public 开头。故改取 143 行 String version = Profiles.getSelectedVersion()，5 字母 Strin，SHA-1 ec521013a367936602eaed033e7b2e3e2136db11。",
+          "冒烟测试：Actions run 39809825125 产出 arm64 169178364 字节，无新增失败 issue。",
+          "未做：版本页切回首页是否刷新需实机确认、卡片与皮肤预览实际观感需实机确认、加载器图标模块未做、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 32,
     "versionName": "0.32.0",
     "date": "2026.10.22",
