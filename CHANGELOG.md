@@ -1533,3 +1533,47 @@ run **39795067414**，arm64 **169178395 B**，5 个产物，无新增失败 issu
 | **SHA-1** | **`cc1c003f2967c6afd23d350abce876d6e64d964e`** |
 
 **本轮无代码改动，未触发编译。** 上轮 run 39795067414 已验证仓库代码状态。
+
+## 0.32.0 — 2026-10-22
+
+执行者：**yuanbao**
+
+- **删除空壳 `QuarkPromo` + 死数据 `LaunchCountSetting`**
+
+### 改动
+
+| 文件 | 改动 |
+|---|---|
+| `QuarkPromo.kt` | **删除** |
+| `MainActivity` | 删 import；启动路径**平铺**（回调嵌套 → 顺序执行） |
+| `AppSettings` | 删数据类（类 + 字段 + 迁移读取三处） |
+
+全仓再无 `com.mio.promo` 包。
+
+### 关键判断：legacy 文件名必须保留
+
+`LEGACY_FILE_NAMES` 有两个职责：
+
+1. 供 `readLegacy<T>()` 读取 —— **已删**
+2. 供 `legacyFiles()` 判断"旧文件是否全部消失"→ 驱动 `shouldMigrate` / `cleanUp`
+
+**删掉文件名 → 残留的 `launch_count_settings.json` 不再被识别 → 永久残留。**
+
+所以：删读取，保留文件名。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `MainActivity.kt` |
+| 行 | **780** |
+| 5 个不同字母 | `c h e k V` |
+| **SHA-1** | **`ae626ef44337e4ce8d044fa98f1822ff4a254345`** |
+
+### 编译验证（PROVEN）
+
+run **39801897300**，arm64 **169177735 B**，无新增失败 issue。
+
+### 新增防错规则 185–189
+
+空壳对象删到底 / 先改调用方再删被调方 / legacy 文件名不跟着删 / 删数据类三处一起 / 平铺 lambda 校验括号。
