@@ -90,12 +90,14 @@ jobs:
           GE=${PIPESTATUS[0]}
           echo "gradle_exit=$GE"
           if [ "$GE" -eq 0 ]; then echo "GRADLE_OK=true" >> "$GITHUB_ENV"; else echo "GRADLE_OK=false" >> "$GITHUB_ENV"; fi
+          # 日志必须在判定失败之前写入：exit 之后写 GITHUB_ENV 不会被保留，
+          # 导致失败时上报步骤永远拿不到日志尾部（无法定位编译错误）
+          { echo "BUILD_LOG<<EOF_DELIM"; tail -c 6000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
           # gradle 失败必须让本步骤失败，否则 job 仍显示 success（谎报成功）
           if [ "$GE" -ne 0 ]; then
             echo "::error::gradle assembleRelease 失败，退出码 $GE"
             exit 1
           fi
-          { echo "BUILD_LOG<<EOF_DELIM"; tail -c 4000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: Build debug
         if: ${{ steps.guard.outputs.has_source == 'true' && github.event_name == 'pull_request' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
@@ -106,11 +108,11 @@ jobs:
           GE=${PIPESTATUS[0]}
           echo "gradle_exit=$GE"
           if [ "$GE" -eq 0 ]; then echo "GRADLE_OK=true" >> "$GITHUB_ENV"; else echo "GRADLE_OK=false" >> "$GITHUB_ENV"; fi
+          { echo "BUILD_LOG<<EOF_DELIM"; tail -c 6000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
           if [ "$GE" -ne 0 ]; then
             echo "::error::gradle assembleDebug 失败，退出码 $GE"
             exit 1
           fi
-          { echo "BUILD_LOG<<EOF_DELIM"; tail -c 4000 /tmp/build.log; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
       - name: 列出产物
         if: ${{ steps.guard.outputs.has_source == 'true' && env.GRADLE_OK == 'true' && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
@@ -174,8 +176,10 @@ jobs:
           path: "*/build/outputs/apk/*/*.apk"
           if-no-files-found: warn
 
+      # 仅在失败时上报，避免噪音；always() 保证前面步骤失败也能执行。
+      # 不依赖 env.GRADLE_OK：该值由失败步骤写入 GITHUB_ENV，在后续 step 级 if 中不可靠。
       - name: 构建结果上报（始终）
-        if: ${{ (steps.gradle.outcome == 'failure' || steps.gradle_debug.outcome == 'failure' || env.GRADLE_OK == 'false') && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
+        if: ${{ always() && (steps.gradle.outcome == 'failure' || steps.gradle_debug.outcome == 'failure') && (github.event.inputs.arch == '' || github.event.inputs.arch == matrix.arch) }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
