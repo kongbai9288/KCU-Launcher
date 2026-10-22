@@ -1,6 +1,32 @@
 [
   {
     "type": "release",
+    "versionCode": 30,
+    "versionName": "0.30.0",
+    "date": "2026.10.22",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "追溯：QuarkPromo.interceptLaunch 在启动游戏前被调用，非中文或非大陆直接放行；中文大陆读缓存网盘链接，pendingPopup 且有链接则直接弹窗，否则按 popupProbability 掷骰子（基础 0.6%，第 80 次起每次 +10%，第 90 次必弹）；中签弹窗点打开网盘会跳浏览器并取消本次启动，点开始游戏才继续。搜索 QuarkPromo 命中 5 处，源码仅自身与 MainActivity。",
+          "现状分析：v0.29.0 停用 UpdateChecker 后 updateNetdiskUrl 不再被调用，缓存链接恒为 null。按逻辑推演，shown 为真但无链接时只置 pendingPopup 并走 else 放行，因此当前实际不会弹窗。",
+          "但保留仍有三个问题：每次启动仍在掷骰子并写 appSettingsDataStore 累积 pityCounter 与 totalLaunchCount；pendingPopup 一旦置 true 就永远 true 属脏状态；只要有任何路径写入 quark_netdisk_url，第 90 次必弹的机制会立刻复活。",
+          "QuarkPromo 改动：updateNetdiskUrl 改为 no-op；interceptLaunch 改为直接调用 onProceed 放行；删除 showDialog、popupProbability、PREF_KEY_NETDISK_URL 常量；清理 11 个失效 import（lifecycleScope、appSettingsDataStore、openLink、FCLAlertDialog、LocaleUtils、launch、first、edit、R、Random、min）；文件从 92 行降至 22 行。",
+          "删除 showDialog 前确认无别处引用；删除 popupProbability 前搜索确认 total=1 仅自身引用。",
+          "保留 QuarkPromo 对象与两个方法签名，使 MainActivity 调用点零改动。",
+          "字符串：values 与 values-zh 删除 4 个 quark_promo_* 字符串，其余 11 个语言目录本就没有这些键，脚本按有则删处理实际仅 2 个文件命中。",
+          "对用户使用逻辑的影响：点启动游戏不再有任何拦截弹窗直接进入、启动计数不再累积、中文大陆用户与非大陆用户行为一致、残留 pendingPopup 为 true 的老用户该字段不再被读取故无影响。",
+          "对代码逻辑的影响：MainActivity 启动回调链缩短一层少一个异步分支使时序更简单、随机数与概率逻辑移除使启动行为确定化。最实质的收益是启动行为确定化，原来这次启动会不会被弹窗打断是随机的，现在必然不会。",
+          "审核 pass。哈希回执：QuarkPromo.kt:20 -> funit -> SHA-1 331f8d3f604e5012ed37182d8054787450e1df6e。",
+          "冒烟测试：Actions run 39795067414 产出 5 个 APK——all 326250277、x86_64 174875272、arm64 169178395、arm 161918539、x86 155567819 字节，无新增失败 issue。",
+          "未做：QuarkPromo 已成空壳对象但未整体删除（需同步改 MainActivity 调用点）、appSettingsDataStore.launchCount 字段是否还有别处使用未确认、首页舞台未重做、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 29,
     "versionName": "0.29.0",
     "date": "2026.10.22",
