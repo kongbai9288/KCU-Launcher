@@ -31,11 +31,6 @@ data class GuidePreference(
 )
 
 @Serializable
-data class LaunchCountSetting(
-    val totalLaunchCount: Int = 0,
-    val pityCounter: Int = 0,
-    val pendingPopup: Boolean = false,
-)
 
 /**
  * 模组列表排序字段：DEFAULT 为扫描加载顺序（增量显示），其余为手动排序维度（全量加载后排序显示）
@@ -110,7 +105,6 @@ data class VersionPinPreference(
 data class AppSettingsPreference(
     val gameItemBar: GameItemBarSetting = GameItemBarSetting(slideSelection = true, doubleTapSwapHands = true),
     val guide: GuidePreference = GuidePreference(),
-    val launchCount: LaunchCountSetting = LaunchCountSetting(),
     val modSort: ModSortPreference = ModSortPreference(),
     val plugin: PluginPreference = PluginPreference(),
     val skinAnimation: SkinAnimationSetting = SkinAnimationSetting(),
@@ -173,7 +167,6 @@ private class LegacySettingsMigration(context: Context) : DataMigration<AppSetti
         return currentData.copy(
             gameItemBar = readLegacy<GameItemBarSetting>("game_item_bar_settings.json") ?: currentData.gameItemBar,
             guide = readLegacy<GuidePreference>("guide_settings.json") ?: currentData.guide,
-            launchCount = readLegacy<LaunchCountSetting>("launch_count_settings.json") ?: currentData.launchCount,
             modSort = readLegacy<ModSortPreference>("mod_sort_settings.json") ?: currentData.modSort,
             plugin = readLegacy<PluginPreference>("plugin_settings.json") ?: currentData.plugin,
             skinAnimation = readLegacy<SkinAnimationSetting>("skin_animation_settings.json") ?: currentData.skinAnimation,
