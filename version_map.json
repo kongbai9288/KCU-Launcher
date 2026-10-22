@@ -1,6 +1,37 @@
 [
   {
     "type": "release",
+    "versionCode": 36,
+    "versionName": "0.36.0",
+    "date": "2026.10.23",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "用户确认：切换角色指登录时的 CharacterSelector，主页的皮肤预览不要。com/mio/skin 包九个文件保留不动，待后续挪到角色选择界面。",
+          "追溯：ui_main.xml 的 skin_viewer 是 SkinViewer 自定义 View；MainUI.java 有 skinViewer、renderer、skinLoader、accountListener 四个字段与 AnimationDialog 双击、restoreSkinSettings 与 saveSkinSettings、onPause 与 onResume 覆写、refreshSkin 方法；MainActivity.kt 有 skinViewerWidth 字段与 fixSkinViewerPosition 方法及三处调用。",
+          "ui_main.xml 改动：删除 SkinViewer，剩 stage_card 与 watermark 两个元素。",
+          "MainUI 改动：删除全部皮肤字段、AnimationDialog 双击弹窗、attach 与 detach 里的皮肤分支、onPause 与 onResume 覆写（只剩 super 调用的空覆写无意义，走父类默认等价）、refreshSkin 方法；删除 13 个失效 import。文件从 161 行降至 61 行。",
+          "MainActivity 改动：删除 skinViewerWidth 字段、fixSkinViewerPosition 方法及三处调用点；删除 ConstraintLayout 与 MainUI 两个失效 import，删前经全仓搜索确认无其他引用。",
+          "AccountListItem 改动：删除第 199 行 UIManager.instance.mainUI.refreshSkin(account) 的调用。",
+          "编译失败事故：第一次上传后 run 39819890952 失败。根因是 refreshSkin 不是死代码，AccountListItem 的 refreshSkinBinding 在调用它，AccountListAdapter 经 item.refreshSkinBinding 触发，OfflineAccountSkinDialog 与 MicrosoftAccountSkinDialog 也会调，删方法导致 unresolved reference。",
+          "为什么会漏：我在本地 raw 目录 grep，那个目录只有下载过的十几个文件不是全仓，本地为 0 是假象。必须用 GitHub code search API 做全仓检索，检索显示 refreshSkin 命中五个文件含四个 account UI，一眼可见。",
+          "连带发现两个 CI 缺陷。其一 BUILD_LOG 写入在 exit 1 之后，失败时 GITHUB_ENV 不会被保留，上报永远拿不到日志尾部。其二上报步骤的 if 依赖 env.GRADLE_OK，而该值由失败步骤写入，在后续 step 级 if 中不可靠导致上报 skipped。",
+          "CI 修复：把 BUILD_LOG 写入移到 exit 判定之前并把 tail 从 4000 提到 6000 字节；上报条件改为 always 且用 steps.gradle.outcome 等于 failure 判断，不再依赖 env。修复后 run 39820845511 的上报步骤由 skipped 变为 success，确认修复有效。",
+          "重要发现：dialog_offline_account_skin.xml 与 dialog_microsoft_account_skin.xml 本身就有 SkinViewer，即皮肤预览加角色切换这个组合在账号皮肤对话框里已天然存在，不需要新造容器，用户计划的落点可直接选这里。",
+          "对用户使用逻辑的影响：打开主页只剩顶部版本卡片与底部水印无 3D 皮肤模型；右菜单展开收起不再有皮肤位置修正动画；账号列表切账号时头像与皮肤缩略图照常刷新，只少了刷新主页模型那一步；离线与微软账号皮肤对话框不受影响，里面有自己的 SkinViewer。",
+          "对未来的影响：主页变空后续舞台重做需另行设计；com/mio/skin 九个文件仍编译进 APK 体积未减；AnimationDialog、SkinAnimations、GltfPlayerModel 已无主页引用是将来删除的候选；ThemeData 的 isCloseSkinModel 设置项主页不再读取但账号对话框未确认是否读取需实机确认该开关是否失效。",
+          "对代码逻辑的影响：MainUI 由 161 行降至 61 行；MainActivity 少四处皮肤位置逻辑使右菜单动画不再牵扯皮肤；首页不再创建 GL 渲染表面使冷启动开销与内存占用下降；账号列表不再跨 UI 触发主页重绘使切账号时少一次跨模块调用。",
+          "审核 pass。哈希回执：AccountListItem.kt 第 198 行 MainActivity.getInstance().refreshAvatar(account)，5 字母 Mainc，SHA-1 0f630ba2b89fa71505f5d7b2a156d70b892d21dd。取材行即删除处的前一行即本次修复的作用点。",
+          "冒烟测试：Actions run 39821739010 产出五个 APK——all 326244770、x86_64 174871839、arm64 169176801、arm 161916743、x86 155565108 字节。",
+          "未做：AnimationDialog 与 SkinAnimations 与 GltfPlayerModel 是否已无引用待确认、isCloseSkinModel 设置项是否应一并移除、主页舞台未重做、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 35,
     "versionName": "0.35.0",
     "date": "2026.10.23",
