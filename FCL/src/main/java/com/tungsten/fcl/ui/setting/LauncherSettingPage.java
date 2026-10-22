@@ -11,9 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
+
 import android.net.Uri;
 import android.provider.Settings;
 import android.view.WindowManager;
@@ -22,7 +20,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.palette.graphics.Palette;
+
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.mio.ui.adapter.SpacingItemDecoration;
@@ -39,7 +37,7 @@ import com.tungsten.fclcore.task.Task;
 import com.tungsten.fclcore.util.Logging;
 import com.tungsten.fclcore.util.io.FileUtils;
 import com.tungsten.fcllibrary.component.dialog.FCLAlertDialog;
-import com.tungsten.fcllibrary.component.dialog.FCLColorPickerDialog;
+
 import com.tungsten.fcllibrary.component.theme.ThemeData;
 import com.tungsten.fcllibrary.component.theme.ThemeEngine;
 import com.tungsten.fcllibrary.component.ui.FCLPage;
@@ -53,7 +51,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.function.IntConsumer;
+
 import java.util.logging.Level;
 
 /**
@@ -91,7 +89,6 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
         binding.settingList.setAdapter(adapter);
         adapter.rebuild();
     }
-
 
     @Override
     public void onButtonClick(LauncherSettingTag tag) {
@@ -146,36 +143,6 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
                     }
                 }
                 break;
-            case THEME_COLOR_SET:
-                showColorPicker(ThemeEngine.getInstance().getTheme()._getColor(),
-                        color -> ThemeEngine.getInstance().applyColor(color),
-                        color -> ThemeEngine.getInstance().applyAndSave(getContext(), color),
-                        color -> ThemeEngine.getInstance().applyColor(color));
-                break;
-            case THEME_COLOR_DARK_SET:
-                showColorPicker(ThemeEngine.getInstance().getTheme().getColorDark(),
-                        color -> ThemeEngine.getInstance().applyColorDark(color),
-                        color -> ThemeEngine.getInstance().applyAndSaveDark(getContext(), color),
-                        color -> ThemeEngine.getInstance().applyColorDark(color));
-                break;
-            case THEME_COLOR2_SET:
-                showColorPicker(ThemeEngine.getInstance().getTheme()._getColor2(),
-                        color -> ThemeEngine.getInstance().applyColor2(color),
-                        color -> ThemeEngine.getInstance().applyAndSave2(getContext(), color),
-                        color -> ThemeEngine.getInstance().applyColor2(color));
-                break;
-            case THEME_COLOR2_DARK_SET:
-                showColorPicker(ThemeEngine.getInstance().getTheme().getColor2Dark(),
-                        color -> ThemeEngine.getInstance().applyColor2Dark(color),
-                        color -> ThemeEngine.getInstance().applyAndSave2Dark(getContext(), color),
-                        color -> ThemeEngine.getInstance().applyColor2Dark(color));
-                break;
-            case BACKGROUND_LT_SET:
-                selectImage(false);
-                break;
-            case BACKGROUND_DK_SET:
-                selectImage(true);
-                break;
             case BACKGROUND_LIVE_SET:
                 selectLiveBackground();
                 break;
@@ -185,36 +152,12 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
             case MENU_ICON_SET:
                 selectMenuIcon();
                 break;
-            case THEME_COLOR_RESET:
-                ThemeEngine.getInstance().applyAndSave(getContext(), getContext().getColor(R.color.default_theme_color));
-                break;
-            case THEME_COLOR_DARK_RESET:
-                ThemeEngine.getInstance().applyAndSaveDark(getContext(), getContext().getColor(R.color.default_theme_color_dark));
-                break;
-            case THEME_COLOR2_RESET:
-                ThemeEngine.getInstance().applyAndSave2(getContext(), Color.parseColor("#000000"));
-                break;
-            case THEME_COLOR2_DARK_RESET:
-                ThemeEngine.getInstance().applyAndSave2Dark(getContext(), Color.parseColor("#FFFFFF"));
-                break;
             case BACKGROUND_LIVE_RESET:
                 try {
                     FileUtils.forceDelete(new File(FCLPath.LIVE_BACKGROUND_PATH));
                     MainActivity.getInstance().setupLiveBackground();
                 } catch (IOException ignore) {
                 }
-                break;
-            case THEME_COLOR_FETCH:
-            case THEME_COLOR_DARK_FETCH:
-            case THEME_COLOR2_FETCH:
-            case THEME_COLOR2_DARK_FETCH:
-                fetchBackgroundColor(tag);
-                break;
-            case BACKGROUND_LT_RESET:
-                resetBackground(false);
-                break;
-            case BACKGROUND_DK_RESET:
-                resetBackground(true);
                 break;
             case CURSOR_RESET:
                 deleteCursorFile();
@@ -253,38 +196,6 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
                 builder.setNegativeButton(getContext().getString(com.tungsten.fcl.R.string.dialog_positive), null);
                 builder.create().show();
             });
-        });
-    }
-
-    private void showColorPicker(int initColor, IntConsumer apply, IntConsumer applyAndSave, IntConsumer restore) {
-        FCLColorPickerDialog dialog = new FCLColorPickerDialog(getContext(), initColor, new FCLColorPickerDialog.Listener() {
-            @Override
-            public void onColorChanged(int color) {
-                apply.accept(color);
-            }
-
-            @Override
-            public void onPositive(int destColor) {
-                applyAndSave.accept(destColor);
-            }
-
-            @Override
-            public void onNegative(int initColor) {
-                restore.accept(initColor);
-            }
-        });
-        dialog.show();
-    }
-
-    private void selectImage(boolean isDk) {
-        ArrayList<String> suffix = new ArrayList<>();
-        suffix.add(".png");
-        suffix.add(".jpg");
-        suffix.add(".jpeg");
-        MainActivity.getInstance().fileLauncher.launchSingleSelection(null, suffix, files -> {
-            if (files == null) return;
-            String path = files.get(0).toFile(getActivity(), new File(FCLPath.CACHE_DIR)).getAbsolutePath();
-            ThemeEngine.getInstance().applyAndSave(getContext(), ((MainActivity) getActivity()).binding.background, isDk ? null : path, isDk ? path : null);
         });
     }
 
@@ -332,66 +243,12 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
         });
     }
 
-    private void fetchBackgroundColor(LauncherSettingTag tag) {
-        ThemeData theme = ThemeEngine.getInstance().getTheme();
-        switch (tag) {
-            case THEME_COLOR_FETCH:
-                fetchPrimaryColor(theme.getBackgroundLt(), theme._getColor(),
-                        color -> ThemeEngine.getInstance().applyAndSave(getContext(), color));
-                break;
-            case THEME_COLOR_DARK_FETCH:
-                fetchPrimaryColor(theme.getBackgroundDk(), theme.getColorDark(),
-                        color -> ThemeEngine.getInstance().applyAndSaveDark(getContext(), color));
-                break;
-            case THEME_COLOR2_FETCH:
-                fetchSecondaryColor(theme.getBackgroundLt(),
-                        color -> ThemeEngine.getInstance().applyAndSave2(getContext(), color));
-                break;
-            case THEME_COLOR2_DARK_FETCH:
-                fetchSecondaryColor(theme.getBackgroundDk(),
-                        color -> ThemeEngine.getInstance().applyAndSave2Dark(getContext(), color));
-                break;
-            default:
-                break;
-        }
-    }
-
     /**
      * 从指定背景提取主要主题色（muted；与当前色相同时换 lightVibrant 保证可见变化）
      */
-    private void fetchPrimaryColor(BitmapDrawable background, int currentColor, IntConsumer applyAndSave) {
-        Bitmap bitmap = background.getBitmap();
-        if (bitmap == null) return;
-        Palette palette = Palette.from(bitmap).generate();
-        int dominantColor = palette.getDominantColor(getContext().getColor(R.color.default_theme_color));
-        int color = palette.getMutedColor(dominantColor);
-        if (currentColor == color) {
-            color = palette.getLightVibrantColor(dominantColor);
-        }
-        applyAndSave.accept(color);
-    }
-
     /**
      * 从指定背景提取次要主题色（vibrant）
      */
-    private void fetchSecondaryColor(BitmapDrawable background, IntConsumer applyAndSave) {
-        Bitmap bitmap = background.getBitmap();
-        if (bitmap == null) return;
-        Palette palette = Palette.from(bitmap).generate();
-        int dominantColor = palette.getDominantColor(getContext().getColor(R.color.default_theme_color));
-        applyAndSave.accept(palette.getVibrantColor(dominantColor));
-    }
-
-    private void resetBackground(boolean isDk) {
-        new Thread(() -> {
-            File backgroundFile = new File(isDk ? FCLPath.DK_BACKGROUND_PATH : FCLPath.LT_BACKGROUND_PATH);
-            if (!backgroundFile.delete() && backgroundFile.exists())
-                Schedulers.androidUIThread().execute(() -> Toast.makeText(getContext(), getContext().getString(R.string.message_failed), Toast.LENGTH_SHORT).show());
-
-            Schedulers.androidUIThread().execute(() -> ThemeEngine.getInstance().applyAndSave(getContext(), ((MainActivity) getActivity()).binding.background, null, null));
-        }).start();
-    }
-
     private static void deleteMenuIconFile() {
         try {
             Files.deleteIfExists(Paths.get(FCLPath.FILES_DIR, "menu_icon.png"));
@@ -478,11 +335,6 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
                 break;
             case SEEKBAR_ANIMATION_SPEED:
                 ThemeEngine.getInstance().setAnimationSpeed(progress);
-                ThemeData.saveTheme(getContext(), ThemeEngine.getInstance().getTheme());
-                break;
-            case SEEKBAR_COLOR_ALPHA:
-                // 界面按百分比显示，内部存 0-255 alpha
-                ThemeEngine.getInstance().applyColorAlpha(Math.round(progress * 2.55f));
                 ThemeData.saveTheme(getContext(), ThemeEngine.getInstance().getTheme());
                 break;
             case SEEKBAR_VIBRATION:
