@@ -1,6 +1,34 @@
 [
   {
     "type": "release",
+    "versionCode": 32,
+    "versionName": "0.32.0",
+    "date": "2026.10.22",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "追溯：v0.30.0 把 QuarkPromo 两个方法改成直通后它已是无行为空壳。剩余引用面为 MainActivity.kt:44 的 import 与 :773 的 QuarkPromo.interceptLaunch(this){启动逻辑}。LaunchCountSetting 数据类存在于 AppSettings.kt:34，被 :113 的 AppSettingsPreference 字段与 :176 的 LegacySettingsMigration 读取行引用，LEGACY_FILE_NAMES 第 137 行含 launch_count_settings.json。",
+          "搜索确认改完后 launchCount、pendingPopup、pityCounter 除 AppSettings 与文档外无任何源码引用。",
+          "MainActivity 改动：删除 import com.mio.promo.QuarkPromo；移除 interceptLaunch 调用并把 lambda 体平铺进 launchVersion，使启动路径从回调嵌套变为顺序执行。括号校验花括号 219 对 219、圆括号 623 对 623。",
+          "AppSettings 改动：删除 LaunchCountSetting 数据类、AppSettingsPreference 中的 launchCount 字段、LegacySettingsMigration 中的 readLegacy 读取行，共三处。",
+          "删除 QuarkPromo.kt 文件，全仓再无 com.mio.promo 包。",
+          "本轮唯一有实质风险的判断点：LEGACY_FILE_NAMES 必须保留 launch_count_settings.json 这一项。该列表有两个职责，其一是供 readLegacy 读取（本轮已删），其二是供 legacyFiles 判断旧文件是否全部消失从而驱动 shouldMigrate 与 cleanUp。若跟着删文件名，设备上残留的该 json 将不再被识别为 legacy 文件，shouldMigrate 视而不见且 cleanUp 不删除，文件永久残留在 datastore 目录。正确做法是删读取、保留文件名，使旧文件仍被识别清理只是不再解析到已删的数据类。",
+          "会导致的错误：删被调方前必须先改调用方否则 unresolved reference 编译失败；平铺 lambda 时括号不配对会编译失败；删数据类三处必须一起删否则编译失败；旧 app_settings.json 含未知字段 launchCount 时 kotlinx.serialization 默认忽略并走默认值。",
+          "对用户使用逻辑的影响：点启动游戏直接进入无任何拦截与 v0.30.0 一致、老用户升级后残留的 launch_count_settings.json 仍会被清理、老用户 app_settings.json 含 launchCount 字段时反序列化忽略走默认值、设置页无变化。",
+          "对未来的影响：若要重新引入启动计数需新建字段不能复用、LEGACY_FILE_NAMES 保留无对应读取逻辑的文件名是有意为之因为其职责是识别待清理文件而非读取、启动路径少一层 lambda 嵌套使 launchVersion 成为直线代码可读性与可调试性提升。",
+          "对代码逻辑的影响：全仓再无 com.mio.promo 包使上游推广机制彻底移除、launchVersion 从回调嵌套变顺序执行使调用栈更浅异常堆栈更易读、AppSettingsPreference 少一个字段使序列化体积略降。",
+          "审核 pass。哈希回执：MainActivity.kt:780 -> chekV -> SHA-1 ae626ef44337e4ce8d044fa98f1822ff4a254345。",
+          "冒烟测试：Actions run 39801897300 产出 arm64 169177735 字节，无新增失败 issue。",
+          "新增防错规则 185 至 189：空壳对象要删到底不能只把方法改成 no-op、删除被调方之前必须先改调用方、legacy 文件名列表不能跟着数据类一起删、删数据类要三处一起删、平铺 lambda 后必须校验括号配对。",
+          "未做：首页舞台未重做、button_hide 字符串引用未确认、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 31,
     "versionName": "0.31.0",
     "date": "2026.10.22",
