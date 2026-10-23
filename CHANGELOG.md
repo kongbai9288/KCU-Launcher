@@ -1953,3 +1953,52 @@ KcuLaunchGate.java:33: no suitable constructor found for File(File)
 ### 编译验证（PROVEN）
 
 run **39975151769**，5 个产物：all 326243739 / x86_64 174871760 / **arm64 169175361** / arm 161916024 / x86 155564753 B。
+
+## 0.41.0 — 2026-10-24
+
+执行者：**yuanbao**
+
+- **导入版本显示层接入**：列表副标题 + 主页卡片显示"未知"或真实版本
+
+### 追溯时发现一个陷阱
+
+`onBindViewHolder` 里 **subtitle 被赋值两次**：
+
+```kotlin
+binding.subtitle.text = versionListItem.libraries     // 行 74
+...
+binding.subtitle.text = String.format("%s  Mods:%d", ...)  // 行 110 ← 覆盖上面
+```
+
+**只改第 74 行会被第 110 行覆盖。** 两处都改了。
+
+### 为什么不在 onBind 里读文件
+
+`onBind` 每次滚动到可见项都执行，读 json 会造成滚动卡顿。
+
+`VersionListItem` 只在 `render()` 时构造一次，读一次缓存起来才对。
+
+### 展示
+
+| 场景 | 列表副标题 | 主页卡片 |
+|---|---|---|
+| 正常下载版本 | 组件摘要（原样） | id（原样） |
+| 刚导入 | **未知** | **未知** |
+| 探测成功 | 真实版本 | 真实版本 |
+
+**标题仍显示目录名 id** —— 改它会影响排序和搜索（搜索按 id 匹配）。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `VersionListItem.java` |
+| 行 | **53** |
+| 5 个不同字母 | `t h i s d` |
+| **SHA-1** | **`40ddbd582f8a3c968210f4fe14f8c5b2eefe0274`** |
+
+### 编译验证（PROVEN）
+
+run **39981928474**（指定 arm64），`app-arm64` **169175399 B**。
+
+⚠ 本次只有 1 个产物——dispatch 指定了 arch，其余架构按条件跳过。全架构矩阵需另跑。
