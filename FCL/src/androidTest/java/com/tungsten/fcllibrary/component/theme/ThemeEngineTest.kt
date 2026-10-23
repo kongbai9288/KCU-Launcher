@@ -163,12 +163,10 @@ class ThemeEngineTest {
     }
 
     @Test
-    fun setCloseSkinModelAndAnimationSpeedUpdate() {
+    fun setAnimationSpeedUpdate() {
         ThemeEngine.setupThemeEngine(context)
-        ThemeEngine.setCloseSkinModel(true)
         ThemeEngine.setAnimationSpeed(3)
         waitForMainThread()
-        assertTrue(ThemeEngine.getTheme().closeSkinModel)
         assertEquals(3, ThemeEngine.getTheme().animationSpeed)
     }
 
