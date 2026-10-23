@@ -1,6 +1,37 @@
 [
   {
     "type": "release",
+    "versionCode": 38,
+    "versionName": "0.38.0",
+    "date": "2026.10.23",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "本轮两件事：删除 close_skin_model 死开关，以及实现自带 so 的加载顺序控制。",
+          "第一部分删除死开关。v0.37.0 登记的未决项用户拍板删除。全仓 code search 命中十六处，其中两个 androidTest 文件是 v0.37.0 检索遗漏的。",
+          "ThemeDataTest.kt 行 38、101、110 与 ThemeEngineTest.kt 行 165 到 172 引用了该字段。androidTest 不在 assembleRelease 编译路径所以 CI 不会因它失败，这正是易被忽略的原因。但不改的话将来任何人跑 connectedAndroidTest 会直接编译失败且报错指向测试文件排查成本高，已一并修改，测试函数改名为 setAnimationSpeedUpdate。",
+          "改动共七个代码文件即 ThemeData、ThemeEngine、ThemePreference、LauncherSettingAdapter、LauncherSettingPage 及两个 androidTest，加九个语言 strings.xml 共十条字符串。失效 import 检查：LauncherSettingPage 的 ThemeData 保留因行 334 仍用，两个测试的 assertTrue 保留因多处仍用。",
+          "第二部分实现自带 so 的加载顺序控制。用户要求 so 同级放 json 控序且该文件不能进入加载流程。",
+          "不放到加载当中有两层含义。复制层指 json 不能被复制进 MOD_RUNTIME_DIR，KcuNativeSync.sync 已按 so 后缀加 ELF magic 双重过滤天然排除；dlopen 层指新增代码只处理 order 里声明的、以 so 结尾、且确实存在于运行时目录的文件。",
+          "为什么必须显式 dlopen：LD_LIBRARY_PATH 只影响依赖库搜索路径，不控制 dlopen 顺序。顺序敏感场景如符号解析与初始化次序必须显式按序加载，否则不同 so 组合会随机崩。",
+          "接入点时序关键：loadInOrder 必须在 setEnv 之后，因为 setEnv 之前 native 侧还没拿到含 MOD_RUNTIME_DIR 的 LD_LIBRARY_PATH，此时 dlopen 解析不到依赖库。插入点 FCLauncher.java 第 567 行位于 setEnv 与 setUpJavaRuntime 之间。",
+          "契约文件路径 sdcard/KCU/natives/abi/load_order.json，字段含 abi 可选且不符则整份不生效、order 文件名数组、onFailure 取值 abort 或其他。",
+          "审核要点：isSafeName 拒绝含斜杠反斜杠、以点开头、非 so 结尾的名字以防御路径穿越与误加载配置文件；abi 不匹配返回 null；json 损坏等同未配置不阻断启动；JsonReader 在 finally 关闭；只加载 so.isFile 为真的即已过 ELF 校验的文件。",
+          "导致的错误逐条处置：路径穿越、dlopen 配置文件本身、隐藏文件、跨架构加载直接崩、json 损坏导致启动崩溃、JsonReader 未关闭、玩家配了但文件没同步进来、顺序错误导致崩溃无法回退（删 json 即回到原行为）。",
+          "对用户使用逻辑的影响：不放 json 时零 dlopen 与上游逐字一致；order 为空同上；abi 写错整份不生效静默回退；正常配置按序 dlopen；某库失败时 skip 跳过继续 abort 停止；改了 json 下次启动生效无缓存。",
+          "对未来的影响：onFailure 等于 abort 的返回值当前未被调用方使用行为等同 skip 是已知缺口未包装，要真正中止需改 FCLauncher 异常路径留待确认语义；顺序配置与渲染器 DLOPEN 环境变量并行两者独立可能重复 dlopen 同一库但 dlopen 幂等无害；契约未写进 manifest.json 迁移工具暂不知道这份配置下轮可补。",
+          "对代码逻辑的影响：新增一个类 FCLauncher 多两行开销极小；未改动 KcuNativeSync 任何逻辑；新增路径非替换未改动上游已有 dlopen 路径。",
+          "审核 pass。哈希回执：FCLauncher.java 第 567 行 KcuNativeOrder.loadInOrder(bridge)，5 字母 KcuNa，SHA-1 90b6d2f0531b2575d88c0cafe068f2f2c8d389e5。取材行即本轮新增的调用点。",
+          "冒烟测试：Actions run 39907251472 由 push 触发含本轮全部改动，产出五个 APK——all 326242773、x86_64 174870254、x86 155563026、arm 161915081、arm64 169175089 字节。另 run 39907254821 手动 dispatch 亦 success。",
+          "未做：输入模式切换因涉及事件流核心需完整追溯 TouchPad 后一次性完成、onFailure abort 语义未接入、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 37,
     "versionName": "0.37.0",
     "date": "2026.10.23",
