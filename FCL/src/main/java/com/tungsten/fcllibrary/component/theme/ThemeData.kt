@@ -32,9 +32,6 @@ data class ThemeData(
     /** Java getter 命名为 isFullscreen（Kotlin Boolean 属性默认 getFullscreen） */
     @get:JvmName("isFullscreen")
     val fullscreen: Boolean,
-    /** Java getter 命名为 isCloseSkinModel */
-    @get:JvmName("isCloseSkinModel")
-    val closeSkinModel: Boolean,
     val animationSpeed: Int,
     /** 派生色（ltColor/dkColor）透明度，独立于主色 alpha */
     val colorAlpha: Int,
@@ -140,7 +137,6 @@ data class ThemeData(
             return ThemeData(
                 COLOR, COLOR_DARK, COLOR2, COLOR2_DARK,
                 pref?.fullscreen ?: false,
-                pref?.closeSkinModel ?: false,
                 pref?.animationSpeed ?: ANIMATION_SPEED,
                 ALPHA,
                 lt, dk
@@ -155,7 +151,6 @@ data class ThemeData(
                     context.themeDataStore.updateData { current ->
                         current.copy(
                             fullscreen = theme.fullscreen,
-                            closeSkinModel = theme.closeSkinModel,
                             animationSpeed = theme.animationSpeed
                         )
                     }
