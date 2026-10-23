@@ -1,6 +1,33 @@
 [
   {
     "type": "release",
+    "versionCode": 39,
+    "versionName": "0.39.0",
+    "date": "2026.10.23",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "用户要求两条：加载顺序配置每个实例独立；默认生成的配置里要有原有的 so 方便直接排序。",
+          "追溯：FCLauncher.launch 线程内 KcuNativeSync.sync 在行 559、setEnv 在行 565、KcuNativeOrder.loadInOrder 在行 567。实例目录取 config.getWorkingDir，同方法内 bridge.chdir(config.getWorkingDir()) 已在使用来源可靠。FCLPath.MOD_RUNTIME_DIR 里原有库与玩家自带库同在该目录。",
+          "改动：KcuNativeOrder.java 配置路径改为实例目录加 natives 加 load_order.json 并新增模板生成；FCLauncher 调用改为 loadInOrder(bridge, config.getWorkingDir)。",
+          "模板格式为 enabled 等于 false、abi 为当前架构、onFailure 等于 skip、order 为 MOD_RUNTIME_DIR 当前已有的全部 so 按名排序，含原有库与玩家自带库。",
+          "关键决策 enabled 字段。用户未要求该字段，是我加的，理由必须说明：若模板生成后即生效，那么什么都不设置的玩家会在第一次启动后被按序 dlopen 一遍所有库，默认行为被改变，违背一直坚持的零污染原则，也违背 v0.38.0 已确立的不放 json 就等同上游。因此模板 enabled 为 false 不生效，用户显式启用才加载；生成时本次也直接 return 避免刚生成就被用上的时序意外。这是本轮唯一偏离用户字面要求的改动，可推翻。",
+          "会导致的错误逐条处置：实例目录为空则在根目录建 natives（已判空直接 return）；每次启动都重写模板覆盖用户编辑（只在文件不存在时生成）；模板生成失败导致启动崩（整体 catch Throwable）；JsonWriter 未关闭（finally 关闭）；路径穿越与误加载配置文件（isSafeName 沿用）；跨架构（abi 不符整份失效）；列模板时把非 so 列进去（listRuntimeLibs 复用 isSafeName）。",
+          "对用户使用逻辑的影响：首次启动某实例生成模板且不生效行为等同上游；打开模板看到所有 so 列表可调次序；改成 enabled 等于 true 后下次启动按序加载；换实例各自独立模板互不干扰；删掉 json 下次启动重新生成。",
+          "对未来的影响：模板在实例目录随实例迁移而走符合迁移工具按实例打包的设计；enabled 默认值 false 需写进文档否则用户不知道要手动开；契约未写进 manifest.json 迁移工具暂不知道这份配置。",
+          "对代码逻辑的影响：loadInOrder 多一个参数开销极小；新增模板生成仅在无文件时执行一次；未改动 KcuNativeSync。",
+          "审核 pass。哈希回执：KcuNativeOrder.java 第 118 行 writer.name(\"enabled\").value(false)，5 字母 write，SHA-1 e1d0c6c1c29e6ad5164072a5b21340dca7fcb052。取材行即本轮新增的 enabled 默认值写入处，也是偏离用户字面要求那个决策的落点。",
+          "冒烟测试：Actions run 39969290071 产出五个 APK——all 326242553、x86_64 174869846、arm64 169174850、arm 161914731、x86 155562667 字节。",
+          "本轮未做需求二即导入 jar 的版本未知与启动选 JDK 与下次显示具体版本，因涉及版本解析与启动链需完整追溯 Versions.java 与 LauncherHelper 后一次性完成，已定位关键钩子为 LauncherHelper 的 checkGameState 行 604 的 Auto 分支与 VersionSetting.getJava 与 JavaManager.getJavaFromVersionName。",
+          "实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 38,
     "versionName": "0.38.0",
     "date": "2026.10.23",
