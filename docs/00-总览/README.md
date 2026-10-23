@@ -20,7 +20,7 @@
 
 ### PROVEN（有产物为证）
 
-- 五架构 APK 持续编译通过（最新 run 39901520832，arm64 169174666 B）
+- 五架构 APK 持续编译通过（最新 run 39907251472，arm64 169175089 B）
 - 包名已改为 `com.kcu.launcher`
 - 签名已接通并验签通过（`CN=kbs`，SHA-256 `d4e860232e977157c41459d7f139f9087036feb38623f07bd2c2f6575db4db4e`）
 - 公共目录根改造完成（`FCLPath`，marker 固化）
@@ -29,6 +29,8 @@
 - 首页舞台版本卡片已加（顶部显示当前选中版本）
 - 主页皮肤预览已移除（`com/mio/skin` 包代码保留待挪到角色选择界面）
 - 动画切换弹窗 `AnimationDialog` 及两个专属布局已删（确认为死代码）
+- `close_skin_model` 死开关已删（含两个 androidTest 文件同步修改）
+- 自带 .so 加载顺序控制已实现（`load_order.json`，配置不参与加载）
 - MobileGlues 官方版与修改版经二进制比对确认为**同一源码的不同构建**，无代码级改动
 - 主题引擎已拆解为固定纸面配色
 - 上游公告、上游更新源、上游网盘推广三处隐式联网/推广已停用（`com.mio.promo` 包已从仓库消失）
@@ -38,7 +40,7 @@
 - **从未在真机上安装过任何 APK** —— 这是当前最大的验证缺口
 - 首页、设置页实际观感未看过
 - 首页版本卡片在"版本页切回首页"时是否刷新未确认（`onViewAttachedToWindow` 只在挂载时触发）
-- `ThemeData.isCloseSkinModel()` 全仓**无任何读取者**，但设置页仍保留开关入口 → **当前点了没反应**，去留待定
+- `load_order.json` 的 `onFailure=abort` 返回值未被使用，**行为等同 skip**
 - 两个输入开关（`KCU_DP_THRESHOLD` / `KCU_MOUSE_DISGUISE`）效果未验证
 - manifest 是否真的生成、内容是否正确未确认
 - .so 双层目录同步行为未确认
