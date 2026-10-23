@@ -1061,8 +1061,6 @@
     <string name="settings_launcher_menu_icon_desc">自定义游戏内悬浮窗菜单图标，支持使用gif</string>
     <string name="settings_launcher_ignore_notch">全屏</string>
     <string name="settings_launcher_ignore_notch_desc">忽略屏幕刘海区域，全屏显示</string>
-    <string name="settings_launcher_close_skin_view">关闭皮肤模型阅览</string>
-    <string name="settings_launcher_close_skin_view_desc">关闭主界面皮肤模型显示</string>
     <string name="settings_launcher_animation_speed">动画速度</string>
     <string name="settings_launcher_animation_speed_desc">调整界面动画速度</string>
     <string name="settings_launcher_vibrate_duration">震动时长</string>
