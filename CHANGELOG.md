@@ -1726,3 +1726,56 @@ run **39819890952 失败**。
 ### 编译验证（PROVEN）
 
 run **39821739010**，5 个产物：all 326244770 / x86_64 174871839 / **arm64 169176801** / arm 161916743 / x86 155565108 B。
+
+## 0.37.0 — 2026-10-23
+
+执行者：**yuanbao**
+
+- **删除死代码 `AnimationDialog` 及两个专属布局**
+
+### 删除
+
+| 文件 | 说明 |
+|---|---|
+| `AnimationDialog.kt` | 99 行 |
+| `dialog_animation_switch.xml` | 无 include |
+| `item_animation.xml` | 无 include |
+
+### 两个关键判断
+
+**① code search 命中 ≠ 引用**
+
+`DialogCard.kt:24`、`RightMenuAdapter.kt:579` 里的 "AnimationDialog" **都在注释里**，描述选中行样式一致。不是 import 也不是调用。
+
+**② `SkinAnimations.kt` 不能删**
+
+它提供 `restoreSkinSwitches()`，**两个账号皮肤 Dialog 在调它**。删了直接编译失败。
+
+（这正是上轮事故教训的正面应用：删文件前沿调用链向上追。）
+
+### 保留
+
+`GltfPlayerModel`（SkinRenderer 依赖）、`animation_*` 字符串（`entries` 在用）。
+
+### 一个未决问题
+
+`isCloseSkinModel` 全仓**仅 ThemeData.kt 定义，无读取者**，但设置页仍有开关入口。
+
+**开关能设置，但没代码读 —— 点了没反应。**
+
+因你计划"保留角色显示"将来可能用到，本轮未动。**要删还是要留，等你决定。**
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `SkinAnimations.kt` |
+| 行 | **55** |
+| 5 个不同字母 | `f u n C o` |
+| **SHA-1** | **`b7aa155438b0fc132bf1469d90f5298948157c7c`** |
+
+### 编译验证（PROVEN）
+
+run **39901520832**，5 个产物：all 326242368 / x86_64 174869171 / x86 155562399 / arm 161914467 / **arm64 169174666** B。
+
+arm64 较 v0.36.0 **减少 2135 B**。
