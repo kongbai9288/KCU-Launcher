@@ -412,3 +412,12 @@
 198. **上报步骤的 `if` 不要依赖失败步骤写入 `env.*` 变量**：该值在后续 step 级 `if` 中不可靠（实测导致上报 skipped）。改用 `always() && steps.<id>.outcome == 'failure'`。
 199. **空覆写（只剩 `super.xxx()`）应整体删除**：走父类默认等价，保留反而误导读者以为有自定义行为。
 200. **判断"是否是死代码"不能只看定义处有无调用**：要沿调用链向上追——`Adapter → Item → 目标方法`、`Dialog → Item → 目标方法` 这类间接链很容易漏。
+
+---
+
+## 30. 追加硬规则（v37，2026-10-23 12:5x）
+
+201. **code search 命中不等于引用，必须逐条看上下文**：命中可能只出现在**注释**里。实例：`AnimationDialog` 命中 `DialogCard.kt` 与 `RightMenuAdapter.kt`，两处都是注释中"与 AnimationDialog 行样式一致"的描述性文字，不是 import 也不是调用。见到命中先打开看该行是不是代码。
+202. **用 `filename:` 限定符检索布局是否被 include**：`filename:xxx` 只命中文件自身说明无人引用，可安全删除；若还命中别的布局则该布局 include 了它，删除会崩。
+203. **一个文件里可能同时含"要删的死函数"和"必须保留的活函数"**：`SkinAnimations.kt` 里 `restoreSkinSettings` 已无调用者，但 `restoreSkinSwitches` 被两个账号 Dialog 用。此时只能删单个函数，**不能删整个文件**。
+204. **删除布局时要连带考虑 databinding 生成的 binding 类**：布局删了 binding 类就不再生成，若 Kotlin/Java 代码仍 import 该 binding 会编译失败。反之只删引用它的类而保留布局则安全（binding 类仍生成但无人用）。
