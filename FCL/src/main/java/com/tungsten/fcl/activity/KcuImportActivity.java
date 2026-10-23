@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.tungsten.fcl.R;
 import com.tungsten.fcl.util.KcuUi;
+import com.tungsten.fcl.util.KcuVersionMeta;
 import com.tungsten.fcl.setting.Profiles;
 import com.tungsten.fclcore.util.Logging;
 
@@ -105,9 +106,7 @@ public class KcuImportActivity extends Activity {
                 return;
             }
             boolean ok = download(url, target);
-            setStatus(ok
-                    ? getString(R.string.kcu_import_done) + " " + target.getAbsolutePath()
-                    : getString(R.string.kcu_import_failed));
+            finishImport(id, target, ok);
         });
     }
 
@@ -131,10 +130,46 @@ public class KcuImportActivity extends Activity {
                 return;
             }
             boolean ok = copy(uri, target);
-            setStatus(ok
-                    ? getString(R.string.kcu_import_done) + " " + target.getAbsolutePath()
-                    : getString(R.string.kcu_import_failed));
+            finishImport(id, target, ok);
         });
+    }
+
+    /**
+     * 导入收尾：写最小版本 JSON 与元数据。
+     * 没有 JSON 时上游枚举阶段会整份忽略该目录，版本不会出现在列表里。
+     */
+    private void finishImport(String id, File jar, boolean ok) {
+        if (!ok) {
+            setStatus(getString(R.string.kcu_import_failed));
+            return;
+        }
+        File dir = jar.getParentFile();
+        writeVersionJson(dir, id);
+        KcuVersionMeta.Meta meta = new KcuVersionMeta.Meta();
+        meta.known = false;
+        meta.display = KcuVersionMeta.UNKNOWN;
+        meta.java = "";
+        KcuVersionMeta.write(dir, meta);
+        setStatus(getString(R.string.kcu_import_done) + " " + jar.getAbsolutePath());
+    }
+
+    /** 最小可被解析的版本 JSON：validate 只要求 id 非空 */
+    private void writeVersionJson(File dir, String id) {
+        java.io.File file = new java.io.File(dir, id + ".json");
+        if (file.isFile()) {
+            return;
+        }
+        java.io.OutputStream out = null;
+        try {
+            out = new java.io.FileOutputStream(file, false);
+            String json = "{\n  \"id\": \"" + id + "\",\n  \"jar\": \"" + id + "\"\n}\n";
+            out.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            out.flush();
+        } catch (Throwable ignored) {
+            // 写不出来不影响 jar 已就位，仅版本不会出现在列表中
+        } finally {
+            close(out);
+        }
     }
 
     private File targetFile(String id) {
