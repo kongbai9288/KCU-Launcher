@@ -754,7 +754,6 @@
     <string name="settings_launcher_cursor">تصویر کرسر</string>
     <string name="settings_launcher_menu_icon">آیکون ویو منو</string>
     <string name="settings_launcher_ignore_notch">نادیده گرفتن ناچ</string>
-    <string name="settings_launcher_close_skin_view">نمایش نزدیک مدل اسکین</string>
     <string name="settings_launcher_animation_speed">سرعت انیمیشن</string>
     <string name="settings_memory">حافظه</string>
     <string name="settings_memory_allocate_auto">%1$.1f گیگابایت حداقل / %2$.1f گیگابایت اختصاص داده شده است</string>
