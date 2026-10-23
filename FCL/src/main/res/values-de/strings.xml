@@ -698,7 +698,6 @@
     <string name="settings_launcher_cursor">Cursor</string>
     <string name="settings_launcher_menu_icon">Menü-Icon</string>
     <string name="settings_launcher_ignore_notch">Frontkamera-Ausschnitt ignorieren</string>
-    <string name="settings_launcher_close_skin_view">Skin-Modell ausblenden</string>
     <string name="settings_launcher_animation_speed">Geschwindigkeit der Übergangsanimationen</string>
     <string name="settings_memory">Speicher</string>
     <string name="settings_memory_allocate_auto">%1$.1f GB Minimum / %2$.1f GB zugewiesen</string>
