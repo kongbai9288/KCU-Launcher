@@ -1,6 +1,36 @@
 [
   {
     "type": "release",
+    "versionCode": 42,
+    "versionName": "0.42.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "起因是 v0.41.0 上传三个文件间隔两秒触发三个并发构建，其中 arm 失败，日志尾部为 java.util.zip.ZipException 导致的归档损坏。这不是代码错误因为同样代码在另一个 run 里五个架构全部通过。",
+          "三个并发构建的编号分别是 39981919934 成功出五个产物、39981924375 成功出五个产物、39981928323 失败只出四个产物缺 arm。",
+          "暴露两个基础设施缺陷：其一是无并发控制，一次提交触发三个构建浪费 CI 时间且并发下载依赖容易损坏归档；其二是 gradle 失败即终止，瞬时故障无法自愈。",
+          "修法一：顶层加 concurrency，group 为 build 加 github.ref，cancel-in-progress 为 true，同一 ref 只保留最新一次构建。",
+          "修法二：Build release 步骤改为 run_once 函数，首次退出码非零时输出 warning 后重试一次，最终仍非零照常失败。真实编译错误重试仍会失败所以结果不被掩盖，只是多花一次构建时间。tee 不带 -a 参数因此第二次完整重写日志不会混淆。",
+          "验证方式：用 rerun-failed-jobs 重跑 39981928323 的 arm 任务，该 commit 含 v0.41.0 全部代码，attempt 2 结果为 success，直接证明原失败是瞬时故障而非代码问题。",
+          "各架构验证来源：all、x86、x86_64、arm64 来自 run 39981924375 的五个产物；arm 来自 run 39981928323 的 attempt 2；arm64 含 MainUI 改动由 run 39981928474 与 39987735110 验证。",
+          "新 workflow 由 run 39987735110 以 dispatch arch 等于 arm64 验证 success，产物 app-arm64 169175404 字节。",
+          "清理工作：关闭六十六条 build 结果未知 噪声 issue，来源是上报逻辑缺陷期 always 上报但拿不到信号的产物并非真实失败，每条都留了说明评论。保留九条即编号十六包名迁移扫描报告、六条 build 成功、三条早期 build 结果。",
+          "需要说明的局限：关闭评论用的是统一文案，未逐条回溯当时是否真有失败。若其中某条其实对应真实失败，信息仍完整保留在 workflow run 历史里可查。",
+          "会导致的错误逐条处置：cancel-in-progress 取消掉正在跑且其实需要的构建（只在同一 ref 内取消，不同分支互不干扰）；重试掩盖真实编译错误（重试后仍失败即失败，最终结果不变）；重试把日志覆盖掉（tee 不带 -a，第二次完整重写）；并发组名用 github.ref 导致 tag 与分支冲突（组名含完整 ref 不冲突）；YAML 语法错误导致 workflow 失效（本地 yaml.safe_load 校验通过加实跑验证）。",
+          "对未来的影响：连续 push 不再产生重复构建节省 CI 时间；瞬时故障自动恢复减少假失败；已知限制是并发组会取消同一 ref 上的前一次构建，因此想用连续 dispatch 验证多架构时会互相取消。",
+          "对代码逻辑的影响：无，只改 workflow 文件不涉及源码。",
+          "审核 pass。哈希回执：.github/workflows/build.yml 第 105 行 echo warning 首次构建失败退出码 GE 重试一次，5 字母 echow，SHA-1 61d8c50d3f5b60b6fc74edc0bb5668363781b931。",
+          "冒烟测试：run 39981928323 的 attempt 2 arm 重跑 success；run 39987735110 新 workflow dispatch arm64 success 产物 app-arm64 169175404 字节。",
+          "实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 41,
     "versionName": "0.41.0",
     "date": "2026.10.24",
