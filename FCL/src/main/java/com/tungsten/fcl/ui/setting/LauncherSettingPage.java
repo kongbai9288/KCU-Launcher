@@ -277,10 +277,6 @@ public class LauncherSettingPage extends FCLPage implements LauncherSettingAdapt
                 ThemeEngine.getInstance().applyAndSave(getContext(), getActivity().getWindow(), checked);
                 getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
                 break;
-            case SWITCH_CLOSE_SKIN_MODEL:
-                ThemeEngine.getInstance().setCloseSkinModel(checked);
-                ThemeData.saveTheme(getContext(), ThemeEngine.getInstance().getTheme());
-                break;
             case SWITCH_DISABLE_FULLSCREEN_INPUT:
                 sharedPreferences.edit().putBoolean("disableFullscreenInput", checked).apply();
                 break;
