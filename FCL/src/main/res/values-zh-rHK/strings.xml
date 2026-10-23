@@ -835,7 +835,6 @@
     <string name="settings_launcher_cursor">滑鼠圖片</string>
     <string name="settings_launcher_menu_icon">菜單鍵圖標</string>
     <string name="settings_launcher_ignore_notch">忽略劉海屏(全屏)</string>
-    <string name="settings_launcher_close_skin_view">關閉皮膚模型閱覽</string>
     <string name="settings_launcher_animation_speed">動畫速度</string>
     <string name="settings_launcher_vibrate_duration">震動時長（用於TouchController模組）</string>
     <string name="settings_memory">遊戲內存</string>
