@@ -1666,4 +1666,6 @@
     <string name="kcu_dev_cleared">已清除 %1$d 项</string>
     <string name="kcu_stage_version">Current version</string>
     <string name="kcu_stage_version_none">Not selected</string>
+    <string name="kcu_pick_java_title">选择运行时</string>
+    <string name="kcu_pick_java_hint">此版本由文件导入，版本信息未知。请选择要使用的 Java 运行时，选定后将记住本次选择。</string>
 </resources>
