@@ -19,6 +19,7 @@ import com.tungsten.fcl.ui.UIManager;
 import com.tungsten.fcl.ui.download.modpack.LocalModpackPage;
 import com.tungsten.fcl.ui.download.modpack.ModpackSelectionPage;
 import com.tungsten.fcl.ui.manage.ModpackTypeSelectionPage;
+import com.tungsten.fcl.util.KcuLaunchGate;
 import com.tungsten.fcl.util.TaskCancellationAction;
 import com.tungsten.fclcore.auth.Account;
 import com.tungsten.fclcore.download.game.GameAssetDownloadTask;
@@ -243,11 +244,14 @@ public class Versions {
     public static void launch(Context context, Profile profile, String id, Consumer<LauncherHelper> injector) {
         if (!checkVersionForLaunching(context, profile, id))
             return;
+        // 导入版本首次启动：先让用户选定运行时，再继续
+        KcuLaunchGate.prepare(context, profile, id, () -> {
         ensureSelectedAccount(context, account -> {
             LauncherHelper launcherHelper = new LauncherHelper(context, profile, account, id);
             if (injector != null)
                 injector.accept(launcherHelper);
             launcherHelper.launch();
+        });
         });
     }
 
