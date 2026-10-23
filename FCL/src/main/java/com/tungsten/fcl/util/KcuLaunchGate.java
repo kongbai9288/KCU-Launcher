@@ -30,7 +30,7 @@ public final class KcuLaunchGate {
      */
     public static void prepare(Context context, Profile profile, String id, Runnable proceed) {
         try {
-            File versionDir = new File(profile.getRepository().getVersionRoot(id));
+            File versionDir = profile.getRepository().getVersionRoot(id);
             KcuVersionMeta.Meta meta = KcuVersionMeta.read(versionDir);
             if (!KcuVersionMeta.file(versionDir).isFile()) {
                 proceed.run();
