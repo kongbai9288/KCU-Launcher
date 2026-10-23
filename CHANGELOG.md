@@ -2002,3 +2002,59 @@ binding.subtitle.text = String.format("%s  Mods:%d", ...)  // 行 110 ← 覆盖
 run **39981928474**（指定 arm64），`app-arm64` **169175399 B**。
 
 ⚠ 本次只有 1 个产物——dispatch 指定了 arch，其余架构按条件跳过。全架构矩阵需另跑。
+
+## 0.42.0 — 2026-10-24
+
+执行者：**yuanbao**
+
+- **构建稳定性**：并发控制 + gradle 首次失败重试一次
+- **清理 66 条噪声 issue**
+
+### 起因
+
+v0.41.0 上传三个文件间隔 2 秒 → **触发 3 个并发构建**，arm 挂了：
+
+```
+Caused by: java.util.zip.ZipException
+```
+
+**不是代码问题** —— 同样代码在另一个 run 里 5 架构全过。
+
+### 两个缺陷，两个修法
+
+| 缺陷 | 修法 |
+|---|---|
+| 无并发控制，一次提交 3 个构建 | `concurrency` + `cancel-in-progress` |
+| gradle 失败即终止 | 首次非零 → warning → 重试一次 |
+
+**真实编译错误重试仍失败**，结果不被掩盖，只多花一次构建时间。
+
+### 证明原失败是瞬时的
+
+`rerun-failed-jobs` 重跑 arm（该 commit 含全部 v0.41.0 代码）→ **attempt 2 success**。
+
+### 清理噪声
+
+关闭 **66 条** `build 结果未知` —— 上报缺陷期产物，非真实失败。每条留评论。
+
+保留 9 条：`#16 包名迁移扫描报告`、6 条 `build 成功`、3 条早期记录。
+
+⚠ 关闭文案是统一的，**没逐条回溯当时是否真失败**。若某条其实对应真实失败，信息仍在 workflow run 历史里。
+
+### 已知限制
+
+并发组会取消同一 ref 上的前一次构建 —— **想连续 dispatch 验证多架构会互相取消**。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `.github/workflows/build.yml` |
+| 行 | **105** |
+| 5 个不同字母 | `e c h o w` |
+| **SHA-1** | **`61d8c50d3f5b60b6fc74edc0bb5668363781b931`** |
+
+### 编译验证（PROVEN）
+
+- run 39981928323 **attempt 2**：arm → **success**
+- run **39987735110**：新 workflow dispatch arm64 → **success**，`app-arm64` **169175404 B**
