@@ -1,6 +1,34 @@
 [
   {
     "type": "release",
+    "versionCode": 41,
+    "versionName": "0.41.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "承接 v0.40.0 遗留：探测到的真实版本只写进 kcu_meta.json 的 display 字段，UI 没有读取。用户要求放进去以后下面显示未知，启动选完 JDK 后下次显示具体版本。本轮把显示层接上。",
+          "绑定点追溯：VersionListPage.render 行 130 构造 VersionListItem；VersionListAdapter.onBindViewHolder 行 69 设 title、行 74 设 subtitle、行 110 再次覆盖 subtitle 为百分号 s 加 Mods 加百分号 d 的格式。关键发现是 subtitle 在同一方法内被赋值两次，最终生效的是第 110 行，只改第 74 行会被覆盖，因此两处都改。",
+          "主页卡片绑定点在 MainUI.refreshSelectedVersion，原逻辑直接把 Profiles.getSelectedVersion 的结果设进 stageVersion。",
+          "为什么不在 onBind 里读文件：onBindViewHolder 每次列表滚动到可见项都会执行，在里面读 json 会造成滚动时反复 IO。VersionListItem 只在 render 时构造一次即版本集合变化才重建，构造时读一次并缓存是正确的位置。",
+          "改动：VersionListItem 新增 displayVersion 字段与 resolveDisplayVersion 静态方法与 getter；VersionListAdapter 两处 subtitle 绑定改用 displayVersion 空合并 libraries；MainUI 版本卡片优先显示 display。",
+          "判定逻辑：无 meta 文件返回 null 表示不是导入版本沿用原显示，有 meta 则返回 display 即未探测为未知或探测后的真实版本。正常下载的版本完全不受影响。",
+          "展示效果：正常下载版本列表副标题显示组件摘要、主页卡片显示版本 id，均原样；刚导入未探测时两者显示未知；探测成功后显示真实版本如 1.20.1。标题 title 仍显示目录名 id 未改，避免影响排序与搜索，因为搜索是按 id 匹配的。",
+          "会导致的错误逐条处置：只改第 74 行被第 110 行覆盖（两处都改）、在 onBind 读文件导致滚动卡顿（改在构造时读一次）、getVersionRoot 抛异常（catch Throwable 返回 null）、正常下载版本显示被改（无 meta 返回 null 走原逻辑）、搜索或排序失效（只改显示 version 字段与筛选逻辑未动）、主页选中版本为空（先判空再读）、主页 getSelectedProfile 为 null（try-catch 兜底回落 id）。",
+          "对用户使用逻辑的影响：打开版本列表导入项副标题显示未知；启动该版本弹运行时选择；启动后返回列表若 jar 内有 version.json 则副标题变真实版本；主页卡片同步从未知变真实版本；正常版本完全不变。",
+          "对未来的影响：探测只做一次 known 为 true 后跳过，换 jar 不重新探测需手动删 meta 已登记；未探测就无法知道版本但用户可在 meta 里手填 display 并置 known 为 true；标题仍为 id 若将来要在标题显示真实版本会影响排序与搜索需另议。",
+          "对代码逻辑的影响：VersionListItem 多一个字段且构造时一次 IO；adapter 两处空合并改动极小；未改动 Version、VersionUI、ViewModel。",
+          "审核 pass。哈希回执：VersionListItem.java 第 53 行 this.displayVersion = resolveDisplayVersion(profile, id)，5 字母 thisd，SHA-1 40ddbd582f8a3c968210f4fe14f8c5b2eefe0274。",
+          "冒烟测试：Actions run 39981928474 指定 arch 为 arm64，产物 app-arm64 169175399 字节。注意本次只有 1 个产物因为 dispatch 指定了 arm64，其余架构按步骤级条件跳过，全架构矩阵需另跑一次不带 arch 的构建。",
+          "实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 40,
     "versionName": "0.40.0",
     "date": "2026.10.23",
