@@ -923,7 +923,6 @@
     <string name="settings_launcher_cursor">Hình ảnh Con trỏ</string>
     <string name="settings_launcher_menu_icon">Biểu tượng Chế độ xem Menu</string>
     <string name="settings_launcher_ignore_notch">Bỏ qua Notch</string>
-    <string name="settings_launcher_close_skin_view">Đóng Xem Mô hình Skin</string>
     <string name="settings_launcher_animation_speed">Tốc độ Hoạt hình</string>
     <string name="settings_launcher_vibrate_duration">Thời lượng Rung (Cho mod TouchController)</string>
     <string name="settings_disable_fullscreen_input">Tắt nhập toàn màn hình (Cho mod TouchController)</string>
