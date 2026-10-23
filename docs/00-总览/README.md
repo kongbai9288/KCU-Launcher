@@ -20,7 +20,7 @@
 
 ### PROVEN（有产物为证）
 
-- APK 持续编译通过（最新 run 39981928474，app-arm64 169175399 B，**本次为指定 arch 的单架构构建**）
+- APK 持续编译通过（最新 run 39987735110，app-arm64 169175404 B）；**五个架构均已验证可构建**（arm 由 run 39981928323 attempt 2 补验）
 - 包名已改为 `com.kcu.launcher`
 - 签名已接通并验签通过（`CN=kbs`，SHA-256 `d4e860232e977157c41459d7f139f9087036feb38623f07bd2c2f6575db4db4e`）
 - 公共目录根改造完成（`FCLPath`，marker 固化）
@@ -43,6 +43,7 @@
 - 首页版本卡片在"版本页切回首页"时是否刷新未确认（`onViewAttachedToWindow` 只在挂载时触发）
 - `load_order.json` 的 `onFailure=abort` 返回值未被使用，**行为等同 skip**
 - 导入版本显示层已接：列表副标题与主页卡片显示"未知"或探测到的真实版本；**标题仍为目录名 id**（改它会影响搜索排序）
+- CI 已加并发控制与 gradle 首次失败重试；66 条噪声 issue 已清理
 - 两个输入开关（`KCU_DP_THRESHOLD` / `KCU_MOUSE_DISGUISE`）效果未验证
 - manifest 是否真的生成、内容是否正确未确认
 - .so 双层目录同步行为未确认
