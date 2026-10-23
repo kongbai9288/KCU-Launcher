@@ -1,6 +1,33 @@
 [
   {
     "type": "release",
+    "versionCode": 37,
+    "versionName": "0.37.0",
+    "date": "2026.10.23",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "承接 v0.36.0 遗留待清项，确认 AnimationDialog 与 SkinAnimations 与 GltfPlayerModel 是否已无引用。全部改用 GitHub code search 做全仓检索，吸取上轮本地 grep 造成编译失败的事故教训。",
+          "检索结果：AnimationDialog 命中六个文件其中 AnimationDialog.kt 自身、DialogCard.kt、RightMenuAdapter.kt 及三个文档；GltfPlayerModel 命中 SkinRenderer.kt 说明被依赖；restoreSkinSettings 命中 SkinRenderer.kt；restoreSkinSwitches 命中 OfflineAccountSkinDialog 与 MicrosoftAccountSkinDialog 两个账号对话框；animation_idle 命中十个语言 values 与 SkinAnimations.kt；isCloseSkinModel 仅 ThemeData.kt 定义；filename 限定符检索 dialog_animation_switch 与 item_animation 各只有文件自身一处命中。",
+          "关键判断一：AnimationDialog 的两处命中是假阳性。DialogCard.kt 第 24 行与 RightMenuAdapter.kt 第 579 行里出现 AnimationDialog 都在注释中，描述选中行样式一致，不是 import 也不是调用。这正是防错规则第一百九十六条所说的 code search 命中不等于引用必须逐条看上下文的典型场景。判定为真正的死代码。",
+          "关键判断二：SkinAnimations.kt 不能删。它提供 restoreSkinSwitches 函数，注释明写供主界面之外其他使用皮肤模型的地方保持一致的显示效果，全仓确认两个账号皮肤 Dialog 在调它，删了直接编译失败。这也印证上轮事故教训即删文件前必须沿调用链向上追。",
+          "GltfPlayerModel 被 SkinRenderer 依赖不能删；animation 系列字符串被 SkinAnimations.entries 使用保留。",
+          "改动：删除 AnimationDialog.kt 共 99 行、dialog_animation_switch.xml、item_animation.xml。两个布局经 filename 限定符确认无 include 无其他布局引用，删除后 databinding 不再生成对应 binding 类且无悬空引用。",
+          "会导致的错误：误信 code search 命中而保留 AnimationDialog、误删 SkinAnimations.kt、删布局但别处 include、删 animation 字符串、删 AnimationDialog 但 databinding 类仍生成悬空。以上逐条处置完毕。",
+          "对用户使用逻辑的影响：主页无变化因 v0.36.0 已移除预览；离线与微软账号皮肤对话框不受影响它们用自己的 SkinViewer 与 restoreSkinSwitches；双击模型换动画入口随主页预览一并消失；设置页关闭皮肤模型开关仍显示但当前无效果。",
+          "对未来的影响：SkinAnimations.entries 仍在使将来角色界面要加动画可直接用；saveSkinSettings 已无调用者成为死函数下轮可单独删除但需注意它与保留的 restoreSkinSwitches 同文件只能删单个函数；OnAnimationSelectedListener 等三个 SAM 接口随 AnimationDialog 删除无影响。",
+          "对代码逻辑的影响：少一个 Dialog 类与两个布局使编译产物略减；databinding 少生成两个 binding 类使编译时间略降；com.mio.skin 包从九个文件减为八个。",
+          "审核 pass。哈希回执：SkinAnimations.kt 第 55 行 fun Context.restoreSkinSwitches(renderer: SkinRenderer) {，5 字母 funCo，SHA-1 b7aa155438b0fc132bf1469d90f5298948157c7c。取材行即为什么必须保留这个文件的技术依据所在行。",
+          "冒烟测试：Actions run 39901520832 产出五个 APK——all 326242368、x86_64 174869171、x86 155562399、arm 161914467、arm64 169174666 字节。arm64 较 v0.36.0 的 169176801 字节减少 2135 字节。",
+          "未做：saveSkinSettings 死函数未删、close_skin_model 死开关去留待用户决定、主页舞台未重做、实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 36,
     "versionName": "0.36.0",
     "date": "2026.10.23",
