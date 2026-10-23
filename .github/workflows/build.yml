@@ -23,6 +23,13 @@ on:
         options: ["all", "arm", "arm64", "x86", "x86_64"]
   workflow_call:
 
+# 连续多次 push 会同时起多个构建（本仓库一次提交曾同时触发 3 个），
+# 浪费 CI 时间且并发下载依赖时易出现归档损坏（实测 java.util.zip.ZipException）。
+# 同一 ref 只保留最新一次。
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build ${{ matrix.arch }}
@@ -86,8 +93,19 @@ jobs:
         id: gradle
         run: |
           set -o pipefail
-          ./gradlew assembleRelease -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
-          GE=${PIPESTATUS[0]}
+          # 首次失败重试一次：排除依赖下载损坏等瞬时故障（实测 ZipException）。
+          # 真实编译错误重试仍会失败，最终结果不会被掩盖，只是多花一次构建时间。
+          run_once() {
+            ./gradlew assembleRelease -Darch=${{ github.event.inputs.arch || matrix.arch }} --no-daemon 2>&1 | tee /tmp/build.log
+            return ${PIPESTATUS[0]}
+          }
+          run_once
+          GE=$?
+          if [ "$GE" -ne 0 ]; then
+            echo "::warning::首次构建失败（退出码 $GE），重试一次"
+            run_once
+            GE=$?
+          fi
           echo "gradle_exit=$GE"
           if [ "$GE" -eq 0 ]; then echo "GRADLE_OK=true" >> "$GITHUB_ENV"; else echo "GRADLE_OK=false" >> "$GITHUB_ENV"; fi
           # 日志必须在判定失败之前写入：exit 之后写 GITHUB_ENV 不会被保留，
