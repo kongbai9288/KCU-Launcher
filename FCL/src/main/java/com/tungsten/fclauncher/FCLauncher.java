@@ -564,7 +564,7 @@ public class FCLauncher {
                 // KCU：按玩家配置顺序加载自带原生库。
                 // 必须在 setEnv 之后——LD_LIBRARY_PATH 此时才包含运行时目录，
                 // 提前加载解析不到依赖库。未配置时不产生任何 dlopen。
-                KcuNativeOrder.loadInOrder(bridge);
+                KcuNativeOrder.loadInOrder(bridge, config.getWorkingDir());
 
                 // setup java runtime
                 setUpJavaRuntime(config, bridge);
