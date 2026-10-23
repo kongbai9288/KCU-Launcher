@@ -71,7 +71,7 @@ class VersionListAdapter(val context: Context, initList: List<VersionListItem>) 
         if (versionListItem.tag != null) {
             binding.tag.text = versionListItem.tag
         }
-        binding.subtitle.text = versionListItem.libraries
+        binding.subtitle.text = versionListItem.displayVersion ?: versionListItem.libraries
         binding.radioButton.setOnClickListener {
             versionListItem.profile.selectedVersion = versionListItem.version
         }
@@ -109,7 +109,7 @@ class VersionListAdapter(val context: Context, initList: List<VersionListItem>) 
         }
         binding.subtitle.text = String.format(
             "%s  Mods:%d",
-            versionListItem.libraries,
+            versionListItem.displayVersion ?: versionListItem.libraries,
             versionListItem.modCount
         )
         playTranslationX(
