@@ -17,7 +17,6 @@ import java.io.OutputStream
 @Serializable
 data class ThemePreference(
     val fullscreen: Boolean = false,
-    val closeSkinModel: Boolean = false,
     val animationSpeed: Int = 8
 )
 
