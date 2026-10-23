@@ -20,7 +20,7 @@
 
 ### PROVEN（有产物为证）
 
-- 五架构 APK 持续编译通过（最新 run 39907251472，arm64 169175089 B）
+- 五架构 APK 持续编译通过（最新 run 39969290071，arm64 169174850 B）
 - 包名已改为 `com.kcu.launcher`
 - 签名已接通并验签通过（`CN=kbs`，SHA-256 `d4e860232e977157c41459d7f139f9087036feb38623f07bd2c2f6575db4db4e`）
 - 公共目录根改造完成（`FCLPath`，marker 固化）
@@ -30,7 +30,7 @@
 - 主页皮肤预览已移除（`com/mio/skin` 包代码保留待挪到角色选择界面）
 - 动画切换弹窗 `AnimationDialog` 及两个专属布局已删（确认为死代码）
 - `close_skin_model` 死开关已删（含两个 androidTest 文件同步修改）
-- 自带 .so 加载顺序控制已实现（`load_order.json`，配置不参与加载）
+- 自带 .so 加载顺序控制已实现；配置改为**实例级** `<实例>/natives/load_order.json`，首次生成含既有 .so 的模板（`enabled=false` 不生效）
 - MobileGlues 官方版与修改版经二进制比对确认为**同一源码的不同构建**，无代码级改动
 - 主题引擎已拆解为固定纸面配色
 - 上游公告、上游更新源、上游网盘推广三处隐式联网/推广已停用（`com.mio.promo` 包已从仓库消失）
