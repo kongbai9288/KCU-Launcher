@@ -61,7 +61,6 @@ enum class LauncherSettingTag {
     // 开关行
     SWITCH_AUTO_EXIT,
     SWITCH_IGNORE_NOTCH,
-    SWITCH_CLOSE_SKIN_MODEL,
     SWITCH_DISABLE_FULLSCREEN_INPUT,
     SWITCH_ALLOW_SCREENSHOTS,
 
@@ -225,13 +224,6 @@ class LauncherSettingAdapter(
                 { ThemeEngine.getInstance().getTheme().fullscreen },
                 LauncherSettingTag.SWITCH_IGNORE_NOTCH,
                 R.string.settings_launcher_ignore_notch_desc,
-                group = SettingGroup.Launcher
-            ),
-            Row.SwitchRow(
-                R.string.settings_launcher_close_skin_view,
-                { ThemeEngine.getInstance().getTheme().closeSkinModel },
-                LauncherSettingTag.SWITCH_CLOSE_SKIN_MODEL,
-                R.string.settings_launcher_close_skin_view_desc,
                 group = SettingGroup.Launcher
             ),
             Row.SeekBarRow(
