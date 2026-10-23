@@ -1194,8 +1194,6 @@
     <string name="settings_launcher_menu_icon_desc">Customize the in-game floating window menu icon (GIF supported).</string>
     <string name="settings_launcher_ignore_notch">Fullscreen</string>
     <string name="settings_launcher_ignore_notch_desc">Ignore the screen notch area and display in fullscreen.</string>
-    <string name="settings_launcher_close_skin_view">Close Skin Model Viewing</string>
-    <string name="settings_launcher_close_skin_view_desc">Disable the skin model on the home page.</string>
     <string name="settings_launcher_animation_speed">Animation Speed</string>
     <string name="settings_launcher_animation_speed_desc">Adjust the UI animation speed.</string>
     <string name="settings_launcher_vibrate_duration">Vibration Duration</string>
