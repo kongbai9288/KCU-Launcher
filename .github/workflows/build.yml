@@ -168,6 +168,23 @@ jobs:
           cp /tmp/apk_all.txt /tmp/apk.txt
           { echo "APK_LISTING<<EOF_DELIM"; head -c 6000 /tmp/apk.txt; echo; echo "EOF_DELIM"; } >> "$GITHUB_ENV"
 
+      # 日志取证：Actions logs API 在本环境不可访问，失败时把构建日志提交到
+      # ci-logs 分支，之后用 contents API 读取。这是失败可诊断的基础设施。
+      - name: 归档构建日志
+        if: ${{ always() && (steps.gradle.outcome == 'failure' || steps.gradle_debug.outcome == 'failure') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name ci
+          git config user.email ci@example.com
+          git checkout --orphan ci-logs 2>/dev/null || git checkout ci-logs
+          mkdir -p logs
+          if [ -f /tmp/build.log ]; then cp /tmp/build.log "logs/build-${{ matrix.arch }}.log"; fi
+          git add logs
+          git commit -m "ci log ${{ matrix.arch }} run ${{ github.run_id }}" || exit 0
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git push origin ci-logs --force || exit 0
+
       - name: Upload APK
         if: ${{ steps.guard.outputs.has_source == 'true' && env.GRADLE_OK == 'true' }}
         uses: actions/upload-artifact@v6
