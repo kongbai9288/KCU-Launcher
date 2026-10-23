@@ -421,3 +421,14 @@
 202. **用 `filename:` 限定符检索布局是否被 include**：`filename:xxx` 只命中文件自身说明无人引用，可安全删除；若还命中别的布局则该布局 include 了它，删除会崩。
 203. **一个文件里可能同时含"要删的死函数"和"必须保留的活函数"**：`SkinAnimations.kt` 里 `restoreSkinSettings` 已无调用者，但 `restoreSkinSwitches` 被两个账号 Dialog 用。此时只能删单个函数，**不能删整个文件**。
 204. **删除布局时要连带考虑 databinding 生成的 binding 类**：布局删了 binding 类就不再生成，若 Kotlin/Java 代码仍 import 该 binding 会编译失败。反之只删引用它的类而保留布局则安全（binding 类仍生成但无人用）。
+
+---
+
+## 31. 追加硬规则（v38，2026-10-23 13:5x）
+
+205. **删除字段时必须一并检索 androidTest 目录**：它**不在 `assembleRelease` 编译路径**，CI 不会因它失败，所以漏改不会暴露。但将来跑 `connectedAndroidTest` 会直接编译失败且报错指向测试文件，排查成本远高于改的时候。实例：删 `closeSkinModel` 时 `ThemeDataTest.kt` / `ThemeEngineTest.kt` 被漏过一轮。
+206. **`LD_LIBRARY_PATH` 不控制 dlopen 顺序**：它只影响依赖库的搜索路径。要控制加载次序（符号解析、初始化次序）必须显式按顺序 `dlopen`，否则不同库组合会随机崩。
+207. **显式 dlopen 必须放在 `setEnv` 之后**：`setEnv` 之前 native 侧还没拿到含运行时目录的 `LD_LIBRARY_PATH`，此时加载解析不到依赖库。
+208. **从外部配置读取文件名做 dlopen 时必须做名字校验**：拒绝含 `/`、`\\`、以 `.` 开头、非 `.so` 结尾——分别防路径穿越、隐藏文件、误加载同目录的配置文件。
+209. **外部配置里的 abi/版本声明不符时应整份失效而非逐条跳过**：跨架构加载会直接崩，静默回退默认行为比部分生效可预测。
+210. **不要用"返回值表示失败"却没人接收**：新增 `onFailure=abort` 时若调用方不判断返回值，行为就等同 `skip`。要么接入要么明说未实现，不允许声称已支持。
