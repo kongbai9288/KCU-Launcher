@@ -1,6 +1,38 @@
 [
   {
     "type": "release",
+    "versionCode": 40,
+    "versionName": "0.40.0",
+    "date": "2026.10.23",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "用户对导入 jar 的实现不满意，要求放进去后显示未知、启动时让用户自己选 JDK、下次使用启动器时显示具体版本。",
+          "追溯发现之前导入的版本根本不显示：DefaultGameRepository 枚举版本时若无 id.json 就打印 No available json file found 并 return Stream.empty 整份忽略。这是 v0.35.0 遗留项只写 jar 不写 json 的直接后果，也是显示未知的前提必须先让它进列表。",
+          "最小 json 是否合法：Version.validate 全文唯一硬性要求是 id 非空，其余字段全可空，所以 id 加 jar 两个字段的 json 可被解析。",
+          "默认 JDK 为什么错：JavaManager.findExactOrNextGreater 在 version 为 null 时直接 return getJavaFromVersionName(jre8)。导入版本没有 javaVersion 所以恒选 jre8，而且根本没让用户选，这正是用户不满之处。",
+          "接入点：Versions.launch 在 checkVersionForLaunching 之后插入 KcuLaunchGate.prepare；候选来自 JavaManager.getJavaList 即 init 扫描 FCLPath.JAVA_PATH 下含 release 文件的目录且 name 为目录名；保存走 getVersionSetting(id).setJava(name) 加 saveVersionSetting(id)；版本目录用 getVersionRoot(id) 且该方法返回 File。",
+          "改动：新增 KcuVersionMeta 与 KcuLaunchGate 两个类；改 KcuImportActivity 使导入收尾写最小 id.json 与 meta；改 Versions 插入 gate；values/strings.xml 新增 kcu_pick_java_title 与 kcu_pick_java_hint；build.yml 修日志取证。",
+          "契约文件为版本目录下的 kcu_meta.json，字段含 known 表示是否已探测、display 展示文本未探测时为未知、java 用户选定运行时名且空表示未选下次仍会询问。",
+          "只对导入版本生效：prepare 第一判断是 meta 文件是否存在，不存在直接放行。正常下载的版本没有该文件，原有启动路径一行未改。",
+          "会导致的错误逐条处置：new File(File) 已发生并修复、弹窗卡住导致启动不了（任何异常都放行）、没有可用 JDK 时弹空窗（candidates 为空直接放行）、用户不选就一直弹（选完写入 java）、jar 无 version.json（probe 返回 null 保持 known 为 false）、entry.getSize 为负一导致 new byte 负一抛异常（被 catch）、流与 ZipFile 泄漏（各自 finally 关闭）、探测后覆盖用户已选 JDK（不会只改 known 与 display）、meta 损坏（read 返回默认值）。",
+          "对用户使用逻辑的影响：导入 jar 生成 json 与 meta 使版本出现在列表；首次启动该版本弹运行时选择候选取决于设备已装的 jre；选完记入 meta 与 VersionSetting 立即继续启动；再次启动不再弹直接启动；jar 内带 version.json 则探测成功写真实版本到 display；jar 内没有则保持未知。",
+          "对未来的影响：显示具体版本当前只在 meta 里 UI 未接是遗留缺口；meta 随版本目录走实例迁移时一并带走；探测只做一次 known 为 true 后跳过所以换 jar 不会重新探测已登记；弹窗用 android.app.AlertDialog 承载 KcuUi 内容保证风格统一。",
+          "对代码逻辑的影响：Versions.launch 多一层 lambda 但正常下载版本不走无影响；新增两个类；未改动上游版本解析因 meta 是独立文件不污染 id.json。",
+          "编译失败事故：第一次上传后 run 39971250413 失败但拿不到任何日志，Actions logs API 返回 403 且上报步骤 gradle_ok 为问号 BUILD_LOG 未传入。修法两条，其一是上报步骤改为直接读 /tmp/build.log 文件不再依赖 GITHUB_ENV 传递，立即生效拿到真实错误；其二是新增归档构建日志步骤在失败时提交到 ci-logs 分支，该步骤显示 success 但分支未创建因 job 级 permissions 为 contents read 使 push 被拒且被双竖线 exit 0 吞掉，已登记未再改。",
+          "真实错误为 KcuLaunchGate.java 第 33 行 no suitable constructor found for File(File)，原因是 getVersionRoot 已经返回 File 却又包了一层 new File，低级错误。",
+          "审核 pass。哈希回执：KcuLaunchGate.java 第 33 行 File versionDir = profile.getRepository().getVersionRoot(id)，5 字母 Filev，SHA-1 0841bd2207fd60d4988c753eb469547836682e45。取材行即本轮编译失败并修复的那一行。",
+          "冒烟测试：Actions run 39975151769 产出五个 APK——all 326243739、x86_64 174871760、arm64 169175361、arm 161916024、x86 155564753 字节。",
+          "遗留：显示层未接，显示具体版本当前只写到 meta 的 display 字段 UI 没有读取它。版本列表显示的是 Version.getId 即目录名，要显示真实版本需改 VersionListItem 或 VersionUI，而 Version 在全仓有 128 处引用，需先确认展示位置再动手。",
+          "实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 39,
     "versionName": "0.39.0",
     "date": "2026.10.23",
