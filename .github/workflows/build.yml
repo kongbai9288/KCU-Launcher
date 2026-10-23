@@ -204,7 +204,12 @@ jobs:
           import json, os, urllib.request
           arch = os.environ.get('MATRIX_ARCH', '?')
           listing = os.environ.get('APK_LISTING') or '(未生成产物清单)'
-          log = os.environ.get('BUILD_LOG') or ''
+          log = ''
+          try:
+              with open('/tmp/build.log', errors='replace') as f:
+                  log = f.read()
+          except Exception:
+              log = '' ''
           ok = os.environ.get('GRADLE_OK', '?')
           title = ("build 成功: " if ok == 'true' else ("build 失败: " if ok == 'false' else "build 结果未知: ")) + arch
           body = ("arch=" + arch + "\ngradle_ok=" + ok + "\n\n## 产物清单\n```\n"
