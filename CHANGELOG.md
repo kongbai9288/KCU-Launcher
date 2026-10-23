@@ -1883,3 +1883,73 @@ run **39907251472**，5 个产物：all 326242773 / x86_64 174870254 / x86 15556
 ### 编译验证（PROVEN）
 
 run **39969290071**，5 个产物：all 326242553 / x86_64 174869846 / **arm64 169174850** / arm 161914731 / x86 155562667 B。
+
+## 0.40.0 — 2026-10-23
+
+执行者：**yuanbao**
+
+- **导入版本：进列表 + 首次启动选运行时 + jar 内探测真实版本**
+
+### 追溯发现：之前导入的版本根本不显示
+
+```java
+LOG.info("No available json file found, ignoring version " + id);
+return Stream.empty();
+```
+
+**没有 `<id>.json` 就被整份忽略** —— 这是 v0.35.0 遗留项"只写 jar 不写 json"的后果。
+
+另外默认 JDK 为什么是 jre8：`findExactOrNextGreater(null)` 直接返回 jre8。导入版本没有 `javaVersion`，**根本没让用户选**。
+
+### 改动
+
+| 文件 | 说明 |
+|---|---|
+| `KcuVersionMeta.java` | 新增：meta 读写 + jar 内 `version.json` 探测 |
+| `KcuLaunchGate.java` | 新增：启动前运行时选择 |
+| `KcuImportActivity` | 导入收尾写最小 json + meta |
+| `Versions` | 插入 gate |
+| `build.yml` | 日志取证 |
+
+### 契约：`<版本目录>/kcu_meta.json`
+
+```json
+{ "known": false, "display": "未知", "java": "" }
+```
+
+**只对有这个文件的版本生效**，正常下载的版本直接放行，原启动路径一行未改。
+
+### 编译失败了一次，而且一开始拿不到日志
+
+run 39971250413 失败，logs API 403、上报 `gradle_ok=?`。
+
+**修了取证**：上报步骤改为直接读 `/tmp/build.log` 文件，不再依赖 `GITHUB_ENV`。
+
+立刻拿到真错误：
+
+```
+KcuLaunchGate.java:33: no suitable constructor found for File(File)
+```
+
+`getVersionRoot` 已经返回 `File`，我多包了一层。低级错误。
+
+### 遗留：显示层未接
+
+**"显示具体版本"目前只写进 meta 的 `display`，UI 没读。**
+
+版本列表显示的是目录名（`Version.getId()`），要显示真实版本得动 `VersionListItem`/`VersionUI`，而 `Version` 全仓 128 处引用。
+
+**你想在哪看到它**（列表副标题？版本卡片？）定了我就接。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuLaunchGate.java` |
+| 行 | **33** |
+| 5 个不同字母 | `F i l e v` |
+| **SHA-1** | **`0841bd2207fd60d4988c753eb469547836682e45`** |
+
+### 编译验证（PROVEN）
+
+run **39975151769**，5 个产物：all 326243739 / x86_64 174871760 / **arm64 169175361** / arm 161916024 / x86 155564753 B。
