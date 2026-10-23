@@ -5,6 +5,7 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 
+import com.tungsten.fcl.util.KcuVersionMeta;
 import com.tungsten.fcl.R;
 import com.tungsten.fcl.setting.Profiles;
 
@@ -52,9 +53,20 @@ public class MainUI extends FCLCommonUI {
             return;
         }
         String version = Profiles.getSelectedVersion();
-        stageVersion.setText(version == null || version.isEmpty()
-                ? getContext().getString(R.string.kcu_stage_version_none)
-                : version);
+        if (version == null || version.isEmpty()) {
+            stageVersion.setText(getContext().getString(R.string.kcu_stage_version_none));
+            return;
+        }
+        // 导入版本：未探测时显示“未知”，探测到后显示真实版本
+        String text = version;
+        try {
+            java.io.File dir = Profiles.getSelectedProfile().getRepository().getVersionRoot(version);
+            if (KcuVersionMeta.file(dir).isFile()) {
+                text = KcuVersionMeta.read(dir).display;
+            }
+        } catch (Throwable ignored) {
+        }
+        stageVersion.setText(text);
     }
 
 }
