@@ -3,7 +3,7 @@
     <string name="app_name_import">Install Modpack</string>
 
     <string name="splash_agreement">KCU requires storage permission to manage and read game files. KCU is fully open-source on GitHub, so please rest assured about your data security. The permission is solely for the game to operate properly and poses no security risks.</string>
-    <string name="splash_permission_msg">No storage permission, please grant Fold Craft Launcher the permission.</string>
+    <string name="splash_permission_msg">No storage permission, please grant KCU Launcher the permission.</string>
     <string name="splash_permission_grant">Grant</string>
     <string name="splash_permission_title">Permission to store needed</string>
     <string name="splash_permission_close">Close the app</string>
@@ -11,7 +11,7 @@
     <string name="splash_permission_settings_msg">You have chosen "Never Allow" Please manually grant storage permissions in settings.</string>
     <string name="notification_permission">KCU requires permission to post notifications to prevent issues with normal game installation or startup.</string>
 
-    <string name="splash_title">Welcome to Fold Craft Launcher</string>
+    <string name="splash_title">Welcome to KCU Launcher</string>
     <string name="splash_eula_error">Cannot get EULA, please check the network.</string>
     <string name="splash_eula_next">Agree and Continue</string>
     <string name="splash_runtime_title">Install or update app runtime</string>
@@ -437,11 +437,11 @@
     <string name="folder_config">Browse configs</string>
     <string name="folder_game">Browse game directory</string>
     <string name="folder_log">Browse log directory</string>
-    <string name="folder_fcl_log">Browse KCU logs</string>
+    <string name="folder_kcu_log">Browse KCU logs</string>
     <string name="upload_log">Upload Log</string>
     <string name="log_not_found">Log file not found</string>
     <string name="log_too_large">Log file is too large</string>
-    <string name="upload_fcl_log">Upload KCU log</string>
+    <string name="upload_kcu_log">Upload KCU log</string>
     <string name="upload_game_log">Upload game log</string>
     <string name="upload_success">Upload success! URL copied to clipboard: %s</string>
     <string name="upload_failed">Upload failed: %s</string>
@@ -1619,7 +1619,7 @@
     <string name="file_browser_no_selection">No file selected.</string>
     <string name="file_browser_operation_failed">Operation failed.</string>
     <string name="crash_reporter_title">Crash Report</string>
-    <string name="crash_reporter_hint">Fold Craft Launcher has encountered an unresolvable error, please seek help from the developer or others.</string>
+    <string name="crash_reporter_hint">KCU Launcher has encountered an unresolvable error, please seek help from the developer or others.</string>
     <string name="crash_reporter_restart">Restart</string>
     <string name="crash_reporter_close">Exit</string>
     <string name="crash_reporter_copy">Copy</string>
