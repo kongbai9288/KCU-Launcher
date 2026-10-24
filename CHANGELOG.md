@@ -2182,3 +2182,59 @@ width = (int) (screenWidth * percentage);   // 快照是小窗尺寸
 
 run **40065239693**（push 触发，**全矩阵**）5 个产物：
 all 326244921 / x86_64 174872477 / **arm64 169176091** / arm 161916596 / x86 155565566 B
+
+## 0.45.0 — 2026-10-24
+
+执行者：**yuanbao**
+
+- **TouchController 尺寸遗留修复**（v0.44.0 未修的那处）
+- 修一次**五架构全崩**的真实编译错误
+
+### 读完实现后确认：不需要 resize 接口
+
+`TouchController` 里的尺寸**只做分母**：
+
+```kotlin
+addPointer(pointerId, event.getX(index) / width, ...)
+client.moveView(true, deltaY / height, deltaX / width)
+```
+
+`TouchControllerInputView` 用它把归一化矩形换算回像素（8 处）。
+
+所以直接改成动态 getter 就行，**不需要任何外部 hook** —— `DisplayUtil` 本来就会被 `onConfigurationChanged` 刷新。
+
+### 五架构全崩，原因很实在
+
+```
+Accidental override: The following declarations have the same JVM signature (getWidth()I)
+```
+
+`TouchControllerInputView` **继承 View**，Android 已有 `getWidth()`。我自定义的 `private val width get()` 编译后也生成 `getWidth()`，撞了。
+
+改名 `screenW`/`screenH`，8 处使用点精确替换——**不能用正则**，会误伤 `cursorRect.width`（RectF 自己的字段）。
+
+**日志能拿到，靠的是 v0.40.0 修的那个取证改进**，否则只能盲猜。
+
+### 哈希碰撞第四次
+
+首次取 `TouchControllerInputView:73` 得 `priva`，**和 v0.19.0 的 `KcuDevMode:28` 完全一致，SHA-1 相同** —— 两行都以 `private` 开头。
+
+改取 `TouchController.kt:33`（含 `val width`）→ `valwi`。
+
+### 尺寸快照问题：到此全量修完
+
+TouchPad / MenuView / ControlButton / ControlDirection / FCLInput / TouchController / TouchControllerInputView —— **七个类**。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `TouchController.kt` |
+| 行 | **33** |
+| 5 个不同字母 | `v a l w i` |
+| **SHA-1** | **`0c816a93d5c6512f3a1a67a42d2421ba687d45b9`** |
+
+### 编译验证（PROVEN）
+
+run **40067932184** 全矩阵 success，5 产物：
+all 326243965 / x86_64 174872036 / **arm64 169175968** / arm 161916555 / x86 155564861 B
