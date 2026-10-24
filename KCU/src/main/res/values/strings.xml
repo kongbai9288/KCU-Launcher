@@ -58,7 +58,7 @@
     <string name="about_developer" translatable="false">FCL-Team</string>
     <string name="about_sponsor">Sponsor</string>
     <string name="about_source">Open Source</string>
-    <string name="about_desc">KCU Launcher 是一个 Android 上的 Minecraft: Java Edition 启动器，允许在安卓设备上运行 Java 版 Minecraft。\n\n本应用基于 Fold Craft Launcher 开发，并借鉴了 PojavLauncher、HMCL 等开源项目，遵循 GPL-v3 许可发布。\n\n页面下方的条目携带图标，点击「开源许可」可查看所使用开源项目的许可（全部内置于本地，不联网获取）。</string>
+    <string name="about_desc">KCU Launcher 是一个由架构师 kongbai9288 以 FCL（即 Fold Craft Launcher）为主体、其他项目为辅的开源软件，源码可修改，遵循 GPL-v3 许可发布。\n\n页面下方的条目携带图标，点击「开源许可」可查看所使用开源项目的许可（全部内置于本地，不联网获取）。</string>
 
     <string name="account_add_server">Add Authentication Server</string>
     <string name="account_add_server_url">Server URL</string>
