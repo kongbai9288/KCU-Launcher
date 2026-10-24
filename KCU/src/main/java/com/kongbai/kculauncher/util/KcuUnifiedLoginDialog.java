@@ -195,15 +195,21 @@ public final class KcuUnifiedLoginDialog {
         /**
          * 确定账号并结束。
          *
-         * 先自定义标识落库，再解析账号 —— 顺序不能反：
-         * 解析过程会读自定义值，先解析的话本次填写的自定义不生效。
+         * 先自定义标识落库，再创建账号 —— 顺序不能反：
+         * 创建过程会读自定义值，反了本次填写的自定义不生效。
+         *
+         * 填了自定义标识时必须显式传入：走 resolve 的话内部按名称推导，
+         * 自定义值会被忽略。那样账号实际用的是推导值，而存档检测拿自定义值比对，
+         * 两处不一致 —— 玩家照提示改完存档仍然对不上。
          */
         private void finishWithOffline() {
             try {
                 KcuUuid.setCustom(context, name, customUuid);
             } catch (Throwable ignored) {
             }
-            Account account = KcuAccountFlow.resolve(name, null);
+            Account account = customUuid != null
+                    ? KcuAccountFlow.createOffline(name, customUuid)
+                    : KcuAccountFlow.resolve(name, null);
             if (account != null) {
                 try {
                     Accounts.addAccount(account);
