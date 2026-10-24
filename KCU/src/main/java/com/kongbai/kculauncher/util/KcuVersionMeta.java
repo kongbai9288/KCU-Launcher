@@ -115,19 +115,30 @@ public final class KcuVersionMeta {
             if (entry == null) {
                 return null;
             }
-            byte[] buf = new byte[(int) Math.min(entry.getSize(), 65536)];
+            // 条目大小可能返回 -1（ZIP 未记录真实大小），此时不能用于分配数组
+            long declared = entry.getSize();
             InputStream in = null;
             try {
                 in = zip.getInputStream(entry);
-                int off = 0;
-                while (off < buf.length) {
-                    int n = in.read(buf, off, buf.length - off);
-                    if (n <= 0) {
-                        break;
+                if (declared > 0) {
+                    byte[] buf = new byte[(int) Math.min(declared, 65536)];
+                    int off = 0;
+                    while (off < buf.length) {
+                        int n = in.read(buf, off, buf.length - off);
+                        if (n <= 0) {
+                            break;
+                        }
+                        off += n;
                     }
-                    off += n;
+                    return parseId(new String(buf, 0, off, "UTF-8"));
                 }
-                return parseId(new String(buf, 0, off, "UTF-8"));
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                byte[] chunk = new byte[8192];
+                int n;
+                while (out.size() < 65536 && (n = in.read(chunk)) > 0) {
+                    out.write(chunk, 0, n);
+                }
+                return parseId(new String(out.toByteArray(), "UTF-8"));
             } finally {
                 close(in);
             }
