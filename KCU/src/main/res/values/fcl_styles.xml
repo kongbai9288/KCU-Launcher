@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- KCUSpinner 下拉弹窗的窗口过渡（ListPopupWindow.setAnimationStyle） -->
-    <style name="KCUSpinnerPopupAnimation">
-        <item name="android:windowEnterAnimation">@anim/fcl_spinner_popup_enter</item>
-        <item name="android:windowExitAnimation">@anim/fcl_spinner_popup_exit</item>
-    </style>
-</resources>
