@@ -564,7 +564,12 @@ public class KCULauncher {
                 // KCU：按玩家配置顺序加载自带原生库。
                 // 必须在 setEnv 之后——LD_LIBRARY_PATH 此时才包含运行时目录，
                 // 提前加载解析不到依赖库。未配置时不产生任何 dlopen。
-                KcuNativeOrder.loadInOrder(bridge, config.getWorkingDir());
+                if (!KcuNativeOrder.loadInOrder(bridge, config.getWorkingDir())) {
+                    // 配置声明 abort 且确有库未加载成功：放弃本次启动。
+                    // 带着缺失的库继续跑，崩溃点会远离真正原因，难以排查
+                    log(bridge, "KCU: 自带原生库按序加载未全部成功，配置为 abort，终止启动");
+                    return;
+                }
 
                 // setup java runtime
                 setUpJavaRuntime(config, bridge);
