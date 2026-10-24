@@ -31,11 +31,7 @@ public class KcuAgeActivity extends Activity {
         LinearLayout root = KcuUi.root(this);
 
         LinearLayout card = KcuUi.card(this);
-        card.addView(KcuUi.title(this, getString(R.string.kcu_age_title)));
-        card.addView(KcuUi.gap(this, 10));
-        card.addView(KcuUi.body(this, getString(R.string.kcu_age_prompt)));
-        card.addView(KcuUi.gap(this, 18));
-
+        // 标题与说明由 KcuAgeGate.buildInto 统一构建，此处不再重复添加
         final int[] selected = new int[]{KcuAgeGate.THRESHOLD};
         KcuAgeGate.buildInto(this, card, selected, () -> {
             KcuAgeGate.declare(selected[0]);
