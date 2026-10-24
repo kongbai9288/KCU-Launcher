@@ -81,6 +81,10 @@ public class KcuDevPage extends KCUPage implements View.OnClickListener {
         clear.setOnClickListener(this);
         card.addView(clear);
 
+        // 清除会连带清掉年龄声明，下次冷启动重新弹年龄页；不提示会被当成故障
+        card.addView(KcuUi.gap(getContext(), 8));
+        card.addView(KcuUi.hint(getContext(), getString(R.string.kcu_dev_clear_note)));
+
         result = KcuUi.status(getContext(), "");
         result.setPadding(0, KcuUi.dp(getContext(), 14), 0, 0);
         card.addView(result);
