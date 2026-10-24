@@ -391,11 +391,11 @@
     <string name="folder_config">Duyệt cấu hình</string>
     <string name="folder_game">Duyệt thư mục trò chơi</string>
     <string name="folder_log">Duyệt thư mục nhật ký</string>
-    <string name="folder_fcl_log">Duyệt nhật ký KCU</string>
+    <string name="folder_kcu_log">Duyệt nhật ký KCU</string>
     <string name="upload_log">Tải lên Nhật ký</string>
     <string name="log_not_found">Không tìm thấy tệp nhật ký</string>
     <string name="log_too_large">Tệp nhật ký quá lớn</string>
-    <string name="upload_fcl_log">Tải lên nhật ký KCU</string>
+    <string name="upload_kcu_log">Tải lên nhật ký KCU</string>
     <string name="upload_game_log">Tải lên nhật ký trò chơi</string>
     <string name="upload_success">Tải lên thành công! URL đã được sao chép vào khay nhớ tạm: %s</string>
     <string name="upload_failed">Tải lên thất bại: %s</string>
