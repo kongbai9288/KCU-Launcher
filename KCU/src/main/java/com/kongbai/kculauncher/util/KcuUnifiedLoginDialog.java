@@ -46,6 +46,8 @@ public final class KcuUnifiedLoginDialog {
         private final AlertDialog dialog;
         private final LinearLayout card;
         private String name = "";
+        /** 玩家自定义标识；留空表示使用按名称推导的默认值 */
+        private java.util.UUID customUuid = null;
 
         Session(Context context, Runnable onFinished) {
             this.context = context;
@@ -75,6 +77,15 @@ public final class KcuUnifiedLoginDialog {
                     KcuUi.field(context, context.getString(R.string.kcu_login_name_hint));
             edit.setSingleLine(true);
             card.addView(edit);
+            card.addView(KcuUi.gap(context, 14));
+
+            // 自定义标识：多数玩家不需要，但跨设备迁移时要把标识对齐到原设备
+            card.addView(KcuUi.hint(context, context.getString(R.string.kcu_login_uuid_hint)));
+            card.addView(KcuUi.gap(context, 6));
+            final android.widget.EditText uuidEdit =
+                    KcuUi.field(context, context.getString(R.string.kcu_login_uuid_field));
+            uuidEdit.setSingleLine(true);
+            card.addView(uuidEdit);
             card.addView(KcuUi.gap(context, 18));
 
             android.widget.Button confirm =
@@ -90,6 +101,17 @@ public final class KcuUnifiedLoginDialog {
                     return;
                 }
                 name = value.trim();
+                String rawUuid = uuidEdit.getText() == null
+                        ? "" : uuidEdit.getText().toString();
+                customUuid = null;
+                if (!TextUtils.isEmpty(rawUuid.trim())) {
+                    customUuid = KcuUuid.parse(rawUuid);
+                    if (customUuid == null) {
+                        appendStatus(context.getString(R.string.kcu_login_uuid_invalid));
+                        buildInput();
+                        return;
+                    }
+                }
                 buildChecking();
                 runProbe();
             });
@@ -170,9 +192,18 @@ public final class KcuUnifiedLoginDialog {
             card.addView(offline);
         }
 
-        /** 按名称生成离线账号并结束 */
+        /**
+         * 确定账号并结束。
+         *
+         * 先自定义标识落库，再解析账号 —— 顺序不能反：
+         * 解析过程会读自定义值，先解析的话本次填写的自定义不生效。
+         */
         private void finishWithOffline() {
-            Account account = KcuAccountFlow.createOffline(name, null);
+            try {
+                KcuUuid.setCustom(context, name, customUuid);
+            } catch (Throwable ignored) {
+            }
+            Account account = KcuAccountFlow.resolve(name, null);
             if (account != null) {
                 try {
                     Accounts.addAccount(account);
