@@ -104,9 +104,12 @@ public final class KcuLaunchGate {
     /**
      * 启动前的存档身份检查。
      *
-     * 只对来源不明的实例做：本启动器创建的实例，账号与存档 UUID 天然一致。
-     * 玩家用文件管理器直接拷入的存档记的是原设备 UUID，与本账号对不上，
-     * 进游戏会表现为背包与进度全空。
+     * 先查注册表：由本启动器创建的实例直接跳过扫描，不产生任何目录遍历开销。
+     * 只有来源不明的实例才扫存档 —— 这类实例里的存档可能来自其他设备，
+     * 记录的 UUID 与本账号对不上，进游戏会表现为背包与进度全空。
+     *
+     * 检测到不一致时只劝导，不自动改写：改写存档是破坏性操作，
+     * 自动执行一旦出问题会被归咎于启动器。
      */
     private static void checkWorldUuid(Context context, Profile profile, Runnable proceed) {
         try {
@@ -115,8 +118,8 @@ public final class KcuLaunchGate {
                 proceed.run();
                 return;
             }
-            String dir = gameDir.getAbsolutePath();
-            if (KcuInstanceRegistry.OWNER_KCU.equals(KcuInstanceRegistry.query(dir))) {
+            if (KcuInstanceRegistry.OWNER_KCU.equals(
+                    KcuInstanceRegistry.query(gameDir.getAbsolutePath()))) {
                 proceed.run();
                 return;
             }
@@ -131,14 +134,15 @@ public final class KcuLaunchGate {
                 proceed.run();
                 return;
             }
-            showUuidFix(context, gameDir, mismatches, proceed);
+            showUuidAdvice(context, mismatches, proceed);
         } catch (Throwable ignored) {
             proceed.run();
         }
     }
 
-    private static void showUuidFix(Context context, File gameDir,
-                                    List<KcuWorldUuid.Mismatch> mismatches, Runnable proceed) {
+    /** 只提示，不改写：把处理权完全留给玩家与外部 NBT 工具 */
+    private static void showUuidAdvice(Context context,
+                                       List<KcuWorldUuid.Mismatch> mismatches, Runnable proceed) {
         StringBuilder names = new StringBuilder();
         for (int i = 0; i < mismatches.size(); i++) {
             if (i > 0) {
@@ -158,33 +162,13 @@ public final class KcuLaunchGate {
         card.addView(KcuUi.hint(context, context.getString(R.string.kcu_uuid_note)));
 
         AlertDialog dialog = new AlertDialog.Builder(context).setView(scroll).create();
-        android.widget.Button fix =
-                KcuUi.primaryButton(context, context.getString(R.string.kcu_uuid_confirm));
-        fix.setOnClickListener(v -> {
-            dialog.dismiss();
-            boolean allOk = true;
-            for (KcuWorldUuid.Mismatch mismatch : mismatches) {
-                if (!KcuWorldUuid.rewrite(mismatch, gameDir)) {
-                    allOk = false;
-                }
-            }
-            if (!allOk) {
-                // 半改写状态必须让玩家知道，不能当作无事发生
-                android.widget.Toast.makeText(context,
-                        context.getString(R.string.kcu_uuid_partial),
-                        android.widget.Toast.LENGTH_LONG).show();
-            }
-            proceed.run();
-        });
-        card.addView(fix);
-        card.addView(KcuUi.gap(context, 8));
-        android.widget.Button skip =
-                KcuUi.secondaryButton(context, context.getString(R.string.kcu_uuid_skip));
-        skip.setOnClickListener(v -> {
+        android.widget.Button ok =
+                KcuUi.primaryButton(context, context.getString(R.string.kcu_uuid_continue));
+        ok.setOnClickListener(v -> {
             dialog.dismiss();
             proceed.run();
         });
-        card.addView(skip);
+        card.addView(ok);
         root.addView(card);
         scroll.addView(root);
         dialog.show();
