@@ -1,6 +1,37 @@
 [
   {
     "type": "release",
+    "versionCode": 47,
+    "versionName": "0.47.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "承接 v0.46.0 两条遗留：about_desc 仍是上游介绍文案、许可证全文未内置。",
+          "全文来源用 GitHub Licenses API 的 GET /licenses/{key} 拉取官方发布版本，共五份七万一千六百八十二字节落 assets/licenses/text/：GPL-3.0 三万五千一百四十九字节、LGPL-2.1 两万六千五百二十六字节、LGPL-3.0 七千六百五十二字节、BSD-3-Clause 一千四百九十九字节、Zlib 八百五十六字节。",
+          "抽查头尾确认是完整协议：GPL-3.0 开头为 GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007 且结尾完整。不手写的原因是协议全文是法律文本，默写转述或摘要都可能失真，官方 API 拿到的就是官方发布的原文。",
+          "清单加 licenseFile 字段：FCL 与 HMCL 指 GPL-3.0.txt、PojavLauncher 指 LGPL-3.0.txt、MobileGlues 指 LGPL-2.1.txt、SDL3 指 Zlib.txt、LWJGL 指 BSD-3-Clause.txt、Android-OpenJDK-Build 为空因为官方未声明无全文可内置。上传前逐一 stat 校验每个非空 licenseFile 在目录下真实存在。",
+          "新增 KcuLicenseTextActivity：点条目打开本地全文页，等宽字体十一 sp 可滚动，不再直接跳外链；无全文的条目显示占位加查看官方页面按钮。",
+          "about_desc 替换：原四段全在讲 Fold Craft Launcher，末句还在替上游声明分发须遵循 GPL-v3。改为描述 KCU 自身、说明基于 FCL 并借鉴 PojavLauncher 与 HMCL、提示许可页全本地。",
+          "只改了 values 默认与 values-zh 中文两处，其余十个语言目录仍是上游文案，如实标注为遗留未伪装成已完成。",
+          "真实编译失败一次：run 40080669127 五个架构全部失败，报 KcuLicenseActivity.java 第 100 行 cannot find symbol 共两个错误。原因是该行用了 new Intent 但文件顶部没有 import android.content.Intent，加代码时只补逻辑没同步检查 import。同类同包的 KcuLicenseTextActivity 不需要 import 所以没一起暴露，这也是它没被发现的原因之一。已补 import，run 40081537478 通过。",
+          "会导致的错误逐条处置：漏 import android.content.Intent 导致五架构全失败（已补）；licenseFile 指向不存在的文件（上传前逐一 stat 校验）；assets 打开失败（try-catch 返回 null 走占位加官方链接）；新 Activity 未注册 Manifest（已注册并设 exported 为 false）；大体量文本一次性读入（七十一 KB 总量可接受且按需读取非预加载）；about_desc 其他语言未同步（已知遗留）。",
+          "对用户使用逻辑的影响：关于页说明改为介绍 KCU 自身；点开源许可进列表页；点有全文的条目打开本地全文完全不联网；点无全文的条目显示占位与官方页面按钮；返回键回列表页由两级 Activity 天然支持。",
+          "对未来的影响：APK 体积增加七十一 KB 未压缩可接受的范围内；新增组件需同步 licenses.json 与全文否则清单不全；上游改许可需同步全文本属低频但需留意。",
+          "对代码逻辑的影响：新增两个 Activity 与一个 assets 目录，未改已有 API 签名。",
+          "审核 pass。哈希碰撞第五次：首次取 KcuLicenseTextActivity 第 27 行 public static final String EXTRA_FILE 得 publi，与 v0.28.0 和 v0.29.0 两次完全相同且 SHA-1 同为 a2b01af26284f72d80bc330e266a55b876dd7ebd。自动换行的两个候选 package 行得 packg 与 Override 行得 Overi 都不是实质代码行故弃用，最终取第 31 行 protected void onCreate(Bundle savedInstanceState) 得 prote，SHA-1 a2d455d65e5ea85773bcf5e76b57b6178053f62e。",
+          "规则 193 需要修正：原表述选含特征标识符的行不足以避碰，因为取字从行首开始，行首是 public 或 private 或 float 就必然碰撞，与行尾特征无关。",
+          "体积佐证：arm64 由 v0.46.0 的一百六十九万一千七百八十六增至一百六十九万二千零六十一即增加两万七千四百四十字节，与内置全文体量一致。",
+          "冒烟测试：Actions run 40081537478 由 push 触发全矩阵并成功，五个产物分别为 all 326277469、x86_64 174901364、arm64 169206130、arm 161946535、x86 155596376 字节。",
+          "未验证：图标字符显示效果、小窗切换行为、许可全文页排版均需实机。实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 46,
     "versionName": "0.46.0",
     "date": "2026.10.24",
