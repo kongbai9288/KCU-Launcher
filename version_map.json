@@ -1,6 +1,27 @@
 [
   {
     "type": "release",
+    "versionCode": 59,
+    "versionName": "0.59.0",
+    "date": "2026.10.25",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "修正一个严重 bug：玩家填写的自定义标识完全没有生效。上一轮我把自定义值落库后调用 resolve 创建账号，而 resolve 内部走 createLocal 按名称推导，自定义值被忽略。后果比没生效更糟：账号实际使用推导值，而存档检测用自定义值比对，两处不一致，玩家照提示改完存档仍然对不上。修复方式是填了自定义标识时改走 createOffline 显式传入。",
+          "劝导界面改为列出每个世界的现记录值到目标值的对应关系。原来只显示世界名，玩家拿着 NBT 工具不知道从什么改成什么；现在逐条给出原值与应改为的值。",
+          "更正上一轮的一条错误审核结论：我报的 KcuNativeOrder abort 失败玩家看不到是错的。实际 KCULauncher 行 567 判断返回值后调用 log(bridge, 消息)，log 走 bridge.getCallback().onLog，会输出到启动器的日志界面，玩家能看到。这条结论是基于过期的文档片段而非实际源码得出的，属于审核不严谨。",
+          "审核 pass。哈希回执：KcuUnifiedLoginDialog.java 第三十六行 new Session 括号 context 逗号 onFinished 括号 点 start 括号，五个字母 n e w S i 拼成 newSi，SHA-1 283f1066a9031ed85f4442bbf416574607d2260a。",
+          "冒烟测试：Actions run 40113629632 全矩阵 success，五个产物分别为 all 326244306、x86_64 174865549、arm64 169172286、arm 161914144、x86 155562823 字节。",
+          "未验证：自定义标识创建账号的行为从未在真机执行；劝导界面的新格式从未在真机显示；实机安装仍为零验证。",
+          "剩余：默认实例不会走 addProfile 因此不会被标记，每次启动仍会扫描存档目录，属可接受的安全取舍；KcuAccountFlow.normalize 仍无调用点。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 58,
     "versionName": "0.58.0",
     "date": "2026.10.25",
