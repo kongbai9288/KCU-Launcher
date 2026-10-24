@@ -17,45 +17,72 @@ jobs:
 
       - name: 运行迁移脚本（文本替换 + 包目录移动）
         run: |
-          set -e
-          python3 .github/scripts/migrate_package.py .
+          set -eo pipefail
+          python3 .github/scripts/migrate_package.py . 2>&1 | tee /tmp/m.log
+          echo "--- 脚本输出 ---"
+          cat /tmp/m.log
 
       - name: 模块改名 FCL -> KCU
         run: |
-          set -e
+          set -eo pipefail
+          echo "CWD=$(pwd)"
+          ls -la | head -20
           if [ -d FCL ]; then
-            git mv FCL KCU || mv FCL KCU
+            echo "FCL 存在，执行 git mv"
+            git mv FCL KCU 2>&1 || { echo "git mv 失败，回退 mv"; mv FCL KCU; }
+          else
+            echo "FCL 不存在！"
           fi
           sed -i 's|include(":FCL")|include(":KCU")|g' settings.gradle.kts
           sed -i 's|rootProject.name = "Fold Craft Launcher"|rootProject.name = "KCU Launcher"|g' settings.gradle.kts
-          # 其他 workflow / 脚本里若硬编码 :FCL 或 FCL/ 一并更新
-          grep -rl ':FCL\|"FCL"\|FCL/build' .github/ 2>/dev/null | while read f; do
-            sed -i 's|:FCL|:KCU|g; s|"FCL"|"KCU"|g; s|FCL/build|KCU/build|g' "$f"
-          done
+          grep -rl ':FCL' .github/ 2>/dev/null | while read f; do sed -i 's|:FCL|:KCU|g' "$f"; done
           echo "--- settings.gradle.kts ---"
           cat settings.gradle.kts
 
       - name: 残留自检
         run: |
-          echo "=== 仍含 com.tungsten 的文件数 ==="
-          grep -rl 'com\.tungsten\|com/tungsten\|com_tungsten' --include='*.java' --include='*.kt' --include='*.xml' --include='*.c' --include='*.h' --include='*.kts' . 2>/dev/null | grep -v '^./docs/' | head -40 || true
-          grep -rl 'com\.tungsten\|com/tungsten\|com_tungsten' --include='*.java' --include='*.kt' --include='*.xml' --include='*.c' --include='*.h' --include='*.kts' . 2>/dev/null | grep -v '^./docs/' | wc -l || true
+          echo "=== 仍含 com.tungsten 的源码文件数 ==="
+          grep -rl 'com\.tungsten\|com/tungsten\|com_tungsten' --include='*.java' --include='*.kt' --include='*.xml' --include='*.c' --include='*.h' --include='*.kts' . 2>/dev/null | grep -v '^./docs/' | wc -l
           echo "=== 仍含 com.mio 的源码文件数 ==="
-          grep -rl 'com\.mio\|com/mio\|com_mio' --include='*.java' --include='*.kt' --include='*.xml' --include='*.c' --include='*.h' . 2>/dev/null | grep -v '^./docs/' | wc -l || true
+          grep -rl 'com\.mio\|com/mio\|com_mio' --include='*.java' --include='*.kt' --include='*.xml' --include='*.c' --include='*.h' . 2>/dev/null | grep -v '^./docs/' | wc -l
           echo "=== FCL_VERSION_CODE 是否保留 ==="
-          grep -rn 'FCL_VERSION_CODE' --include='*.java' --include='*.kt' . | head -5 || true
+          grep -rn 'FCL_VERSION_CODE' --include='*.java' --include='*.kt' . | head -3
 
       - name: 提交
+        id: commit
         run: |
-          set -e
+          set -eo pipefail
           git config user.name "yuanbao"
           git config user.email "yuanbao@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          echo "--- remote ---"; git remote -v
           git add -A
-          echo "STAGED=$(git diff --cached --name-only | wc -l)"
+          echo "STAGED_COUNT=$(git diff --cached --name-only | wc -l)"
+          git status --porcelain | head -5
           if git diff --cached --quiet; then
-            echo "无改动，跳过提交"
+            echo "RESULT=NO_CHANGE"
           else
-            git commit -m "refactor: 包名迁移 com.tungsten.fcl*/com.mio -> com.kongbai.kculauncher*，模块与项目名去 FCL 化 (yuanbao)" 2>&1 | tail -5
-            git push origin HEAD:${{ github.ref_name }} 2>&1 | tail -10
+            git commit -m "refactor: 包名迁移 com.tungsten.fcl*/com.mio -> com.kongbai.kculauncher*，模块与项目名去 FCL 化 (yuanbao)"
+            echo "COMMIT_OK=$?"
+            git push origin "HEAD:${{ github.ref_name }}"
+            echo "PUSH_OK=$? RESULT=PUSHED"
           fi
+        continue-on-error: true
+
+      - name: 上传诊断日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migrate-log
+          path: /tmp/m.log
+          if-no-files-found: ignore
+
+      - name: 汇总工作区状态
+        if: always()
+        run: |
+          echo "=== 顶层目录 ==="
+          ls -1
+          echo "=== KCU 模块 java 包 ==="
+          find KCU/src/main/java -maxdepth 4 -type d 2>/dev/null | head -20 || echo "KCU 不存在"
+          echo "=== git log 最近 ==="
+          git log --oneline -3
