@@ -70,7 +70,7 @@ class ManagePage(context: Context?, id: Int) : KCUPage(context, id, R.layout.pag
                     ManageItem(R.drawable.ic_baseline_cloud_upload_24, R.string.upload_log) {
                         uploadLatestLog()
                     },
-                    ManageItem(R.drawable.ic_baseline_script_24, R.string.folder_fcl_log) {
+                    ManageItem(R.drawable.ic_baseline_script_24, R.string.folder_kcu_log) {
                         onBrowse(
                             KCUPath.LOG_DIR
                         )
