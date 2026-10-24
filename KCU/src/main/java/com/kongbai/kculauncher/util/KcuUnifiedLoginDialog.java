@@ -1,0 +1,181 @@
+package com.kongbai.kculauncher.util;
+
+import android.app.AlertDialog;
+import android.content.Context;
+import android.text.TextUtils;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+
+import com.kongbai.kculauncher.R;
+import com.kongbai.kculauncher.core.auth.Account;
+import com.kongbai.kculauncher.core.task.Schedulers;
+import com.kongbai.kculauncher.setting.Accounts;
+
+/**
+ * 统一登录入口。
+ *
+ * 玩家只需填写名称：先探测该名称是否对应正版账号，可用则引导正版登录，
+ * 不可用则按名称直接生成离线账号进入。
+ *
+ * 皮肤为可选项，当前不提供选择界面 —— 皮肤选择与角色切换将合并处理，
+ * 此处始终不设置皮肤，待该界面完成后再接入。
+ *
+ * 本入口只在未开启开发者模式时使用；开发者模式下由调用方改用原有的
+ * 离线 / 微软 / 第三方三条独立入口。
+ */
+public final class KcuUnifiedLoginDialog {
+
+    private KcuUnifiedLoginDialog() {
+    }
+
+    /**
+     * @param onFinished 账号创建完成后回调（用于刷新账号列表）；未创建也会在关闭时回调一次
+     */
+    public static void show(Context context, Runnable onFinished) {
+        try {
+            new Session(context, onFinished).start();
+        } catch (Throwable ignored) {
+            // 界面构建失败不应影响账号页
+        }
+    }
+
+    private static final class Session {
+
+        private final Context context;
+        private final Runnable onFinished;
+        private final AlertDialog dialog;
+        private final LinearLayout card;
+        private String name = "";
+
+        Session(Context context, Runnable onFinished) {
+            this.context = context;
+            this.onFinished = onFinished;
+            ScrollView scroll = new ScrollView(context);
+            LinearLayout root = KcuUi.root(context);
+            this.card = KcuUi.card(context);
+            root.addView(card);
+            scroll.addView(root);
+            this.dialog = new AlertDialog.Builder(context).setView(scroll).create();
+        }
+
+        void start() {
+            buildInput();
+            dialog.show();
+        }
+
+        /** 阶段一：填写名称 */
+        private void buildInput() {
+            card.removeAllViews();
+            card.addView(KcuUi.header(context, "\u2261", context.getString(R.string.kcu_login_title)));
+            card.addView(KcuUi.gap(context, 12));
+            card.addView(KcuUi.body(context, context.getString(R.string.kcu_login_hint)));
+            card.addView(KcuUi.gap(context, 16));
+
+            final android.widget.EditText edit =
+                    KcuUi.field(context, context.getString(R.string.kcu_login_name_hint));
+            edit.setSingleLine(true);
+            card.addView(edit);
+            card.addView(KcuUi.gap(context, 18));
+
+            android.widget.Button confirm =
+                    KcuUi.primaryButton(context, context.getString(R.string.kcu_login_confirm));
+            confirm.setOnClickListener(v -> {
+                String value = edit.getText() == null ? "" : edit.getText().toString();
+                if (TextUtils.isEmpty(value.trim())) {
+                    appendStatus(context.getString(R.string.kcu_login_name_empty));
+                    return;
+                }
+                if (!KcuAccountFlow.isValidName(value)) {
+                    appendStatus(context.getString(R.string.kcu_login_name_invalid));
+                    return;
+                }
+                name = value.trim();
+                buildChecking();
+                runProbe();
+            });
+            card.addView(confirm);
+        }
+
+        private void buildChecking() {
+            card.removeAllViews();
+            card.addView(KcuUi.header(context, "\u2261", context.getString(R.string.kcu_login_title)));
+            card.addView(KcuUi.gap(context, 18));
+            card.addView(KcuUi.status(context, context.getString(R.string.kcu_login_checking)));
+        }
+
+        private void runProbe() {
+            final String checking = name;
+            Schedulers.defaultScheduler().execute(() -> {
+                int result = KcuLoginProbe.probe(checking);
+                Schedulers.androidUIThread().execute(() -> onProbed(result));
+            });
+        }
+
+        private void onProbed(int result) {
+            // 名称对应正版账号：把选择权交回玩家，不擅自替其登录
+            if (result == KcuLoginProbe.RESULT_PREMIUM) {
+                buildPremiumChoice();
+                return;
+            }
+            finishWithOffline();
+        }
+
+        /** 阶段二：名称对应正版账号，让玩家决定走哪条路 */
+        private void buildPremiumChoice() {
+            card.removeAllViews();
+            card.addView(KcuUi.header(context, "!", context.getString(R.string.kcu_login_premium_title)));
+            card.addView(KcuUi.gap(context, 12));
+            card.addView(KcuUi.body(context, context.getString(R.string.kcu_login_premium_body)));
+            card.addView(KcuUi.gap(context, 18));
+
+            android.widget.Button premium =
+                    KcuUi.primaryButton(context, context.getString(R.string.kcu_login_use_microsoft));
+            premium.setOnClickListener(v -> {
+                dismiss();
+                try {
+                    new com.kongbai.kculauncher.ui.account.CreateAccountDialog(
+                            context, Accounts.FACTORY_MICROSOFT).show();
+                } catch (Throwable ignored) {
+                }
+            });
+            card.addView(premium);
+            card.addView(KcuUi.gap(context, 10));
+
+            android.widget.Button offline =
+                    KcuUi.secondaryButton(context, context.getString(R.string.kcu_login_use_offline));
+            offline.setOnClickListener(v -> finishWithOffline());
+            card.addView(offline);
+        }
+
+        /** 按名称生成离线账号并结束 */
+        private void finishWithOffline() {
+            Account account = KcuAccountFlow.createOffline(name, null);
+            if (account != null) {
+                try {
+                    Accounts.addAccount(account);
+                    Accounts.setSelectedAccount(account);
+                } catch (Throwable ignored) {
+                }
+            }
+            dismiss();
+        }
+
+        private void appendStatus(String text) {
+            card.addView(KcuUi.gap(context, 10));
+            card.addView(KcuUi.status(context, text));
+        }
+
+        private void dismiss() {
+            try {
+                dialog.dismiss();
+            } catch (Throwable ignored) {
+            }
+            if (onFinished != null) {
+                try {
+                    onFinished.run();
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+    }
+}
