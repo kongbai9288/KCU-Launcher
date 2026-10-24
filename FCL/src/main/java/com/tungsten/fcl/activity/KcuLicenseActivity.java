@@ -93,7 +93,17 @@ public class KcuLicenseActivity extends Activity {
         row.addView(text);
 
         final String url = item.optString("url", "");
-        if (!url.isEmpty()) {
+        final String file = item.optString("licenseFile", "");
+        if (!file.isEmpty()) {
+            // 有内置全文时优先打开本地全文页，避免直接跳外部链接
+            row.setOnClickListener(v -> {
+                Intent intent = new Intent(this, KcuLicenseTextActivity.class);
+                intent.putExtra(KcuLicenseTextActivity.EXTRA_TITLE, item.optString("name", ""));
+                intent.putExtra(KcuLicenseTextActivity.EXTRA_FILE, file);
+                intent.putExtra(KcuLicenseTextActivity.EXTRA_URL, url);
+                startActivity(intent);
+            });
+        } else if (!url.isEmpty()) {
             row.setOnClickListener(v -> AndroidUtilKt.openLink(this, url));
         }
 
