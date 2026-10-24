@@ -3150,3 +3150,106 @@ all 326244201 / x86_64 174865775 / **arm64 169172420** / arm 161914271 / x86 155
 **后果**：标记文件目前**写不出来** → 注册表对所有现有实例都走"未登记"分支 → **性能优化暂时不生效**。
 
 下轮要补这个接线，否则这轮的性能设计是空转的。
+
+## 0.58.0 — 2026-10-25
+
+执行者：**yuanbao**
+
+审核发现的三个未接线问题，**全部补上**。
+
+---
+
+# 一、修了一个我自己埋的 bug
+
+`KcuAccountFlow.resolve()` 里有一句：
+
+```java
+for (Account account : accounts) {
+    if (account != null && !(account instanceof OfflineAccount)) {
+        return account;   // ← 退回任意一个在线账号
+    }
+}
+```
+
+**后果**：玩家填 `Steve`，如果本地存着某个微软账号（名字完全不同），
+**会直接登录到那个微软账号上**，而不是创建离线 Steve。
+
+讽刺的是 —— 我在 v0.53 写 `findByName` 时，注释里明确批评过这个行为：
+
+> 若在没有同名账号时退回任意一个在线账号，会把无关账号牵扯进来。
+
+**同一个文件里，一条注释在批评另一段代码。**
+
+已删。现在是：同名复用 → 否则按名称生成本地账号。
+
+---
+
+# 二、三个接线
+
+| 项 | 接在哪 |
+|---|---|
+| `markCreated` | `Profiles.addProfile` |
+| 自定义标识输入 | 统一登录的名称阶段 |
+| `resolve()` | 统一登录的 `finishWithOffline` |
+
+## markCreated 的位置是最大风险点
+
+**必须挂在 `addProfile`，不能挂在 `init`。**
+
+```
+init()  行 121: profiles.add(profile)      ← 不走 addProfile
+addProfile() 行 55: profiles.add(profile)  ← 走
+```
+
+**挂错位置的后果**：迁移来的老实例会被误标成"本启动器创建"
+→ **永久跳过存档检测** → 玩家永远看不到 UUID 冲突提示。
+
+## 顺序不能反
+
+```java
+KcuUuid.setCustom(context, name, customUuid);   // 先写
+Account account = KcuAccountFlow.resolve(name, null);  // 再解析
+```
+
+`resolve` 内部会读自定义值 —— 反了这次填的标识就不生效。
+
+---
+
+# 三、自定义标识输入框
+
+名称填写下方新增**可选项**，留空用默认。格式非法会提示，且不发起请求。
+
+解决了 `KcuUuid` 之前**只有读取、没有写入途径**的问题。
+
+---
+
+# 四、劝导界面加了期望值
+
+原来只说"不一致"，玩家拿着 NBT 工具**不知道该改成什么**。
+现在直接把目标值显示出来。
+
+---
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuAccountFlow.java` |
+| 行 | **34** |
+| 该行原文 | `if (username == null \|\| username.trim().isEmpty()) {` |
+| 5 个不同字母 | `i f u s e` |
+| **SHA-1** | **`0e9287eeeac0991bb985eace5ae22a8af4a1fdd1`** |
+
+### 编译验证（PROVEN）
+
+run **40112374262** 全矩阵 success，5 产物：
+all 326243806 / x86_64 174866243 / **arm64 169173376** / arm 161914439 / x86 155563726 B
+
+### 剩余
+
+- `KcuNativeOrder` abort 失败**玩家看不到**（只记日志）
+- `Mismatch.found` 仍未显示（只显示了 expected）
+
+### 未验证
+
+三个接线**全都没在真机上跑过**。
