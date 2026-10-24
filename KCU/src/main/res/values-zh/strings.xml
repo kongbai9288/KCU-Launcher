@@ -1523,6 +1523,9 @@
     <string name="kcu_login_premium_body">该名称关联了正版账号。你可以使用其所属的微软账号登录，也可以继续以该名称离线进入。</string>
     <string name="kcu_login_use_microsoft">使用微软账号登录</string>
     <string name="kcu_login_use_offline">以离线方式继续</string>
+    <string name="kcu_login_uuid_hint">自定义标识（可选）</string>
+    <string name="kcu_login_uuid_field">留空则使用默认推导值</string>
+    <string name="kcu_login_uuid_invalid">标识格式无效。留空则使用默认推导值。</string>
     <string name="kcu_login_unavailable_title">在线服务不可用</string>
     <string name="kcu_login_unavailable_body">Mojang 服务可能不可用，你将进入离线模式。请先填写名称以登录游戏。</string>
     <string name="kcu_login_uuid_note">提示：离线标识可能与在线登录时不一致，可使用 KCU-Migrator 的 NBT 编辑功能修改。</string>
