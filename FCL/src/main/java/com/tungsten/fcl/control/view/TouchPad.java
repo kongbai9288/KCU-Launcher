@@ -27,8 +27,11 @@ import java.util.Objects;
 
 public class TouchPad extends View {
 
-    private final int screenWidth;
-    private final int screenHeight;
+    /**
+     * 屏幕尺寸改为每次使用时动态获取。
+     * 原先在构造时快照为 final：小窗/分屏切换回全屏后数值仍是旧窗口尺寸，
+     * 指针被 clamp 在旧范围内，表现为扩大后 MC 无法操控整个屏幕。
+     */
     /** 原始实现写死的点击位移容差，单位是 px */
     private static final int CLICK_SLOP_PX = 10;
     /** 换算到 dp 后的容差基准值 */
@@ -51,8 +54,6 @@ public class TouchPad extends View {
 
     public TouchPad(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        this.screenWidth = AndroidUtilKt.getScreenWidth();
-        this.screenHeight = AndroidUtilKt.getScreenHeight();
         init();
     }
 
@@ -283,8 +284,8 @@ public class TouchPad extends View {
                         }
                         float deltaX = (event.getX() - downX) * (float) gameMenu.getMenuSetting().getMouseSensitivityCursor();
                         float deltaY = (event.getY() - downY) * (float) gameMenu.getMenuSetting().getMouseSensitivityCursor();
-                        float targetX = Math.max(0, Math.min(screenWidth, initialX + deltaX));
-                        float targetY = Math.max(0, Math.min(screenHeight, initialY + deltaY));
+                        float targetX = Math.max(0, Math.min(AndroidUtilKt.getScreenWidth(), initialX + deltaX));
+                        float targetY = Math.max(0, Math.min(AndroidUtilKt.getScreenHeight(), initialY + deltaY));
                         gameMenu.getInput().setPointerId(POINTER_ID);
                         gameMenu.getInput().setPointer(targetX, targetY, POINTER_ID);
                         break;
@@ -315,7 +316,7 @@ public class TouchPad extends View {
                 gameMenu.getInput().handleExternalTouchButtons(event);
                 return true;
             }
-            if (gameMenu.getMenuSetting().isDisableLeftTouch() && event.getX() <= (float) screenWidth / 2) {
+            if (gameMenu.getMenuSetting().isDisableLeftTouch() && event.getX() <= (float) AndroidUtilKt.getScreenWidth() / 2) {
                 return true;
             }
             switch (event.getActionMasked()) {
