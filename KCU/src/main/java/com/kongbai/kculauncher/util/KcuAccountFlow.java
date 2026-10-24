@@ -66,6 +66,51 @@ public final class KcuAccountFlow {
         }
     }
 
+    /**
+     * 按名称精确查找已存在的账号（任意类型），找不到返回 null。
+     *
+     * 只做名称匹配，不做任何兜底：迁移与去重场景需要的是"有没有同名账号"，
+     * 若在没有同名账号时退回任意一个在线账号，会把无关账号牵扯进来。
+     */
+    public static Account findByName(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+        String name = username.trim();
+        try {
+            List<Account> accounts = Accounts.getAccounts();
+            if (accounts == null) {
+                return null;
+            }
+            for (Account account : accounts) {
+                if (account != null && name.equalsIgnoreCase(account.getUsername())) {
+                    return account;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * 以显式 UUID 创建离线账号。
+     *
+     * 离线身份由 UUID 决定（世界数据归属按 UUID 判定），
+     * 迁移时必须沿用原 UUID，重新推导会让玩家失去原有存档归属。
+     */
+    public static Account createOffline(String username, UUID uuid) {
+        if (username == null || username.trim().isEmpty()) {
+            return null;
+        }
+        String name = username.trim();
+        try {
+            UUID real = uuid != null ? uuid : OfflineAccountFactory.getUUIDFromUserName(name);
+            return Accounts.FACTORY_OFFLINE.create(name, real);
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
     /** 名称合法性：仅允许字母数字与下划线，长度 3-16 */
     public static boolean isValidName(String username) {
         if (username == null) {
