@@ -22,6 +22,11 @@ public final class KcuAccountFlow {
     }
 
     /**
+     * 按名称确定账号：同名账号直接复用，否则按名称生成本地账号。
+     *
+     * 这里不再做"退回任意一个在线账号"的兜底。该兜底会让玩家填的名称与实际
+     * 使用的账号不符 —— 填 Steve 却登录到某个微软账号上，属于把无关账号牵扯进来。
+     *
      * @param username 名称，必填
      * @param skin     皮肤，可为空
      */
@@ -36,11 +41,6 @@ public final class KcuAccountFlow {
             if (accounts != null) {
                 for (Account account : accounts) {
                     if (account != null && name.equalsIgnoreCase(account.getUsername())) {
-                        return account;
-                    }
-                }
-                for (Account account : accounts) {
-                    if (account != null && !(account instanceof OfflineAccount)) {
                         return account;
                     }
                 }
