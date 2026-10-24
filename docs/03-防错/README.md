@@ -500,3 +500,14 @@
 241. **替换标识符时不要用裸正则**：`\bwidth\b` 会匹配 `cursorRect.width`（RectF 自身字段）。必须用完整表达式（如 `cursorRect.left * width,`）逐条替换并 assert 命中数为 1。
 242. **"有没有 resize 接口"不是修复的前提**：先读实现确认尺寸用来干什么。本例 TouchController 的尺寸只做归一化分母，直接改动态 getter 即可，不需要外部 hook。
 243. **哈希取字碰撞已出现四次**（`publi`×2、`float`×2、`priva`×2）：取材行若以 `private`/`public`/`float` 开头必然碰撞。取字行必须含特征标识符（如 `val width`、`baseInfo.setXPosition`）。
+
+---
+
+## 39. 追加硬规则（v46，2026-10-24 15:2x）
+
+244. **从 Java 调 Kotlin 顶层函数要用 `XxxKt` 类名**：`AndroidUtil.kt` 里的 `fun openLink` 编译为 `AndroidUtilKt.openLink`，`import com.mio.util.openLink` 不存在。同类：`AndroidUtilKt.getScreenWidth()`。
+245. **新建 Activity 必须同步注册 Manifest**：未注册时 `startActivity` 直接崩溃，编译期发现不了。新增 Activity 后第一步就是改 Manifest 并设 `exported`。
+246. **图标位要显式关掉主题 tint**：`app:auto_text_tint="false"` + 白色文字，否则自动 tint 成黑字压在强调色底上看不见（与 v0.22.0 同源）。
+247. **许可证标识必须查官方 API 的 `license.spdx_id`，不能凭印象**：实测 PojavLauncher 是 LGPL-3.0 而非 GPL-3.0，凭印象就会写错。查不到的如实标注"未声明"或干脆不列，不要猜。
+248. **不要在列表行里嵌套 `KcuUi.card()`**：card 带 22dp 内边距，嵌套在外层 card 内会过挤。行容器用无背景 LinearLayout。
+249. **fork 项目的关于页要清理上游指向**：赞助、官网、社交链接若指向上游，应替换或移除——我们不是上游。
