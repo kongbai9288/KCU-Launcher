@@ -73,7 +73,9 @@ public final class KcuLaunchGate {
         card.addView(KcuUi.body(context, context.getString(R.string.kcu_pick_java_hint)));
         card.addView(KcuUi.gap(context, 16));
 
+        // 不可取消：按返回键会让 proceed 永不执行，表现为"点了启动什么都没发生"
         AlertDialog dialog = new AlertDialog.Builder(context).setView(scroll).create();
+        dialog.setCancelable(false);
         for (JavaVersion java : candidates) {
             android.widget.Button button = KcuUi.secondaryButton(context, java.getName());
             button.setOnClickListener(v -> {
