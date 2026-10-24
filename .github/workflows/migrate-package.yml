@@ -27,10 +27,14 @@ jobs:
           echo "--- 2. 跑迁移脚本 ---"
           python3 .github/scripts/migrate_package.py .
           echo "SCRIPT_EXIT=$?"
+          echo "--- 2a. 补丁：清掉残留 FCL 标识符（含 R 字段下划线引用）---"
+          python3 .github/scripts/patch_fcl.py .
+          echo "PATCH_EXIT=$?"
           echo "--- 2b. 类文件重命名 FCL* -> KCU* ---"
           python3 .github/scripts/rename_classes.py .
           echo "RENAME_EXIT=$?"
-          echo "FCL 前缀源文件残留=$(find . -name 'FCL*.java' -o -name 'FCL*.kt' | wc -l)"
+          echo "源码残留 FCL 标识符文件数=$(grep -rl 'FCL' --include='*.java' --include='*.kt' --include='*.xml' --include='*.c' --include='*.h' . 2>/dev/null | wc -l)"
+          echo "--- FCL_VERSION_CODE 保留检查 ---"; grep -rn "FCL_VERSION_CODE" --include="*.java" --include="*.kt" . | head -3
           echo "--- 3. settings ---"
           sed -i 's|include(":FCL")|include(":KCU")|g' settings.gradle.kts
           sed -i 's|rootProject.name = "Fold Craft Launcher"|rootProject.name = "KCU Launcher"|g' settings.gradle.kts
