@@ -72,8 +72,8 @@ public final class KcuAgeGate {
 
     /** 构建选择界面；selected[0] 为当前选中值 */
     public static void buildInto(Context context, LinearLayout card, final int[] selected, Runnable onConfirm) {
-        card.addView(KcuUi.title(context, context.getString(R.string.kcu_age_title)));
-        card.addView(KcuUi.gap(context, 10));
+        card.addView(KcuUi.header(context, "!", context.getString(R.string.kcu_age_title)));
+        card.addView(KcuUi.gap(context, 12));
         card.addView(KcuUi.body(context, context.getString(R.string.kcu_age_prompt)));
         card.addView(KcuUi.gap(context, 18));
 
@@ -83,6 +83,7 @@ public final class KcuAgeGate {
         String unit = context.getString(R.string.kcu_age_unit);
         for (int i = 0; i < options.length; i++) {
             RadioButton rb = new RadioButton(context);
+            rb.setId(i + 1);
             rb.setText(options[i] + unit);
             rb.setTag(options[i]);
             rb.setTextColor(KcuUi.INK);
