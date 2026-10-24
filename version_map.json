@@ -1,6 +1,32 @@
 [
   {
     "type": "release",
+    "versionCode": 49,
+    "versionName": "0.49.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "承接 v0.48.0：代码层去 FCL 完成后文案层与文档层仍有大量残留，本轮补齐。",
+          "追溯发现的关键机制：v0.48 的补丁脚本已顺带把大部分 plain FCL 文案改成 KCU，因为 XML 的 string 值不在引号内所以未被字符串保护挡住；但含 Fold Craft Launcher 与 FCL-Team 的值被保护清单挡住全部保留。这说明保护粒度过粗，同一个词作为上游署名该留而作为本应用自称该改，上一版一刀切保护了。",
+          "分类处置：应用自身改为 KCU 的有 values 的 splash_permission_msg、splash_title、crash_reporter_hint，以及 values-zh 的 splash_permission_msg、splash_title、modpack_unsupported、crash_reporter_hint。",
+          "上游署名与法律声明保留：about_launcher 等于 Fold Craft Launcher、about_developer 等于 FCL-Team、about_desc 中本应用基于 Fold Craft Launcher 开发的声明、values-zh 的 about_desc 中由 FCL-Team 基于 HMCL 的表述，以及 FCL_VERSION_CODE。",
+          "资源 ID 改动：settings_fcl_ 改 settings_kcu_ 共一百零六处十三个文件；folder_fcl_log 与 upload_fcl_log 同步改名并同步 ManagePage 的引用；modpack_files_fclversion_cfg 不改因为那是文件格式名改了会变语义。",
+          "README_EN 与 README_RU 之前完全是上游原文：标题是 Fold Craft Launcher、徽章指向 FCL-Team、还挂着上游作者的赞助入口。已改标题为 KCU Launcher、徽章指向本仓库、移除赞助入口因为那是上游作者的、项目介绍改为 derivative of Fold Craft Launcher 并保留上游署名、贡献者墙指向本仓库、Weblate 加说明继承自上游、Related Projects 与 Dependencies 全部保留。",
+          "图片路径 src 由 /FCL/src 改 /KCU/src，因为目录改名后原路径已失效必须修。",
+          "真实编译失败一次：run 40092091151 报 Lint found 4 errors，values-de、values-uk、values-ru、values-zh-rHK 的 strings.xml 里 folder_fcl_log 被翻译但默认 locale 找不到对应项触发 ExtraTranslation，而 release 构建的 lintVitalRelease 是 fatal 直接中断。原因是我手动只改了 values、values-zh、values-vi 三个文件漏了其余语言目录。改为补丁脚本遍历所有 values 星号 slash strings.xml 统一改名后 SETTINGS_PATCHED_FILES 四，run 40092760318 通过。",
+          "教训：改资源 ID 必须同步全部语言目录，不是改默认加中文就够了。对比 settings_fcl_ 那一百零六处因为脚本遍历所有 xml 一次通过。",
+          "审核 pass。哈希回执：patch_settings.py 第 3 行文档字符串，内容是 FCL 资源标识符改名说明，五个字母 F C L s e 拼成 FCLse，SHA-1 f73b791ef2fd219f93332e82dabded392d800342。首次自动取材取到中文注释行，中文字符也被 isalpha 判为字母，已修正为只取 ASCII 字母并记为规则 263。",
+          "冒烟测试：Actions run 40092760318 由 push 触发全矩阵并成功，五个产物分别为 all 326271045、x86_64 174896285、arm64 169201210、arm 161942816、x86 155590355 字节。",
+          "未验证：实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 48,
     "versionName": "0.48.0",
     "date": "2026.10.24",
