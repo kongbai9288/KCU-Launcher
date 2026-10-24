@@ -70,6 +70,14 @@ public final class KcuUi {
         return v;
     }
 
+    /** 徽章底：实心强调色圆角，供独立的图标视图复用（如列表行内的图标位） */
+    public static GradientDrawable badgeBackground() {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(ACCENT);
+        d.setCornerRadius(RADIUS_DP * 8);
+        return d;
+    }
+
     /**
      * 图标徽章：圆形强调色底 + 白色符号。
      * 用字符而非图片资源，保证风格统一且不新增 drawable。
