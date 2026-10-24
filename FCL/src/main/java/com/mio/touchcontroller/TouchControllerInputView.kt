@@ -68,8 +68,10 @@ class TouchControllerInputView @JvmOverloads constructor(
      */
     private var fallbackWidth: Int = -1
     private var fallbackHeight: Int = -1
-    private val width: Int get() = getScreenWidth().takeIf { it > 0 } ?: fallbackWidth
-    private val height: Int get() = getScreenHeight().takeIf { it > 0 } ?: fallbackHeight
+    /** 不能命名为 width/height：本类继承 View，已存在 getWidth()/getHeight()，
+     *  同名属性会产生 JVM 签名冲突（Accidental override），故用 screenW/screenH。 */
+    private val screenW: Int get() = getScreenWidth().takeIf { it > 0 } ?: fallbackWidth
+    private val screenH: Int get() = getScreenHeight().takeIf { it > 0 } ?: fallbackHeight
     fun setSize(width: Int, height: Int) {
         fallbackWidth = width
         fallbackHeight = height
@@ -213,10 +215,10 @@ class TouchControllerInputView @JvmOverloads constructor(
                         }
                         cursorRect?.let {
                             setInsertionMarkerLocation(
-                                cursorRect.left * width,
-                                cursorRect.top * height,
-                                (cursorRect.left + cursorRect.width) * width,
-                                (cursorRect.top + cursorRect.height) * height,
+                                cursorRect.left * screenW,
+                                cursorRect.top * screenH,
+                                (cursorRect.left + cursorRect.width) * screenW,
+                                (cursorRect.top + cursorRect.height) * screenH,
                                 CursorAnchorInfo.FLAG_HAS_VISIBLE_REGION,
                             )
                         }
@@ -225,10 +227,10 @@ class TouchControllerInputView @JvmOverloads constructor(
                                 setEditorBoundsInfo(EditorBoundsInfo.Builder().apply {
                                     setEditorBounds(
                                         RectF(
-                                            inputAreaRect.left * width,
-                                            inputAreaRect.top * height,
-                                            (inputAreaRect.left + inputAreaRect.width) * width,
-                                            (inputAreaRect.top + inputAreaRect.height) * height,
+                                            inputAreaRect.left * screenW,
+                                            inputAreaRect.top * screenH,
+                                            (inputAreaRect.left + inputAreaRect.width) * screenW,
+                                            (inputAreaRect.top + inputAreaRect.height) * screenH,
                                         )
                                     )
                                 }.build())
