@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.EditText;
 
 /**
  * 界面构建的唯一入口。
@@ -54,7 +55,7 @@ public final class KcuUi {
         LinearLayout v = new LinearLayout(context);
         v.setOrientation(LinearLayout.VERTICAL);
         v.setBackground(cardBackground());
-        int pad = dp(context, 16);
+        int pad = dp(context, 22);
         v.setPadding(pad, pad, pad, pad);
         return v;
     }
@@ -69,11 +70,65 @@ public final class KcuUi {
         return v;
     }
 
+    /**
+     * 图标徽章：圆形强调色底 + 白色符号。
+     * 用字符而非图片资源，保证风格统一且不新增 drawable。
+     */
+    public static TextView iconBadge(Context context, CharSequence glyph) {
+        TextView v = new TextView(context);
+        v.setText(glyph);
+        v.setGravity(Gravity.CENTER);
+        v.setTextColor(PAPER_HI);
+        v.setTextSize(23f);
+        int size = dp(context, 46);
+        v.setLayoutParams(new LinearLayout.LayoutParams(size, size));
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(ACCENT);
+        d.setCornerRadius(size / 2f);
+        v.setBackground(d);
+        return v;
+    }
+
+    /** 标题行：图标徽章 + 大标题，横排居中对齐 */
+    public static LinearLayout header(Context context, CharSequence glyph, CharSequence title) {
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.addView(iconBadge(context, glyph));
+        TextView t = title(context, title);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.leftMargin = dp(context, 14);
+        t.setLayoutParams(lp);
+        row.addView(t);
+        return row;
+    }
+
+    /** 输入行：前置图标徽章 + 输入区，返回横排容器 */
+    public static LinearLayout fieldRow(Context context, CharSequence hint, CharSequence glyph) {
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.addView(iconBadge(context, glyph));
+        EditText e = field(context, hint);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        lp.leftMargin = dp(context, 12);
+        e.setLayoutParams(lp);
+        row.addView(e);
+        return row;
+    }
+
+    /** 从 fieldRow 容器内取出输入区 */
+    public static EditText editOf(LinearLayout row) {
+        return (EditText) row.getChildAt(1);
+    }
+
     public static TextView title(Context context, CharSequence text) {
         TextView v = new TextView(context);
         v.setText(text);
         v.setTextColor(INK);
-        v.setTextSize(19f);
+        v.setTextSize(21f);
         v.setGravity(Gravity.START);
         return v;
     }
@@ -149,8 +204,9 @@ public final class KcuUi {
         e.setTextColor(INK);
         e.setTextSize(14f);
         e.setSingleLine(true);
-        int pad = dp(context, 12);
+        int pad = dp(context, 14);
         e.setPadding(pad, pad, pad, pad);
+        e.setMinHeight(dp(context, 46));
         GradientDrawable d = new GradientDrawable();
         d.setColor(PAPER_HI);
         d.setCornerRadius(RADIUS_DP * 3);
