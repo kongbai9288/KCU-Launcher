@@ -117,7 +117,30 @@ public final class KcuUnifiedLoginDialog {
                 buildPremiumChoice();
                 return;
             }
+            // 探测未成功时不能静默走离线 —— 玩家会以为自己登录成功了。
+            // 明确说明服务不可用，并告知将以填写的名称进入游戏
+            if (result == KcuLoginProbe.RESULT_UNAVAILABLE) {
+                buildServiceUnavailable();
+                return;
+            }
             finishWithOffline();
+        }
+
+        /** 探测失败：说明服务不可用，并说明将以该名称离线进入 */
+        private void buildServiceUnavailable() {
+            card.removeAllViews();
+            card.addView(KcuUi.header(context, "!", context.getString(R.string.kcu_login_unavailable_title)));
+            card.addView(KcuUi.gap(context, 12));
+            card.addView(KcuUi.body(context, context.getString(R.string.kcu_login_unavailable_body)));
+            card.addView(KcuUi.gap(context, 10));
+            card.addView(KcuUi.hint(context,
+                    context.getString(R.string.kcu_login_uuid_note)));
+            card.addView(KcuUi.gap(context, 18));
+
+            android.widget.Button offline =
+                    KcuUi.primaryButton(context, context.getString(R.string.kcu_login_use_offline));
+            offline.setOnClickListener(v -> finishWithOffline());
+            card.addView(offline);
         }
 
         /** 阶段二：名称对应正版账号，让玩家决定走哪条路 */
