@@ -28,7 +28,7 @@ FCL 已有、不需要自研：
 | A1 | app_config 自定义契约 | root-S7（52★） | P0 |
 | A2 | 改为内置默认 + 外部覆盖双来源 | root-S7 + 本项目 | P0 |
 | A3 | 终端复用 ShellUtil，提为一级入口 | FCL 官方 | P0 |
-| A4 | 公共目录策略集中改 FCLPath / PathManager | FCL / ZL2 | P0 |
+| A4 | 公共目录策略集中改 KCUPath / PathManager | FCL / ZL2 | P0 |
 | A14 | x86/x86_64 natives substitution 修正 | Copper（21★） | P0（全 ABI 后） |
 | A5 | 披风、Chroma 名字、主屏快捷方式 | ZL2Plus（146★） | P1 |
 | A6 | 设置/账号/皮肤整体导入导出 | ZL2Plus | P1 |

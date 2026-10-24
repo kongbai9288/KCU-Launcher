@@ -10,18 +10,18 @@
 改造前先追清楚 `.so` 究竟怎么被加载。
 
 ```
-FCLauncher.launchProcess
+KCULauncher.launchProcess
   → setEnv(config, bridge, render)
       → addCommonEnv
           → envMap.put("LD_LIBRARY_PATH", getLibraryPath(...))
               → getLibraryPath → appendCommonPaths
-                  → 【无条件】sb.append(FCLPath.MOD_RUNTIME_DIR).append(":")
+                  → 【无条件】sb.append(KCUPath.MOD_RUNTIME_DIR).append(":")
 ```
 
-实测 `FCLauncher.java:162`：
+实测 `KCULauncher.java:162`：
 
 ```java
-sb.append(FCLPath.MOD_RUNTIME_DIR).append(split);
+sb.append(KCUPath.MOD_RUNTIME_DIR).append(split);
 ```
 
 **这一行没有任何条件判断**——`MOD_RUNTIME_DIR` 恒定进入 `LD_LIBRARY_PATH`。
@@ -51,9 +51,9 @@ sb.append(FCLPath.MOD_RUNTIME_DIR).append(split);
 
 ## 3. 实现（KcuNativeSync.java）
 
-新增 `com.tungsten.fclauncher.utils.KcuNativeSync`。
+新增 `com.kongbai.kculauncher.launcher.utils.KcuNativeSync`。
 
-挂载点 `FCLauncher.launchProcess` 内、**`setEnv` 之前**：
+挂载点 `KCULauncher.launchProcess` 内、**`setEnv` 之前**：
 
 ```java
 // 必须在 setEnv 之前，否则拼出的库搜索路径不含本次同步的文件
@@ -108,7 +108,7 @@ setEnv(config, bridge, render);
 
 | 项 | 值 |
 |---|---|
-| 文件 | `FCL/src/main/java/com/tungsten/fclauncher/utils/KcuNativeSync.java` |
+| 文件 | `FCL/src/main/java/com/kongbai/kculauncher/launcher/utils/KcuNativeSync.java` |
 | 行号 | **114** |
 | 该行原文 | `                dst.setWritable(true);` |
 | 取出的 5 个不同字母 | `d` `s` `t` `e` `W` |

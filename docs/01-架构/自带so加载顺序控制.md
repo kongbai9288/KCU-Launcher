@@ -64,7 +64,7 @@ androidTest **不在 `assembleRelease` 编译路径**，所以 CI 不会因它�
 ## 2. 追溯：接入点
 
 ```
-FCLauncher.launch 线程
+KCULauncher.launch 线程
   └─ KcuNativeSync.sync()      ← 行 559
   └─ setEnv(...)               ← 行 565（LD_LIBRARY_PATH 在此拼好并传给 native）
   └─ setUpJavaRuntime(...)
@@ -137,7 +137,7 @@ FCLauncher.launch 线程
 
 | # | 影响 | 评估 |
 |---|---|---|
-| 1 | 新增 1 个类，FCLauncher 多 2 行 | 极小 |
+| 1 | 新增 1 个类，KCULauncher 多 2 行 | 极小 |
 | 2 | 未改动 `KcuNativeSync` 任何逻辑 | ✅ |
 | 3 | 未改动上游已有 dlopen 路径 | ✅ 新增路径，非替换 |
 
@@ -151,7 +151,7 @@ FCLauncher.launch 线程
 
 | 项 | 值 |
 |---|---|
-| 文件 | `FCLauncher.java` |
+| 文件 | `KCULauncher.java` |
 | 行号 | **567** |
 | 该行原文 | `                KcuNativeOrder.loadInOrder(bridge);` |
 | 取出的 5 个不同字母 | `K` `c` `u` `N` `a` |
@@ -166,7 +166,7 @@ FCLauncher.launch 线程
 
 `onFailure=abort` 的返回值当前未被使用（调用处未判断）。**行为等同 `skip`。**
 
-这是已知缺口，未包装。要真正中止启动需改动 `FCLauncher` 的异常处理路径，留待确认语义后做。
+这是已知缺口，未包装。要真正中止启动需改动 `KCULauncher` 的异常处理路径，留待确认语义后做。
 
 ---
 

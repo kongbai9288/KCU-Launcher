@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="KeycodeView">
+        <attr name="keycode" format="integer"/>
+    </declare-styleable>
+    <declare-styleable name="LogWindow">
+        <attr name="auto_log_tint" format="boolean"/>
+    </declare-styleable>
+    <declare-styleable name="DraggableTextView">
+        <attr name="save_key" format="string"/>
+    </declare-styleable>
+
+    <!-- 原 FCLLibrary 模块属性（模块已并入 FCL） -->
+    <attr name="use_theme_color" format="boolean" />
+    <attr name="auto_tint" format="boolean" />
+    <attr name="text_use_theme_color" format="boolean" />
+    <declare-styleable name="KCUView">
+        <attr name="use_theme_color" />
+    </declare-styleable>
+    <declare-styleable name="KCUButton">
+        <attr name="ripple" format="boolean" />
+        <attr name="shape" format="integer" />
+        <attr name="auto_padding" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="KCUImageButton">
+        <attr name="auto_tint" />
+        <attr name="no_padding" format="boolean" />
+        <attr name="use_theme_color" />
+    </declare-styleable>
+    <declare-styleable name="KCUImageView">
+        <attr name="auto_src_tint" format="boolean" />
+        <attr name="use_theme_color" />
+    </declare-styleable>
+    <declare-styleable name="KCUTextView">
+        <attr name="auto_text_background_tint" format="boolean" />
+        <attr name="auto_text_tint" format="boolean" />
+        <attr name="use_theme_color" />
+    </declare-styleable>
+    <declare-styleable name="KCUSpinner">
+        <attr name="auto_text_tint" />
+    </declare-styleable>
+    <declare-styleable name="KCUCheckedTextView">
+        <attr name="auto_checked_text_background_tint" format="boolean" />
+        <attr name="auto_checked_text_tint" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="KCUEditText">
+        <attr name="auto_edit_tint" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="KCUCheckBox">
+        <attr name="auto_hint_tint" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="FCLTitleView">
+        <attr name="title" format="string" localization="suggested" />
+    </declare-styleable>
+    <declare-styleable name="KCUTabLayout">
+        <attr name="follow_theme" format="boolean" />
+        <attr name="auto_text_tint" />
+    </declare-styleable>
+    <declare-styleable name="KCUPreciseSeekBar">
+        <attr name="auto_button_tint" format="boolean" />
+        <attr name="min_value" format="integer" />
+        <attr name="max_value" format="integer" />
+    </declare-styleable>
+    <declare-styleable name="KCULinearLayout">
+        <attr name="auto_linear_background_tint" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="KCUConstraintLayout">
+        <attr name="auto_tint"/>
+    </declare-styleable>
+    <declare-styleable name="KCUAppBarLayout">
+        <attr name="auto_tint" />
+    </declare-styleable>
+    <declare-styleable name="KCURadioButton">
+        <attr name="text_use_theme_color" />
+    </declare-styleable>
+    <declare-styleable name="KCUNumberSeekBar">
+        <attr name="suffix" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="ColorPickerView" parent="ColorPanelView">
+        <attr name="cpv_alphaChannelVisible" format="boolean|reference" />
+        <attr name="cpv_alphaChannelText" format="string|reference" />
+        <attr name="cpv_sliderColor" format="color|reference" />
+        <attr name="cpv_borderColor" format="color|reference" />
+    </declare-styleable>
+</resources>

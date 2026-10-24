@@ -23,17 +23,17 @@
 Profiles（Kotlin object，@JvmStatic val profiles）
   → Profile.name / gameDir / selectedVersion
   → Profile.gameDir setter → repository.changeDirectory(File)
-  → FCLGameRepository.setBaseDirectory
+  → KCUGameRepository.setBaseDirectory
   → 【终点】同样是文件系统路径
 ```
 
-关键：`Profile.gameDir` 是**绝对路径**，反序列化时直接读入，不经过 `FCLPath`。所以实例目录与公共根**可以不同源**——这正是迁移工具需要清单的原因。
+关键：`Profile.gameDir` 是**绝对路径**，反序列化时直接读入，不经过 `KCUPath`。所以实例目录与公共根**可以不同源**——这正是迁移工具需要清单的原因。
 
 ### 2.2 挂点追踪
 
 ```
 SplashActivity.onCreate → init()
-  → FCLPath.loadPaths(context)        // 路径就绪
+  → KCUPath.loadPaths(context)        // 路径就绪
   → initState()
   → enterLauncher() [Dispatchers.IO]
       → RendererManager.init / JavaManager.init / Controllers.init
@@ -108,7 +108,7 @@ SplashActivity.onCreate → init()
 
 | 项 | 值 |
 |---|---|
-| 文件 | `FCL/src/main/java/com/tungsten/fcl/util/KcuManifest.java` |
+| 文件 | `FCL/src/main/java/com/kongbai/kculauncher/util/KcuManifest.java` |
 | 行号 | **60** |
 | 该行原文 | `                out.close();` |
 | 取出的 5 个不同字母 | `o` `u` `t` `c` `l` |

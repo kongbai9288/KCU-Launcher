@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_item"
+    android:orientation="horizontal"
+    android:padding="5dp">
+
+    <com.kongbai.kculauncher.library.component.view.KCUImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_baseline_keyboard_24"
+        android:tint="@android:color/darker_gray" />
+
+    <com.kongbai.kculauncher.library.component.view.KCUTextView
+        android:id="@+id/name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:singleLine="true" />
+
+    <com.kongbai.kculauncher.library.component.view.KCUCheckBox
+        android:id="@+id/check"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="10dp" />
+
+    <com.kongbai.kculauncher.library.component.view.KCUImageButton
+        android:id="@+id/up"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_baseline_arrow_upward_24"
+        android:tint="@android:color/darker_gray" />
+
+    <com.kongbai.kculauncher.library.component.view.KCUImageButton
+        android:id="@+id/down"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_baseline_arrow_downward_24"
+        android:tint="@android:color/darker_gray" />
+
+    <com.kongbai.kculauncher.library.component.view.KCUImageButton
+        android:id="@+id/edit"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_baseline_edit_24"
+        android:tint="@android:color/darker_gray" />
+
+    <com.kongbai.kculauncher.library.component.view.KCUImageButton
+        android:id="@+id/delete"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/ic_baseline_delete_24"
+        android:tint="@android:color/darker_gray" />
+
+</LinearLayout>

@@ -23,18 +23,18 @@
 - APK 持续编译通过（最新 run 40081537478 **全矩阵**，5 产物：all 326277469 / x86_64 174901364 / arm64 169206130 / arm 161946535 / x86 155596376 B）
 - 包名已改为 `com.kcu.launcher`
 - 签名已接通并验签通过（`CN=kbs`，SHA-256 `d4e860232e977157c41459d7f139f9087036feb38623f07bd2c2f6575db4db4e`）
-- 公共目录根改造完成（`FCLPath`，marker 固化）
+- 公共目录根改造完成（`KCUPath`，marker 固化）
 - manifest 契约生成挂点已接入
 - 自定义 .so 双层目录同步已接入
 - 首页舞台版本卡片已加（顶部显示当前选中版本）
-- 主页皮肤预览已移除（`com/mio/skin` 包代码保留待挪到角色选择界面）
+- 主页皮肤预览已移除（`com/kongbai/kculauncher/mio/skin` 包代码保留待挪到角色选择界面）
 - 动画切换弹窗 `AnimationDialog` 及两个专属布局已删（确认为死代码）
 - `close_skin_model` 死开关已删（含两个 androidTest 文件同步修改）
 - 自带 .so 加载顺序控制已实现；配置改为**实例级** `<实例>/natives/load_order.json`，首次生成含既有 .so 的模板（`enabled=false` 不生效）
 - 导入版本会生成最小 `<id>.json` 与 `kcu_meta.json`，首次启动弹出运行时选择；jar 内 `version.json` 探测真实版本
 - MobileGlues 官方版与修改版经二进制比对确认为**同一源码的不同构建**，无代码级改动
 - 主题引擎已拆解为固定纸面配色
-- 上游公告、上游更新源、上游网盘推广三处隐式联网/推广已停用（`com.mio.promo` 包已从仓库消失）
+- 上游公告、上游更新源、上游网盘推广三处隐式联网/推广已停用（`com.kongbai.kculauncher.mio.promo` 包已从仓库消失）
 
 ### NOT PROVEN（未验证）
 
@@ -45,8 +45,8 @@
 - 导入版本显示层已接：列表副标题与主页卡片显示"未知"或探测到的真实版本；**标题仍为目录名 id**（改它会影响搜索排序）
 - CI 已加并发控制与 gradle 首次失败重试；66 条噪声 issue 已清理
 - 弹窗已改为图标徽章 + 大尺寸；小窗尺寸快照已修（TouchPad/MenuView）
-- 屏幕尺寸快照已全仓排查并修完（TouchPad / MenuView / ControlButton / ControlDirection / FCLInput）
-- 屏幕尺寸快照**已全量修完**：TouchPad / MenuView / ControlButton / ControlDirection / FCLInput / TouchController / TouchControllerInputView 共 7 个类
+- 屏幕尺寸快照已全仓排查并修完（TouchPad / MenuView / ControlButton / ControlDirection / KCUInput）
+- 屏幕尺寸快照**已全量修完**：TouchPad / MenuView / ControlButton / ControlDirection / KCUInput / TouchController / TouchControllerInputView 共 7 个类
 - 关于页已本地化：条目带字符图标、重排三组、开源许可页读本地 assets（零联网）
 - 许可证全文已内置（官方 API 拉取，5 份 71682 B），许可页全本地零联网
 - **遗留**：10 个非中英文语言的 `about_desc` 仍是上游文案（需各语种翻译）

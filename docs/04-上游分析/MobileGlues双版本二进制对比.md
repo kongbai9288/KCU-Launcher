@@ -159,7 +159,7 @@ Linker: LLD 18.0.4
 
 （承接 v0.33.0 调研）
 
-`FCLauncher.java`：
+`KCULauncher.java`：
 
 ```java
 FCL_VERSION_CODE = packageInfo.versionCode;        // 行 65

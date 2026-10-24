@@ -88,7 +88,7 @@
   - 产物命名 `KCU-<buildType>-<version>-<abi>.apk`
   - `versionCode=3` / `versionName=0.3.0`
 
-状态：基线已落地但**尚未编译验证**。`applicationId` 仍为 `com.tungsten.fcl`，改包名需连同源码目录与 Manifest 一起迁移，列为下一步。
+状态：基线已落地但**尚未编译验证**。`applicationId` 仍为 `com.kongbai.kculauncher`，改包名需连同源码目录与 Manifest 一起迁移，列为下一步。
 
 ## 0.4.0 — 2026.10.19
 
@@ -120,7 +120,7 @@
 
 - 新增"构建结果上报（始终）"步骤：无论成败都开 issue，附产物清单与 sha256，便于在无日志下载权限时核实。
 
-- 仍未做：**包名迁移**（当前 `applicationId` 仍是 `com.tungsten.fcl`）、公共目录改造、自定义 .so 接入、实机安装验证。
+- 仍未做：**包名迁移**（当前 `applicationId` 仍是 `com.kongbai.kculauncher`）、公共目录改造、自定义 .so 接入、实机安装验证。
 
 ### 0.4.0 编译证据（实测，非推断）
 
@@ -234,8 +234,8 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
 
   | 文件 | 大小 |
   |---|---|
-  | `com/mio/touchcontroller/TouchController.kt` | 5881 B |
-  | `com/mio/touchcontroller/TouchControllerInputView.kt` | 25461 B |
+  | `com/kongbai/kculauncher/mio/touchcontroller/TouchController.kt` | 5881 B |
+  | `com/kongbai/kculauncher/mio/touchcontroller/TouchControllerInputView.kt` | 25461 B |
 
   依赖 `implementation(libs.touchcontroller)`。
 
@@ -289,7 +289,7 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
   规模证据（GitHub 代码搜索，本仓库）：
 
   ```
-  "com.tungsten.fcl"  →  total_count = 1196
+  "com.kongbai.kculauncher"  →  total_count = 1196
   ```
 
   **决策：只改 applicationId，不动源码包名。**
@@ -307,14 +307,14 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
 
   | 行 | 改前 | 改后 |
   |---|---|---|
-  | 88 | `applicationId = "com.tungsten.fcl"` | `"com.kcu.launcher"` |
-  | 120 | `file_browser_provider = "com.tungsten.fcl.debug.provider"` | `"com.kcu.launcher.debug.provider"` |
+  | 88 | `applicationId = "com.kongbai.kculauncher"` | `"com.kcu.launcher"` |
+  | 120 | `file_browser_provider = "com.kongbai.kculauncher.debug.provider"` | `"com.kcu.launcher.debug.provider"` |
 
-  `namespace` **保持 `com.tungsten.fcl` 不动**——改它会让 R 文件落到新包而源码 package 未变，直接编译失败。
+  `namespace` **保持 `com.kongbai.kculauncher` 不动**——改它会让 R 文件落到新包而源码 package 未变，直接编译失败。
 
 - 自动跟随、无需改动的部分：Manifest 三处 authority 均为 `${applicationId}`（`.document.provider` / `.provider` / `.crashreporterinitprovider`）。
 
-- 保持不变的部分：Manifest 中 4 处硬编码类引用指向 `com.tungsten.fclcore` / `com.tungsten.fcllibrary`——它们是与 `fcl` **并列的独立包**，源码包名整体不动故引用仍有效。
+- 保持不变的部分：Manifest 中 4 处硬编码类引用指向 `com.kongbai.kculauncher.core` / `com.kongbai.kculauncher.library`——它们是与 `fcl` **并列的独立包**，源码包名整体不动故引用仍有效。
 
 - 新增 `docs/01-架构/包名迁移.md`，防错规则追加 124–128。
 
@@ -328,23 +328,23 @@ sha256 930657a44c9e1dbcbd4e5b203f567bcc11b1556efee6fd2e0d381e2fe8d88a75
 |---|---|
 | 涉及文件数 | 1143 |
 | 出现总次数 | 7672 |
-| `com.tungsten.fclcore` | 3809 |
-| `com.tungsten.fcllibrary` | 2358 |
-| `com.tungsten.fcl` | 1352 |
-| `com.tungsten.fclauncher` | 153 |
+| `com.kongbai.kculauncher.core` | 3809 |
+| `com.kongbai.kculauncher.library` | 2358 |
+| `com.kongbai.kculauncher` | 1352 |
+| `com.kongbai.kculauncher.launcher` | 153 |
 
 **扫描抓到一处遗漏**：
 
 ```
 FCL/src/main/res/values/strings.xml:1555
-<string name="file_browser_provider">com.tungsten.fcl.provider</string>
+<string name="file_browser_provider">com.kongbai.kculauncher.provider</string>
 ```
 
 这是 main source set 的默认值（**release 变体走它**），硬编码、不随 `${applicationId}` 变。已改为 `com.kcu.launcher.provider`。
 
 > 凭阅读 build.gradle.kts 只能发现 debug 变体那一处，release 的藏在 strings.xml 里。**先扫描再改动**是对的。
 
-同时扫描印证决策：布局 XML 大量引用 `com.tungsten.fcllibrary.component.view.*` 全限定名，若改 fcllibrary 包名而不同步改上百个布局，会直接 `InflateException`。源码包名不动，全部保持有效。
+同时扫描印证决策：布局 XML 大量引用 `com.kongbai.kculauncher.library.component.view.*` 全限定名，若改 fcllibrary 包名而不同步改上百个布局，会直接 `InflateException`。源码包名不动，全部保持有效。
 
 ### 0.9.0 编译验证（实测，06:46 完成）
 
@@ -424,7 +424,7 @@ sha256 0bc7bb590c90bdbd82c00e4dc96b9a124288b240f5bbf05fdba29cbc41174d87
 |---|---|
 | 系统拦截强制松开左键 / 切后台归零 | `TouchPad.java:186-190` |
 | 非主控手指抬起不重置 | `TouchPad.java:323` |
-| 一个按键只归一根手指 | `FCLInput.acquireLookOwner` |
+| 一个按键只归一根手指 | `KCUInput.acquireLookOwner` |
 | 渲染帧同步（切界面重锚丢弃本帧） | `TouchPad.java:279-288` |
 | 首帧跳变消除 | `TouchPad.java:296-303` |
 | Raw Input 1:1 不加滤镜 | `TouchPad.java:307-315` |
@@ -536,8 +536,8 @@ sha256 0bc7bb590c90bdbd82c00e4dc96b9a124288b240f5bbf05fdba29cbc41174d87
 ```
 SHARED_COMMON_DIR
   → Config.commonDirectory / Profiles.Profile.gameDir / LauncherSettingPage
-  → FCLGameRepository.changeDirectory → setBaseDirectory
-  → FCLCacheRepository.directory listener → changeDirectory(Paths.get(t))
+  → KCUGameRepository.changeDirectory → setBaseDirectory
+  → KCUCacheRepository.directory listener → changeDirectory(Paths.get(t))
   → DefaultCacheRepository.changeDirectory → CacheRepository.changeDirectory
   → 【终点】java.nio.file.Files
 ```
@@ -546,7 +546,7 @@ SHARED_COMMON_DIR
 
 **附带发现**：`Profiles.checkProfiles()` 只在 profiles 为空时建默认档 → 改动**只影响首次启动**，老用户存的是绝对路径，不受影响。
 
-### 改动（FCLPath.java）
+### 改动（KCUPath.java）
 
 | 字段 | 原值 | 新值 |
 |---|---|---|
@@ -571,7 +571,7 @@ return kcu;
 
 | 项 | 值 |
 |---|---|
-| 文件 | `FCLPath.java` |
+| 文件 | `KCUPath.java` |
 | 行 | **85** |
 | 原文 | `SHARE_DIR = KCU_SHARED_ROOT + "/share";` |
 | 5 个不同字母 | `S H A R E` |
@@ -641,7 +641,7 @@ boolean legacyHasData = new File(legacy, ".minecraft").exists();  // 看内容�
 
 | 项 | 值 |
 |---|---|
-| 文件 | `FCLPath.java` |
+| 文件 | `KCUPath.java` |
 | 行 | **71** |
 | 原文 | `return chosen.getAbsolutePath();` |
 | 5 个不同字母 | `r e t u n` |
@@ -665,7 +665,7 @@ Actions run **39375222293**：五架构全绿
 
 ### API 终点追踪
 
-`Profile.gameDir` 是**绝对路径**，反序列化时直接读入、**不经 `FCLPath`**。所以实例目录与公共根**可以不同源**——这正是迁移工具需要清单的原因。
+`Profile.gameDir` 是**绝对路径**，反序列化时直接读入、**不经 `KCUPath`**。所以实例目录与公共根**可以不同源**——这正是迁移工具需要清单的原因。
 
 挂点：
 
@@ -735,7 +735,7 @@ Actions run **39375975967**，五架构全绿：
   | 文件 | 关键改动 |
   |---|---|
   | `build.gradle.kts` | applicationId、storeType、版本号 |
-  | `FCLPath.java` | KCU_SHARED_ROOT + marker 固化（两版） |
+  | `KCUPath.java` | KCU_SHARED_ROOT + marker 固化（两版） |
   | `KcuManifest.java` | 新增 |
   | `SplashActivity.kt` | manifest 挂点 |
   | `MenuSetting.kt` | 2 开关 × 3 处 |
@@ -784,10 +784,10 @@ Actions run **39375975967**，五架构全绿：
 launchProcess → setEnv → addCommonEnv → getLibraryPath → appendCommonPaths
 ```
 
-实测 `FCLauncher.java:162`：
+实测 `KCULauncher.java:162`：
 
 ```java
-sb.append(FCLPath.MOD_RUNTIME_DIR).append(split);
+sb.append(KCUPath.MOD_RUNTIME_DIR).append(split);
 ```
 
 **无任何条件判断**——该私有目录恒定进入 `LD_LIBRARY_PATH`。
@@ -1138,7 +1138,7 @@ Actions run **39550429538**：Build release / 列出产物 / 验证签名 均 su
 
 ```
 SettingUI → getPageCount() / createPage(int) / getTabTitles()
-          → 【终点】FCLMultiPageUI.setupPages(container, tabLayout)
+          → 【终点】KCUMultiPageUI.setupPages(container, tabLayout)
 ```
 
 `getPageCount` 共 5 处实现，互不影响；基类内 `return getPageCount()` 供 adapter，无外部硬编码。
@@ -1548,7 +1548,7 @@ run **39795067414**，arm64 **169178395 B**，5 个产物，无新增失败 issu
 | `MainActivity` | 删 import；启动路径**平铺**（回调嵌套 → 顺序执行） |
 | `AppSettings` | 删数据类（类 + 字段 + 迁移读取三处） |
 
-全仓再无 `com.mio.promo` 包。
+全仓再无 `com.kongbai.kculauncher.mio.promo` 包。
 
 ### 关键判断：legacy 文件名必须保留
 
@@ -1596,7 +1596,7 @@ run **39801897300**，arm64 **169177735 B**，无新增失败 issue。
 
 **① `@Override onStart()` 会编译失败**
 
-源码注释写着「替代原 onStart/onStop 生命周期」——`FCLCommonUI` 根本没这两个方法。已改挂 `onViewAttachedToWindow`。
+源码注释写着「替代原 onStart/onStop 生命周期」——`KCUCommonUI` 根本没这两个方法。已改挂 `onViewAttachedToWindow`。
 
 **② ElementTree 写回是追加不是替换**
 
@@ -1680,7 +1680,7 @@ Android (13691557, +pgo, +bolt, +lto, +mlgo) clang 18.0.4, LLD 18.0.4
 
 执行者：**yuanbao**
 
-- **移除主页皮肤预览**（`com/mio/skin` 包代码保留）
+- **移除主页皮肤预览**（`com/kongbai/kculauncher/mio/skin` 包代码保留）
 
 ### 改动
 
@@ -1822,13 +1822,13 @@ androidTest **不在 `assembleRelease` 路径** → CI 不会失败 → 易被�
 
 `onFailure=abort` 的返回值**当前没被使用**，行为等同 `skip`。
 
-要真正中止启动需改 `FCLauncher` 异常路径，留待确认语义。**未包装。**
+要真正中止启动需改 `KCULauncher` 异常路径，留待确认语义。**未包装。**
 
 ### 审核：pass
 
 | 项 | 值 |
 |---|---|
-| 文件 | `FCLauncher.java` |
+| 文件 | `KCULauncher.java` |
 | 行 | **567** |
 | 5 个不同字母 | `K c u N a` |
 | **SHA-1** | **`90b6d2f0531b2575d88c0cafe068f2f2c8d389e5`** |
@@ -2068,7 +2068,7 @@ Caused by: java.util.zip.ZipException
 
 ### 小窗根因：尺寸被"快照"成不可变值
 
-刷新机制其实是有的（`JVMActivity extends FCLActivity`，`onConfigurationChanged` 会刷 `currentDisplayMetrics`）。
+刷新机制其实是有的（`JVMActivity extends KCUActivity`，`onConfigurationChanged` 会刷 `currentDisplayMetrics`）。
 
 **但两处在构造时把它存死了：**
 
@@ -2137,7 +2137,7 @@ run **40060988638**（arm64），`app-arm64` **169175625 B**。
 
 | 类型 | 处置 |
 |---|---|
-| 构造时快照成 final/val | **本轮修**：`ControlButton`、`ControlDirection`、`FCLInput` |
+| 构造时快照成 final/val | **本轮修**：`ControlButton`、`ControlDirection`、`KCUInput` |
 | 方法内局部读取 | 无需改（`GameMenu` 等） |
 | 用时直接调用 | 无需改（`AWTInput`） |
 
@@ -2151,7 +2151,7 @@ width = (int) (screenWidth * percentage);   // 快照是小窗尺寸
 
 按钮永远按小窗比例渲染。"整个操作页面全部偏移"同理——定位也用旧尺寸。
 
-**`FCLInput`** —— "MC 都没办法正常操控"的**另一半**：`TouchPad` 之外它也把指针 clamp 在旧范围。
+**`KCUInput`** —— "MC 都没办法正常操控"的**另一半**：`TouchPad` 之外它也把指针 clamp 在旧范围。
 
 **`ControlDirection`** —— 两个构造函数各有一处赋值，**只删一处会编译失败**（对已删 final 字段赋值）。全量删了 2 处。
 
@@ -2223,7 +2223,7 @@ Accidental override: The following declarations have the same JVM signature (get
 
 ### 尺寸快照问题：到此全量修完
 
-TouchPad / MenuView / ControlButton / ControlDirection / FCLInput / TouchController / TouchControllerInputView —— **七个类**。
+TouchPad / MenuView / ControlButton / ControlDirection / KCUInput / TouchController / TouchControllerInputView —— **七个类**。
 
 ### 审核：pass
 
@@ -2272,7 +2272,7 @@ all 326243965 / x86_64 174872036 / **arm64 169175968** / arm 161916555 / x86 155
 
 ### 上传前拦下两个必错项
 
-1. **Kotlin 顶层函数不能 `import com.mio.util.openLink`** —— 它编译成 `AndroidUtilKt`，已改
+1. **Kotlin 顶层函数不能 `import com.kongbai.kculauncher.mio.util.openLink`** —— 它编译成 `AndroidUtilKt`，已改
 2. 新建 Activity **没在 Manifest 注册** → `startActivity` 直接崩
 
 ### 审核：pass

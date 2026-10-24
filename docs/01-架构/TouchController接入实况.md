@@ -11,8 +11,8 @@
 
 | 文件 | 大小 | 作用 |
 |---|---|---|
-| `FCL/src/main/java/com/mio/touchcontroller/TouchController.kt` | 5881 B | 代理客户端封装 |
-| `FCL/src/main/java/com/mio/touchcontroller/TouchControllerInputView.kt` | 25461 B | 触摸输入视图 |
+| `FCL/src/main/java/com/kongbai/kculauncher/mio/touchcontroller/TouchController.kt` | 5881 B | 代理客户端封装 |
+| `FCL/src/main/java/com/kongbai/kculauncher/mio/touchcontroller/TouchControllerInputView.kt` | 25461 B | 触摸输入视图 |
 
 `build.gradle.kts` 第 316 行：`implementation(libs.touchcontroller)`
 
@@ -34,7 +34,7 @@ ModChecker.kt 扫描已装模组
         ↓
 "touchcontroller" -> bridge.setHasTouchController(true)
         ↓
-FCLBridge.hasTouchController() == true
+KCUBridge.hasTouchController() == true
         ↓
 GameMenu.java:795  if (getBridge() != null && getBridge().hasTouchController())
         ↓

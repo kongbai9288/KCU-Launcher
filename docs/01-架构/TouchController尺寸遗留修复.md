@@ -52,7 +52,7 @@ val width: Int get() = getScreenWidth().takeIf { it > 0 } ?: initialWidth
 private val screenW: Int get() = getScreenWidth().takeIf { it > 0 } ?: fallbackWidth
 ```
 
-**不需要任何外部 hook** —— 窗口变化后 `DisplayUtil` 被 `FCLActivity.onConfigurationChanged`
+**不需要任何外部 hook** —— 窗口变化后 `DisplayUtil` 被 `KCUActivity.onConfigurationChanged`
 刷新，getter 下次调用自动拿到新值。
 
 ---
@@ -100,7 +100,7 @@ TouchControllerInputView.kt:71:28 Accidental override:
 
 | # | 影响 | 评估 |
 |---|---|---|
-| 1 | 尺寸快照类问题**已全量修完** | TouchPad/MenuView/ControlButton/ControlDirection/FCLInput/TouchController/InputView |
+| 1 | 尺寸快照类问题**已全量修完** | TouchPad/MenuView/ControlButton/ControlDirection/KCUInput/TouchController/InputView |
 | 2 | 新增代码若再声明 `val width` on View 子类 | 会再次冲突，已写入规则 240 |
 
 ### 5.4 对代码逻辑的影响

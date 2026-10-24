@@ -9,7 +9,7 @@
 ## 0. 总体分层
 
 ```
-FCLApp（轻量 Application，仅跟踪 currentActivity）
+KCUApp（轻量 Application，仅跟踪 currentActivity）
  ├─ SplashActivity → EulaFragment / RuntimeFragment（EULA、权限、运行时解压）
  │   └─ enterLauncher：RendererManager → JavaManager → Controllers → ConfigHolder.init
  ├─ MainActivity（ViewPager2 纵向承载 8 个 UI，UIManager 管理）
@@ -18,7 +18,7 @@ FCLApp（轻量 Application，仅跟踪 currentActivity）
  └─ 底层：fclcore（HMCL 移植核心）
           + fclauncher（Pojav 移植启动后端）
           + fcllibrary（组件库）
-          + com.mio（新代码层）
+          + com.kongbai.kculauncher.mio（新代码层）
           + org.libsdl（SDL3 嵌入式改造）
 ```
 
@@ -36,19 +36,19 @@ Versions.launch
       3. Java 版本校验
       4. 完整性检查 + 释放 MioLibPatcher / MioLaunchWrapper
       5. 登录（进度回调实时写弹窗）
-      6. 构建 LaunchOptions + FCLGameLauncher + 五个人工确认点
+      6. 构建 LaunchOptions + KCUGameLauncher + 五个人工确认点
   → DefaultLauncher.generateCommandLine（组装完整 java 命令行）
-  → FCLauncher.launchMinecraft
+  → KCULauncher.launchMinecraft
   → JVMActivity.onSurfaceTextureAvailable 才真正 fclBridge.execute(surface, callback)
   → native 侧 setenv / dlopen / VMLauncher 在同进程内拉起 OpenJDK（不是 OS 进程）
   → mio.Wrapper 包装主类
   → 游戏跑 GL4ES / Zink / SDL 渲染路径
 ```
 
-### 1.1 `FCLauncher.launchProcess` 内部顺序
+### 1.1 `KCULauncher.launchProcess` 内部顺序
 
 ```
-new FCLBridge()                ← 静态块 System.loadLibrary("fcl") + ("pojavexec_awt")
+new KCUBridge()                ← 静态块 System.loadLibrary("fcl") + ("pojavexec_awt")
 setLogPath(LATEST_GAME_LOG)
 创建 MAX_PRIORITY 线程（不 start）
   ↓ JVMActivity.onSurfaceTextureAvailable 触发 execute()
@@ -144,7 +144,7 @@ execute():
 
 ## 3. 渲染器
 
-Java 侧**没有** RendererKind 枚举。`com.mio.data.Renderer` 是数据类，内置 6 个 ID：
+Java 侧**没有** RendererKind 枚举。`com.kongbai.kculauncher.mio.data.Renderer` 是数据类，内置 6 个 ID：
 
 `GL4ES` / `VGPU` / `VIRGL` / `ZINK` / `FREEDRENO` / `NGGL4ES`
 
@@ -161,7 +161,7 @@ Java 侧**没有** RendererKind 枚举。`com.mio.data.Renderer` 是数据类，
 
 `addRendererEnv` 再为 SDL 路径算 `SDL_EGL_LIBRARY` / `SDL_OPENGL_LIBRARY` 绝对路径（**仅当库真实存在于渲染器目录**）。
 
-Surface 生命周期由 JVMActivity / TextureView 驱动。Java 侧不参与帧循环，FPS 经 `FCLBridge.getFps()` 轮询 native。
+Surface 生命周期由 JVMActivity / TextureView 驱动。Java 侧不参与帧循环，FPS 经 `KCUBridge.getFps()` 轮询 native。
 
 ---
 
@@ -170,7 +170,7 @@ Surface 生命周期由 JVMActivity / TextureView 驱动。Java 侧不参与帧�
 **上行**（Android → 游戏）：
 
 ```
-FCLBridge.pushEvent* → CallbackBridge.sendXxx → @CriticalNative native 写输入管道
+KCUBridge.pushEvent* → CallbackBridge.sendXxx → @CriticalNative native 写输入管道
 ```
 
 **下行**（游戏 → Android）四类入口：
@@ -186,7 +186,7 @@ FCLBridge.pushEvent* → CallbackBridge.sendXxx → @CriticalNative native 写�
 
 | 类 | 体系 |
 |---|---|
-| `FCLKeycodes` | Linux evdev 键码（触屏控件层的中间键码） |
+| `KCUKeycodes` | Linux evdev 键码（触屏控件层的中间键码） |
 | `LwjglGlfwKeycode` | GLFW 3.4 键码 + `GLFW_MOD_*` + `GLFW_MOUSE_BUTTON_*` |
 | `EfficientAndroidLWJGLKeycode` | Android → GLFW，112 项并行数组 + 二分查找 |
 | `AndroidKeycodeMap` | Android → FCL |
@@ -269,7 +269,7 @@ preExecute() → dependents → execute() → dependencies → postExecute() →
 
 - fakefx 剩余"仅 Bindings 内部可达"类（When/ListBinding 族等）暂缓删除，收益低回归风险高
 - `rebaseArgs` 里有一行孤立的 `config.getRenderer();` 死代码
-- `DownloadUI` 与 `FCLMultiPageUI` 并存两套临时页栈，跨 UI 弹栈需注意调用侧
+- `DownloadUI` 与 `KCUMultiPageUI` 并存两套临时页栈，跨 UI 弹栈需注意调用侧
 
 ---
 
@@ -281,4 +281,4 @@ preExecute() → dependents → execute() → dependencies → postExecute() →
 - `RendererManager` / `JavaManager` 的具体 API
 - `CustomControl` / 控制器仓库的加载流程
 - `Terracotta` 模块的联机流程
-- `com.mio` 包（新代码层）全貌
+- `com.kongbai.kculauncher.mio` 包（新代码层）全貌

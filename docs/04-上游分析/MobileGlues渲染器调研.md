@@ -75,7 +75,7 @@ if (isInPluginApp == 0 && fclVersion == 0 && zlVersion == 0
 
 ### 对 KCU 的影响 —— 实测：无影响
 
-`FCL/src/main/java/com/tungsten/fclauncher/FCLauncher.java`：
+`FCL/src/main/java/com/kongbai/kculauncher/launcher/KCULauncher.java`：
 
 ```java
 FCL_VERSION_CODE = packageInfo.versionCode;      // 行 65
@@ -241,6 +241,6 @@ LGPL-2.1 对"通过动态链接使用库"是允许的，义务只有三条：
 ## 9. 待办
 
 - [ ] 确认 KCU 启动流程是否向渲染器进程传递 `FCL_VERSION_CODE`（改包名后很可能仍传的是旧值或已失效）
-- [ ] 若不传，需在 `FCLauncher` 的环境变量拼装处补 `MG_PLUGIN_STATUS=1`
+- [ ] 若不传，需在 `KCULauncher` 的环境变量拼装处补 `MG_PLUGIN_STATUS=1`
 - [ ] 设计 Mali 档 config.json 默认值
 - [ ] 关于页补 MobileGlues 的 LGPL-2.1 声明
