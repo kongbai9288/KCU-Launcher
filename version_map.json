@@ -1,6 +1,33 @@
 [
   {
     "type": "release",
+    "versionCode": 44,
+    "versionName": "0.44.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "承接 v0.43.0 遗留：其他类若也快照屏幕尺寸则小窗问题仍在，本轮做全仓排查并修完。",
+          "排查方式为 code search，getScreenWidth 命中源码文件共十七个，逐个区分三类：构造时快照为 final 或 val 的有 TouchPad、MenuView 已于 v0.43.0 修，以及 ControlButton、ControlDirection、FCLInput 本轮修；方法内局部读取即每次调用重算的有 GameMenu、RightMenuAdapter、JVMActivity、FCLGameRepository、两个皮肤 Dialog 与各 Dialog，无需改；AWTInput 用时直接调用，无需改。",
+          "ControlButton 的字段在原六十五与六十六行、构造赋值在一百五十二与一百五十三行、读取共十处，含宽高计算二百一十六至二百二十、定位二百三十一至二百三十二、拖动 clamp 五百六十九至五百七十、存回百分比四百四十五至四百四十六与五百八十一至五百八十二、基准五百八十八、指针六百一十四至六百一十五与六百三十七至六百三十八。这正是用户所说扩大后按钮都是小的很的直接原因，因为宽高按快照的小窗尺寸乘百分比；也是整个操作页面全部偏移的原因，因为定位按旧尺寸算。",
+          "ControlDirection 字段在六十与六十一行，两个构造函数各有一处赋值即一百六十二至一百六十三与二百二十一至二百二十二，只删一处会留下对已删 final 字段的赋值导致编译失败，所以用全量替换删了两处；读取七处。",
+          "FCLInput 字段在四十五与四十六行、赋值一百一十七至一百一十八、读取两处即三百七十八至三百七十九与四百三十八至四百三十九的指针 clamp。这是 MC 没办法正常操控的另一半，TouchPad 之外 FCLInput 也把指针 clamp 在旧范围。",
+          "会导致的错误逐条处置：ControlDirection 有两处赋值只删一处会编译失败所以用 count 大于等于一的全量替换并确认删了两处；正则误伤 mScreenWidth 与 getScreenWidth 的问题用 \\b 边界解决因前导为字母不匹配；删字段后残留裸引用经 grep 排除 getScreenXxx 调用为零命中；括号失衡经检查三个文件花括号差均为零；每次调用读静态字段的开销可忽略因只读一个 int 且多在触摸与布局路径；百分比定位在尺寸变化后仍合理因为存的是百分比重算后落在同比例位置。",
+          "对用户使用逻辑的影响：小窗切全屏或全屏切小窗时按钮按新尺寸等比放大且位置按百分比重算；拖动控件后存回仍按当前尺寸换算百分比；陀螺仪与指针范围由 FCLInput 与 TouchPad 都按当前尺寸 clamp。",
+          "对未来的影响：GameMenu 七百九十七至八百零一行把 getScreenWidth 与 getScreenHeight 传给 TouchController 构造与 setSize，窗口变化后不会更新，属遗留；其余 Dialog 里的都是局部读取无需处理。",
+          "对代码逻辑的影响：三个类各少两个字段，其余逻辑未变。",
+          "审核 pass。哈希回执出现第三次碰撞：第一次取材 ControlButton 第五百六十五行得到的五个字母又是 float，与 v0.43.0 的 TouchPad 第二百八十七行完全相同，SHA-1 同为 685e80366130387cb75c055248326976d16fdf8d，原因是两行都以 float x 等于 Math.max 开头。按规则一百九十三条即取字行要选含特征标识符的，改取第五百七十七行含 baseInfo.setXPosition，五个字母为 b a s e I 拼成 baseI，SHA-1 c38dc33cef5c7ee694dd13e443c2f91760f64fa4。",
+          "遗留：GameMenu 行七百九十七至八百零一传给 TouchController 的尺寸仍是构造时快照，未修原因是 TouchController 是否有 resize 接口未确认，贸然改可能引入新问题，已登记。",
+          "冒烟测试：Actions run 40065239693 由 push 触发全矩阵，五个产物分别为 all 326244921、x86_64 174872477、arm64 169176091、arm 161916596、x86 155565566 字节。",
+          "未验证：小窗切换行为需实机。实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 43,
     "versionName": "0.43.0",
     "date": "2026.10.24",
