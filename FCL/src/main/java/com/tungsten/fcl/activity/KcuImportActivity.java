@@ -50,20 +50,22 @@ public class KcuImportActivity extends Activity {
         LinearLayout root = KcuUi.root(this);
         LinearLayout card = KcuUi.card(this);
 
-        card.addView(KcuUi.title(this, getString(R.string.kcu_import_title)));
-        card.addView(KcuUi.gap(this, 10));
+        card.addView(KcuUi.header(this, "\u2193", getString(R.string.kcu_import_title)));
+        card.addView(KcuUi.gap(this, 12));
         card.addView(KcuUi.body(this, getString(R.string.kcu_import_hint)));
         card.addView(KcuUi.gap(this, 18));
 
-        editId = KcuUi.field(this, getString(R.string.kcu_import_id_hint));
-        card.addView(editId);
+        LinearLayout rowId = KcuUi.fieldRow(this, getString(R.string.kcu_import_id_hint), "#");
+        card.addView(rowId);
+        editId = KcuUi.editOf(rowId);
 
-        editUrl = KcuUi.field(this, getString(R.string.kcu_import_url_hint));
+        LinearLayout rowUrl = KcuUi.fieldRow(this, getString(R.string.kcu_import_url_hint), "\u25C7");
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.topMargin = KcuUi.dp(this, 12);
-        editUrl.setLayoutParams(lp);
-        card.addView(editUrl);
+        rowUrl.setLayoutParams(lp);
+        card.addView(rowUrl);
+        editUrl = KcuUi.editOf(rowUrl);
 
         android.widget.Button btnUrl = KcuUi.primaryButton(this, getString(R.string.kcu_import_fetch));
         btnUrl.setOnClickListener(v -> startFetch());
