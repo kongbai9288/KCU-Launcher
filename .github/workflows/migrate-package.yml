@@ -14,32 +14,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.KCU_PAT }}
 
       - name: 迁移
-        id: do
         run: |
           set +e
           OUT=/tmp/diag.txt
           exec > >(tee $OUT) 2>&1
           echo "CWD=$(pwd)"
-          echo "--- ls 顶层 ---"; ls -1
-          echo "--- FCL 是否存在 ---"; test -d FCL && echo YES || echo NO
-          echo "--- 运行脚本 ---"
+          echo "--- 1. 模块改名 FCL -> KCU（先做，保证 git mv 干净）---"
+          test -d FCL && { git mv FCL KCU; echo "GITMV_EXIT=$?"; } || echo "NO_FCL"
+          echo "--- 2. 跑迁移脚本 ---"
           python3 .github/scripts/migrate_package.py .
           echo "SCRIPT_EXIT=$?"
-          echo "--- 模块改名 ---"
-          if [ -d FCL ]; then git mv FCL KCU || mv FCL KCU; echo "MV_EXIT=$?"; else echo "NO_FCL"; fi
+          echo "--- 3. settings ---"
           sed -i 's|include(":FCL")|include(":KCU")|g' settings.gradle.kts
           sed -i 's|rootProject.name = "Fold Craft Launcher"|rootProject.name = "KCU Launcher"|g' settings.gradle.kts
-          echo "--- settings ---"; cat settings.gradle.kts
-          echo "--- git 状态 ---"
+          cat settings.gradle.kts | grep -n 'include\|rootProject'
+          echo "--- 4. 提交 ---"
           git config user.name "yuanbao"
           git config user.email "yuanbao@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${{ secrets.KCU_PAT }}@github.com/${{ github.repository }}.git"
+          # workflow 文件需要 workflow scope，本 PAT 无此权限，故不纳入本次提交
+          git checkout -- .github/workflows 2>/dev/null
+          git reset -q HEAD .github/workflows 2>/dev/null
           git add -A
           echo "STAGED=$(git diff --cached --name-only | wc -l)"
-          echo "--- porcelain head ---"; git status --porcelain | head -8
+          echo "WORKFLOW_STAGED=$(git diff --cached --name-only | grep -c '\.github/workflows/' || true)"
           if git diff --cached --quiet; then
             echo "RESULT=NO_CHANGE"
           else
@@ -54,7 +55,7 @@ jobs:
       - name: 输出诊断到 issue
         if: always()
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.KCU_PAT }}
         run: |
           python3 - <<'PY'
           import json, os, urllib.request
@@ -69,7 +70,7 @@ jobs:
           req.add_header("Content-Type", "application/json")
           try:
               with urllib.request.urlopen(req, timeout=60) as r:
-                  print("issue created:", json.loads(r.read())["number"])
+                  print("issue:", json.loads(r.read())["number"])
           except Exception as e:
-              print("issue 创建失败:", e)
+              print("失败:", e)
           PY
