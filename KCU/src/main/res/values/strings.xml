@@ -1679,12 +1679,10 @@
     <string name="kcu_login_unavailable_title">Online service unavailable</string>
     <string name="kcu_login_unavailable_body">The Mojang service may be unavailable, so you will enter offline mode. Fill in your name to log in to the game.</string>
     <string name="kcu_login_uuid_note">Note: the offline identifier may differ from the one used when signing in online. You can edit it with the NBT editor in KCU-Migrator.</string>
-    <string name="kcu_uuid_title">Save data identifier mismatch</string>
-    <string name="kcu_uuid_body">The identifier recorded in these worlds does not match this account. Continuing will rewrite the identifier inside the saves so that your inventory and progress are restored. Your original files will be changed.</string>
-    <string name="kcu_uuid_note">If you would rather not change the saves, choose keep as is; the identifier can also be edited later with the NBT editor in KCU-Migrator.</string>
-    <string name="kcu_uuid_confirm">Rewrite and start</string>
-    <string name="kcu_uuid_skip">Keep as is and start</string>
-    <string name="kcu_uuid_partial">Some worlds could not be updated completely. Please check your saves.</string>
+    <string name="kcu_uuid_title">Save identifier may conflict</string>
+    <string name="kcu_uuid_body">The identifier recorded in these worlds does not match the one used by this account, so your inventory and progress may appear empty. This launcher will not modify your saves. Please use an NBT editing tool to change the identifier.</string>
+    <string name="kcu_uuid_note">For example, use the NBT editor in KCU-Migrator. Editing is done entirely by you, and this launcher will not touch your save files.</string>
+    <string name="kcu_uuid_continue">I understand, continue</string>
     <string name="kcu_stage_version">Current version</string>
     <string name="kcu_stage_version_none">Not selected</string>
     <string name="kcu_pick_java_title">选择运行时</string>
