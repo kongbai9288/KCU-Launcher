@@ -42,8 +42,6 @@ public class FCLInput implements View.OnCapturedPointerListener {
 
     public static final String EXTERNAL_MOUSE_ID = "External";
 
-    private final int screenWidth;
-    private final int screenHeight;
 
     private Gamepad gamepad;
     private int currentDirection = -1;
@@ -114,8 +112,6 @@ public class FCLInput implements View.OnCapturedPointerListener {
     public FCLInput(@NonNull GameMenu menu) {
         this.menu = menu;
 
-        this.screenWidth = AndroidUtilKt.getScreenWidth();
-        this.screenHeight = AndroidUtilKt.getScreenHeight();
     }
 
     public void setPointer(float x, float y, String id) {
@@ -375,8 +371,8 @@ public class FCLInput implements View.OnCapturedPointerListener {
                 deltaY = lastAxisRZ * deltaTimeScale * 10 * menu.getMenuSetting().getMouseSensitivity();
             }
             if (menu.getCursorMode() == FCLBridge.CursorEnabled) {
-                float targetX = (float) Math.max(0, Math.min(screenWidth, menu.getCursorX() + deltaX * menu.getMenuSetting().getMouseSensitivityCursor()));
-                float targetY = (float) Math.max(0, Math.min(screenHeight, menu.getCursorY() + deltaY * menu.getMenuSetting().getMouseSensitivityCursor()));
+                float targetX = (float) Math.max(0, Math.min(AndroidUtilKt.getScreenWidth(), menu.getCursorX() + deltaX * menu.getMenuSetting().getMouseSensitivityCursor()));
+                float targetY = (float) Math.max(0, Math.min(AndroidUtilKt.getScreenHeight(), menu.getCursorY() + deltaY * menu.getMenuSetting().getMouseSensitivityCursor()));
                 setPointerId(EXTERNAL_MOUSE_ID);
                 setPointer(targetX, targetY, EXTERNAL_MOUSE_ID);
                 setPointerId(null);
@@ -435,8 +431,8 @@ public class FCLInput implements View.OnCapturedPointerListener {
     /** 悬停降级路径的增量应用：菜单态移动光标，捕获态转发视角增量 */
     private void applyPointerDelta(float deltaX, float deltaY) {
         if (menu.getCursorMode() == FCLBridge.CursorEnabled) {
-            float targetX = (float) Math.max(0, Math.min(screenWidth, menu.getCursorX() + deltaX * menu.getMenuSetting().getMouseSensitivityCursor()));
-            float targetY = (float) Math.max(0, Math.min(screenHeight, menu.getCursorY() + deltaY * menu.getMenuSetting().getMouseSensitivityCursor()));
+            float targetX = (float) Math.max(0, Math.min(AndroidUtilKt.getScreenWidth(), menu.getCursorX() + deltaX * menu.getMenuSetting().getMouseSensitivityCursor()));
+            float targetY = (float) Math.max(0, Math.min(AndroidUtilKt.getScreenHeight(), menu.getCursorY() + deltaY * menu.getMenuSetting().getMouseSensitivityCursor()));
             setPointerId(EXTERNAL_MOUSE_ID);
             setPointer(targetX, targetY, EXTERNAL_MOUSE_ID);
             setPointerId(null);
