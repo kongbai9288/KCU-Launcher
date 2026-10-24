@@ -23,6 +23,8 @@ import android.view.inputmethod.InputContentInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.getSystemService
 import androidx.core.view.inputmethod.EditorInfoCompat
+import com.mio.util.getScreenHeight
+import com.mio.util.getScreenWidth
 import com.tungsten.fcl.control.FCLInput
 import com.tungsten.fclauncher.keycodes.FCLKeycodes
 import kotlinx.coroutines.MainScope
@@ -60,11 +62,17 @@ class TouchControllerInputView @JvmOverloads constructor(
                 value.inputHandler = inputHandler
             }
         }
-    private var width: Int = -1
-    private var height: Int = -1
+    /**
+     * 屏幕尺寸改为每次使用时动态获取：窗口形态变化后光标与输入区矩形的
+     * 归一化到像素换算仍按新尺寸进行。传入值仅作为取不到当前尺寸时的兜底。
+     */
+    private var fallbackWidth: Int = -1
+    private var fallbackHeight: Int = -1
+    private val width: Int get() = getScreenWidth().takeIf { it > 0 } ?: fallbackWidth
+    private val height: Int get() = getScreenHeight().takeIf { it > 0 } ?: fallbackHeight
     fun setSize(width: Int, height: Int) {
-        this.width = width
-        this.height = height
+        fallbackWidth = width
+        fallbackHeight = height
     }
     var fclInput: FCLInput? = null
     private val inputMethodManager: InputMethodManager by lazy {
