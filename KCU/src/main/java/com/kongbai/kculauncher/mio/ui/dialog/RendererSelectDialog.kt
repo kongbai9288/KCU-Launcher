@@ -33,7 +33,7 @@ class RendererSelectDialog(
         window?.attributes = params
         val binding = DialogRendererSelectBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.title.text = context.getString(R.string.settings_fcl_renderer)
+        binding.title.text = context.getString(R.string.settings_kcu_renderer)
         val currentId = currentRendererId()
         val adapter = RendererSelectItemAdapter(
             context,

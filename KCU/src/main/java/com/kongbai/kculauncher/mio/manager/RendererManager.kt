@@ -31,7 +31,7 @@ object RendererManager {
         rendererList.clear()
         RENDERER_GL4ES = Renderer(
             "Holy-GL4ES",
-            context.getString(R.string.settings_fcl_renderer_gl4es),
+            context.getString(R.string.settings_kcu_renderer_gl4es),
             "libgl4es_114.so",
             "libEGL.so",
             "",
@@ -44,7 +44,7 @@ object RendererManager {
 
         RENDERER_VIRGL = Renderer(
             "VirGLRenderer",
-            context.getString(R.string.settings_fcl_renderer_virgl),
+            context.getString(R.string.settings_kcu_renderer_virgl),
             "libOSMesa_81.so",
             "libEGL.so",
             "",
@@ -58,7 +58,7 @@ object RendererManager {
 
         RENDERER_VGPU = Renderer(
             "VGPU",
-            context.getString(R.string.settings_fcl_renderer_vgpu),
+            context.getString(R.string.settings_kcu_renderer_vgpu),
             "libvgpu.so",
             "libEGL.so",
             "",
@@ -71,7 +71,7 @@ object RendererManager {
 
         RENDERER_ZINK = Renderer(
             "Zink",
-            context.getString(R.string.settings_fcl_renderer_zink),
+            context.getString(R.string.settings_kcu_renderer_zink),
             "libglxshim.so",
             "libEGL_mesa.so",
             "",
@@ -85,7 +85,7 @@ object RendererManager {
 
         RENDERER_FREEDRENO = Renderer(
             "Freedreno",
-            context.getString(R.string.settings_fcl_renderer_freedreno),
+            context.getString(R.string.settings_kcu_renderer_freedreno),
             "libOSMesa_8.so",
             "libEGL.so",
             "",
@@ -99,7 +99,7 @@ object RendererManager {
 
         RENDERER_NGGL4ES = Renderer(
             "Krypton Wrapper",
-            context.getString(R.string.settings_fcl_renderer_nggl4es),
+            context.getString(R.string.settings_kcu_renderer_nggl4es),
             "libng_gl4es.so",
             "libEGL.so",
             "",

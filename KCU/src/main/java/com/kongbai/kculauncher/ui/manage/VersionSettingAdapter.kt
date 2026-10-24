@@ -159,60 +159,60 @@ class VersionSettingAdapter(
                 group = SettingGroup.Common
             )
             result += Row.ValueRow(
-                R.string.settings_fcl_controller,
+                R.string.settings_kcu_controller,
                 { controllerName() },
                 VersionSettingTag.EDIT_CONTROLLER,
                 VersionSettingTag.INSTALL_CONTROLLER,
-                descriptionRes = R.string.settings_fcl_controller_desc,
+                descriptionRes = R.string.settings_kcu_controller_desc,
                 group = SettingGroup.Common
             )
             result += Row.ValueRow(
-                R.string.settings_fcl_graphics_backend,
+                R.string.settings_kcu_graphics_backend,
                 { versionSetting.graphicsBackend },
                 VersionSettingTag.EDIT_BACKEND,
                 null,
-                descriptionRes = R.string.settings_fcl_graphics_backend_desc,
+                descriptionRes = R.string.settings_kcu_graphics_backend_desc,
                 group = SettingGroup.Render,
             )
             result += Row.ValueRow(
-                R.string.settings_fcl_renderer,
+                R.string.settings_kcu_renderer,
                 { rendererText() },
                 VersionSettingTag.EDIT_RENDERER,
                 VersionSettingTag.INSTALL_RENDERER,
-                descriptionRes = R.string.settings_fcl_renderer_desc,
+                descriptionRes = R.string.settings_kcu_renderer_desc,
                 group = SettingGroup.Render,
             )
             result += Row.SwitchRow(
-                R.string.settings_fcl_vulkan_driver_system,
+                R.string.settings_kcu_vulkan_driver_system,
                 { versionSetting.isVKDriverSystem },
                 { listener.onSpecialSwitch(VersionSettingTag.VULKAN, it) },
                 rowTag = VersionSettingTag.VULKAN,
-                descriptionRes = R.string.settings_fcl_vulkan_driver_system_desc,
+                descriptionRes = R.string.settings_kcu_vulkan_driver_system_desc,
                 group = SettingGroup.Render,
             )
             if (!versionSetting.isVKDriverSystem) {
                 result += Row.ValueRow(
-                    R.string.settings_fcl_driver,
+                    R.string.settings_kcu_driver,
                     { versionSetting.driver },
                     VersionSettingTag.EDIT_DRIVER,
                     VersionSettingTag.INSTALL_DRIVER,
-                    descriptionRes = R.string.settings_fcl_driver_desc,
+                    descriptionRes = R.string.settings_kcu_driver_desc,
                     group = SettingGroup.Render,
                 )
             }
             result += Row.ValueRow(
-                R.string.settings_fcl_vulkan_check,
+                R.string.settings_kcu_vulkan_check,
                 { vulkanCheckSummary },
                 VersionSettingTag.EDIT_VULKAN_CHECK,
                 null,
-                descriptionRes = R.string.settings_fcl_vulkan_check_desc,
+                descriptionRes = R.string.settings_kcu_vulkan_check_desc,
                 group = SettingGroup.Render,
             )
             result += Row.SwitchRow(
-                R.string.settings_fcl_vulkan_check_disable,
+                R.string.settings_kcu_vulkan_check_disable,
                 { versionSetting.isNotCheckVulkan },
                 { versionSetting.isNotCheckVulkan = it },
-                descriptionRes = R.string.settings_fcl_vulkan_check_disable_desc,
+                descriptionRes = R.string.settings_kcu_vulkan_check_disable_desc,
                 group = SettingGroup.Render,
             )
             result += Row.SwitchRow(

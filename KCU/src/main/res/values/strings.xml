@@ -1084,23 +1084,23 @@
     <string name="settings_advanced_force_resolution">Force set resolution</string>
     <string name="settings_advanced_force_resolution_desc">Force the game to run at a specified resolution (WxH). Experimental option, use with caution.</string>
 
-    <string name="settings_fcl_controller">Controller</string>
-    <string name="settings_fcl_controller_desc">Choose the controller layout used by this version.</string>
-    <string name="settings_fcl_vulkan_driver_system">Use System Vulkan driver</string>
-    <string name="settings_fcl_vulkan_driver_system_desc">Use the system Vulkan driver. Better performance but may cause compatibility issues.</string>
-    <string name="settings_fcl_graphics_backend">Graphics Backend</string>
-    <string name="settings_fcl_graphics_backend_desc">Choose the graphics rendering backend. Only effective for 26.2+.</string>
-    <string name="settings_fcl_renderer">OpenGL Implementation</string>
-    <string name="settings_fcl_renderer_desc">Choose the OpenGL renderer implementation.</string>
-    <string name="settings_fcl_renderer_gl4es" translatable="false">Holy GL4ES (OpenGL 2.1)</string>
-    <string name="settings_fcl_renderer_virgl" translatable="false">VirGLRenderer (OpenGL 4.3)</string>
-    <string name="settings_fcl_renderer_vgpu">VGPU (OpenGL 2.1+)</string>
-    <string name="settings_fcl_renderer_zink" translatable="false">Kopper Zink (OpenGL 4.6)</string>
-    <string name="settings_fcl_renderer_freedreno">Freedreno (OpenGL 4.6, only support adreno616-a660)</string>
-    <string name="settings_fcl_renderer_nggl4es">Krypton Wrapper (OpenGL 3.1+)</string>
+    <string name="settings_kcu_controller">Controller</string>
+    <string name="settings_kcu_controller_desc">Choose the controller layout used by this version.</string>
+    <string name="settings_kcu_vulkan_driver_system">Use System Vulkan driver</string>
+    <string name="settings_kcu_vulkan_driver_system_desc">Use the system Vulkan driver. Better performance but may cause compatibility issues.</string>
+    <string name="settings_kcu_graphics_backend">Graphics Backend</string>
+    <string name="settings_kcu_graphics_backend_desc">Choose the graphics rendering backend. Only effective for 26.2+.</string>
+    <string name="settings_kcu_renderer">OpenGL Implementation</string>
+    <string name="settings_kcu_renderer_desc">Choose the OpenGL renderer implementation.</string>
+    <string name="settings_kcu_renderer_gl4es" translatable="false">Holy GL4ES (OpenGL 2.1)</string>
+    <string name="settings_kcu_renderer_virgl" translatable="false">VirGLRenderer (OpenGL 4.3)</string>
+    <string name="settings_kcu_renderer_vgpu">VGPU (OpenGL 2.1+)</string>
+    <string name="settings_kcu_renderer_zink" translatable="false">Kopper Zink (OpenGL 4.6)</string>
+    <string name="settings_kcu_renderer_freedreno">Freedreno (OpenGL 4.6, only support adreno616-a660)</string>
+    <string name="settings_kcu_renderer_nggl4es">Krypton Wrapper (OpenGL 3.1+)</string>
 
-    <string name="settings_fcl_driver">Vulkan Driver</string>
-    <string name="settings_fcl_driver_desc">Choose the Vulkan driver implementation.</string>
+    <string name="settings_kcu_driver">Vulkan Driver</string>
+    <string name="settings_kcu_driver_desc">Choose the Vulkan driver implementation.</string>
 
     <string name="settings_download_netdisk">Netdisk(Recommended for users in China)</string>
 
@@ -1480,11 +1480,11 @@
     <string name="message_vulkan_driver_system">Warning: Using the system Vulkan driver may result in better performance, but may also cause crashes due to compatibility issues!</string>
     <string name="message_loading_controllers">Loading controllers, please wait...</string>
 
-    <string name="settings_fcl_vulkan_check">Check Vulkan</string>
-    <string name="settings_fcl_vulkan_check_desc">Check whether the device supports the Vulkan rendering backend required by Minecraft 26.2 and later.</string>
-    <string name="settings_fcl_vulkan_check_not_checked">Not checked</string>
-    <string name="settings_fcl_vulkan_check_disable">Disable Vulkan compatibility check</string>
-    <string name="settings_fcl_vulkan_check_disable_desc">Skip the Vulkan compatibility check and related prompts when launching Minecraft 26.2 and later.</string>
+    <string name="settings_kcu_vulkan_check">Check Vulkan</string>
+    <string name="settings_kcu_vulkan_check_desc">Check whether the device supports the Vulkan rendering backend required by Minecraft 26.2 and later.</string>
+    <string name="settings_kcu_vulkan_check_not_checked">Not checked</string>
+    <string name="settings_kcu_vulkan_check_disable">Disable Vulkan compatibility check</string>
+    <string name="settings_kcu_vulkan_check_disable_desc">Skip the Vulkan compatibility check and related prompts when launching Minecraft 26.2 and later.</string>
     <string name="vulkan_check_title">Vulkan Check</string>
     <string name="vulkan_check_running">Checking Vulkan support...</string>
     <string name="vulkan_check_failed">Vulkan check failed. The device may not support Vulkan, or the driver failed to load.</string>

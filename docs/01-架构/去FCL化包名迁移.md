@@ -18,16 +18,16 @@
 
 | 层 | 硬编码位置 | 不改的后果 |
 |---|---|---|
-| **JNI** | `fcl_loader.c:126/196` `FindClass("com/tungsten/fclauncher/bridge/FCLBridge")` | 运行期崩 |
-| **JNI** | `input_bridge_v3.c:781` `FindClass("com/tungsten/fclauncher/CriticalNativeTest")` | 运行期崩 |
+| **JNI** | `fcl_loader.c:126/196` `FindClass("com/kongbai/kculauncher/launcher/bridge/KCUBridge")` | 运行期崩 |
+| **JNI** | `input_bridge_v3.c:781` `FindClass("com/kongbai/kculauncher/launcher/CriticalNativeTest")` | 运行期崩 |
 | **JNI 导出** | `utils.c` / `awt_bridge.c` / `fcl_loader.c` / `exit_hook.c` / `input_bridge_v3.c` 含 `Java_com_tungsten` | 链接期/运行期找不到符号 |
-| **布局 XML** | 286 处 `<com.tungsten.fcllibrary.component.view.FCLTextView>` 全限定名 | 编译过、运行期 `InflateException` |
+| **布局 XML** | 286 处 `<com.kongbai.kculauncher.library.component.view.KCUTextView>` 全限定名 | 编译过、运行期 `InflateException` |
 
 **JNI 是硬约束**：`FindClass` 的字符串必须与 Java 类全限定名逐字一致。
 只改 Java 不改 C，能编译通过，装上去一启动就崩。
 
-顶层包全景（迁移前）：`com.tungsten.fcl` 257、`fclcore` 546、`fcllibrary` 63、
-`fclauncher` 17、`com.mio` 若干 —— 共 **1244 个文件**。
+顶层包全景（迁移前）：`com.kongbai.kculauncher` 257、`fclcore` 546、`fcllibrary` 63、
+`fclauncher` 17、`com.kongbai.kculauncher.mio` 若干 —— 共 **1244 个文件**。
 
 ---
 
@@ -35,13 +35,13 @@
 
 | 原 | 新 |
 |---|---|
-| `com.tungsten.fclcore` | `com.kongbai.kculauncher.core` |
-| `com.tungsten.fcllibrary` | `com.kongbai.kculauncher.library` |
-| `com.tungsten.fclauncher` | `com.kongbai.kculauncher.launcher` |
-| `com.tungsten.fcl` | `com.kongbai.kculauncher` |
-| `com.mio` | `com.kongbai.kculauncher.mio` |
+| `com.kongbai.kculauncher.core` | `com.kongbai.kculauncher.core` |
+| `com.kongbai.kculauncher.library` | `com.kongbai.kculauncher.library` |
+| `com.kongbai.kculauncher.launcher` | `com.kongbai.kculauncher.launcher` |
+| `com.kongbai.kculauncher` | `com.kongbai.kculauncher` |
+| `com.kongbai.kculauncher.mio` | `com.kongbai.kculauncher.mio` |
 | `FCL*` 类（46 个） | `KCU*` |
-| `FCLauncher` | **`KCULauncher`**（特例，直接去 FCL 会剩 "auncher"） |
+| `KCULauncher` | **`KCULauncher`**（特例，直接去 FCL 会剩 "auncher"） |
 | 模块 `:FCL` → `:KCU` | 目录 `FCL/` → `KCU/` |
 | `rootProject.name` | `Fold Craft Launcher` → `KCU Launcher` |
 
@@ -77,7 +77,7 @@ rename_classes.py    类文件改名 FCL* -> KCU*
 ### 坑 2：`git mv` 报 bad source
 
 ```
-fatal: bad source, source=FCL/src/androidTest/java/com/mio/cache/VersionCacheTest.kt
+fatal: bad source, source=FCL/src/androidTest/java/com/kongbai/kculauncher/mio/cache/VersionCacheTest.kt
 ```
 **顺序错了**：先跑了脚本（文件已移到新目录），再 `git mv FCL KCU`。
 改为**先 `git mv` 模块，再跑脚本**。
@@ -109,11 +109,11 @@ e: .../view/KCUConstraintLayout.kt:20:47 Unresolved reference 'FCLConstraintLayo
 ### 坑 6：Kotlin 字符串模板被整串保护（编译失败 #3）
 
 ```
-e: .../core/game/JavaVersion.kt:10:19 Unresolved reference 'FCLPath'
+e: .../core/game/JavaVersion.kt:10:19 Unresolved reference 'KCUPath'
 ```
-第 10 行是 `return "${FCLPath.JAVA_PATH}/${javaVersion.name}"`。
+第 10 行是 `return "${KCUPath.JAVA_PATH}/${javaVersion.name}"`。
 第一版把整个字符串当字面量保护，模板内的**代码标识符**没被替换，
-导致 import 已改 `KCUPath` 而模板内仍是 `FCLPath`。
+导致 import 已改 `KCUPath` 而模板内仍是 `KCUPath`。
 补 `patch_kotlin_tpl.py`：先挖 `${...}` 单独处理 → `PATCHED_TPL_FILES=8`。
 
 ---

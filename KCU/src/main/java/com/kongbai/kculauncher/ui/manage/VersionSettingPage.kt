@@ -237,7 +237,7 @@ class VersionSettingPage(
         activity.lifecycleScope.launch {
             val apiVersion = VulkanCheckManager.loadRecord()?.apiVersion.orEmpty()
             adapter.vulkanCheckSummary = apiVersion.ifEmpty {
-                context.getString(R.string.settings_fcl_vulkan_check_not_checked)
+                context.getString(R.string.settings_kcu_vulkan_check_not_checked)
             }
             Schedulers.androidUIThread().execute {
                 adapter.refreshRow(VersionSettingTag.EDIT_VULKAN_CHECK)
@@ -351,7 +351,7 @@ class VersionSettingPage(
                 val backends = listOf("default", "opengl", "vulkan")
                 showItemSelectionDialog(
                     context,
-                    context.getString(R.string.settings_fcl_graphics_backend),
+                    context.getString(R.string.settings_kcu_graphics_backend),
                     backends,
                     false,
                     selectedIndex = backends.indexOf(lastVersionSetting.graphicsBackend)
@@ -388,7 +388,7 @@ class VersionSettingPage(
                     else Profiles.getSelectedProfile().versionSetting
                 showItemSelectionDialog(
                     context,
-                    context.getString(R.string.settings_fcl_driver),
+                    context.getString(R.string.settings_kcu_driver),
                     driverList.map { it.driver },
                     false,
                     selectedIndex = driverList.indexOfFirst { it.driver == versionSetting.driver }
