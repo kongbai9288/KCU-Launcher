@@ -3253,3 +3253,93 @@ all 326243806 / x86_64 174866243 / **arm64 169173376** / arm 161914439 / x86 155
 ### 未验证
 
 三个接线**全都没在真机上跑过**。
+
+## 0.59.0 — 2026-10-25
+
+执行者：**yuanbao**
+
+---
+
+# 一、严重 bug：自定义标识根本没生效
+
+上一轮我写的是：
+
+```java
+KcuUuid.setCustom(context, name, customUuid);   // 落库
+Account account = KcuAccountFlow.resolve(name, null);  // ← 内部仍按名称推导
+```
+
+**`resolve` → `createLocal` → `getUUIDFromUserName(name)` —— 自定义值被完全忽略。**
+
+## 后果比"没生效"更糟
+
+| 环节 | 实际用的值 |
+|---|---|
+| 账号实际身份（进游戏） | **推导值** |
+| 存档检测比对 | **自定义值** |
+
+**两处不一致。** 玩家照着提示把存档改成自定义值，进游戏**还是对不上**
+—— 因为游戏用的是推导值。
+
+已修：填了自定义标识时改走 `createOffline(name, customUuid)` 显式传入。
+
+---
+
+# 二、劝导界面列出「原值 → 目标值」
+
+原来只显示世界名。玩家拿着 NBT 工具**不知道从什么改成什么**。
+
+现在逐条给出：
+
+```
+• My World
+    5627dd98-e6be-3c21-b8a8-e92344183641
+  → 11112222-3333-4444-5555-666677778888
+```
+
+---
+
+# 三、更正我上一轮的一条错误结论
+
+我报的「`KcuNativeOrder` abort 失败玩家看不到」—— **是错的**。
+
+实际源码：
+
+```java
+if (!KcuNativeOrder.loadInOrder(bridge, config.getWorkingDir())) {
+    log(bridge, "KCU: 自带原生库按序加载未全部成功，配置为 abort，终止启动");
+    return;
+}
+```
+
+`log()` → `bridge.getCallback().onLog()` → **输出到启动器日志界面，玩家看得到**。
+
+**我上一轮是基于文档片段判断的，没读实际源码。**
+
+教训已记为防错规则：**审核必须读实际源码，不能依赖文档片段。**
+
+---
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuUnifiedLoginDialog.java` |
+| 行 | **36** |
+| 该行原文 | `new Session(context, onFinished).start();` |
+| 5 个不同字母 | `n e w S i` |
+| **SHA-1** | **`283f1066a9031ed85f4442bbf416574607d2260a`** |
+
+### 编译验证（PROVEN）
+
+run **40113629632** 全矩阵 success，5 产物：
+all 326244306 / x86_64 174865549 / **arm64 169172286** / arm 161914144 / x86 155562823 B
+
+### 剩余
+
+- 默认实例不走 `addProfile` → 不会被标记 → 每次启动仍扫存档（**安全取舍**：挂到 init 会误标迁移来的老实例）
+- `KcuAccountFlow.normalize` 无调用点
+
+### 未验证
+
+自定义标识创建账号、劝导界面新格式 —— **都没在真机上跑过**。
