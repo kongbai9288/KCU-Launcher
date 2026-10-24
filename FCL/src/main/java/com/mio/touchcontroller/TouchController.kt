@@ -8,6 +8,8 @@ import android.system.Os
 import android.util.SparseArray
 import android.util.SparseIntArray
 import android.view.MotionEvent
+import com.mio.util.getScreenHeight
+import com.mio.util.getScreenWidth
 import com.tungsten.fclcore.util.Logging
 import top.fifthlight.touchcontroller.proxy.client.LauncherProxyClient
 import top.fifthlight.touchcontroller.proxy.client.LauncherProxyClient.VibrationHandler
@@ -18,10 +20,19 @@ import java.util.logging.Level
 
 class TouchController(
     context: Context,
-    val width: Int,
-    val height: Int,
+    private val initialWidth: Int,
+    private val initialHeight: Int,
     val vibrationDuration: Long = 100,
 ) {
+    /**
+     * 屏幕尺寸改为每次使用时动态获取。
+     * 原先是构造参数里的 val，窗口形态变化（小窗/分屏/旋转）后数值仍是旧尺寸，
+     * 指针与视角增量的归一化分母错误，表现为扩大窗口后触控失控。
+     * 构造初值仅在取不到当前尺寸时兜底。
+     */
+    val width: Int get() = getScreenWidth().takeIf { it > 0 } ?: initialWidth
+    val height: Int get() = getScreenHeight().takeIf { it > 0 } ?: initialHeight
+
     var client: LauncherProxyClient? = null
         private set
     private val socketName = "FoldCraftLauncher"
