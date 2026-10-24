@@ -356,7 +356,7 @@
     <string name="folder_config">瀏覽配置文件夾</string>
     <string name="folder_game">瀏覽遊戲文件夾</string>
     <string name="folder_log">瀏覽日誌文件夾</string>
-    <string name="folder_fcl_log">瀏覽KCU日誌文件夾</string>
+    <string name="folder_kcu_log">瀏覽KCU日誌文件夾</string>
     <string name="folder_mod">瀏覽模組文件夾</string>
     <string name="folder_resourcepacks">瀏覽資源包文件夾</string>
     <string name="folder_saves">瀏覽存檔文件夾</string>

@@ -308,7 +308,7 @@
     <string name="folder_config">Конфігурації</string>
     <string name="folder_game">Папка гри</string>
     <string name="folder_log">Логи</string>
-    <string name="folder_fcl_log">Логи лаунчера</string>
+    <string name="folder_kcu_log">Логи лаунчера</string>
     <string name="folder_mod">Моди</string>
     <string name="folder_resourcepacks">Ресурспаки</string>
     <string name="folder_saves">Світи</string>

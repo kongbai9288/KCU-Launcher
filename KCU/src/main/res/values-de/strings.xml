@@ -308,7 +308,7 @@
     <string name="folder_config">Konfigurationen</string>
     <string name="folder_game">Spielordner</string>
     <string name="folder_log">Logs</string>
-    <string name="folder_fcl_log">Launcher-Logs</string>
+    <string name="folder_kcu_log">Launcher-Logs</string>
     <string name="folder_mod">Mods</string>
     <string name="folder_resourcepacks">Ressourcenpakete</string>
     <string name="folder_saves">Welten</string>
