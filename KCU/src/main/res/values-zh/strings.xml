@@ -1512,6 +1512,17 @@
     <string name="kcu_dev_clearing">清除中…</string>
     <string name="kcu_dev_cleared">已清除 %1$d 项</string>
     <string name="kcu_dev_clear_note">清除全部标记会同时清除年龄声明，下次启动需重新选择年龄。</string>
+    <string name="kcu_login_title">添加账号</string>
+    <string name="kcu_login_hint">填写游戏内名称。系统会检查该名称是否可以进行在线登录；若不可用，则以该名称离线进入游戏。</string>
+    <string name="kcu_login_name_hint">游戏内名称</string>
+    <string name="kcu_login_confirm">继续</string>
+    <string name="kcu_login_checking">正在检查可用性……</string>
+    <string name="kcu_login_name_empty">请填写名称。</string>
+    <string name="kcu_login_name_invalid">名称需为 3 至 16 位，仅可包含字母、数字与下划线。</string>
+    <string name="kcu_login_premium_title">在线登录可用</string>
+    <string name="kcu_login_premium_body">该名称关联了正版账号。你可以使用其所属的微软账号登录，也可以继续以该名称离线进入。</string>
+    <string name="kcu_login_use_microsoft">使用微软账号登录</string>
+    <string name="kcu_login_use_offline">以离线方式继续</string>
     <string name="kcu_stage_version">当前版本</string>
     <string name="kcu_stage_version_none">未选择</string>
 </resources>
