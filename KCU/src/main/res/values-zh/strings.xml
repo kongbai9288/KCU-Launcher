@@ -1523,6 +1523,15 @@
     <string name="kcu_login_premium_body">该名称关联了正版账号。你可以使用其所属的微软账号登录，也可以继续以该名称离线进入。</string>
     <string name="kcu_login_use_microsoft">使用微软账号登录</string>
     <string name="kcu_login_use_offline">以离线方式继续</string>
+    <string name="kcu_login_unavailable_title">在线服务不可用</string>
+    <string name="kcu_login_unavailable_body">Mojang 服务可能不可用，你将进入离线模式。请先填写名称以登录游戏。</string>
+    <string name="kcu_login_uuid_note">提示：离线标识可能与在线登录时不一致，可使用 KCU-Migrator 的 NBT 编辑功能修改。</string>
+    <string name="kcu_uuid_title">存档标识不一致</string>
+    <string name="kcu_uuid_body">以下存档中记录的标识与本账号不一致。继续将重写存档内的标识，以恢复背包与进度；原文件会被修改。</string>
+    <string name="kcu_uuid_note">若不想改动存档，可选择保持原样；标识也可稍后用 KCU-Migrator 的 NBT 编辑功能修改。</string>
+    <string name="kcu_uuid_confirm">重写并启动</string>
+    <string name="kcu_uuid_skip">保持原样并启动</string>
+    <string name="kcu_uuid_partial">部分存档未能完整更新，请检查你的存档文件。</string>
     <string name="kcu_stage_version">当前版本</string>
     <string name="kcu_stage_version_none">未选择</string>
 </resources>
