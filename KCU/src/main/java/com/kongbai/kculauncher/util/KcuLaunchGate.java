@@ -143,16 +143,18 @@ public final class KcuLaunchGate {
     /** 只提示，不改写：把处理权完全留给玩家与外部 NBT 工具 */
     private static void showUuidAdvice(Context context,
                                        List<KcuWorldUuid.Mismatch> mismatches, Runnable proceed) {
+        // 每个世界都列出"现记录值 → 应改为的值"：
+        // 玩家用 NBT 工具改时需要知道从什么改成什么，只报世界名没法动手
         StringBuilder names = new StringBuilder();
         for (int i = 0; i < mismatches.size(); i++) {
             if (i > 0) {
                 names.append("\n");
             }
-            names.append("\u2022 ").append(mismatches.get(i).worldName);
+            KcuWorldUuid.Mismatch one = mismatches.get(i);
+            names.append("\u2022 ").append(one.worldName).append("\n    ")
+                    .append(one.found).append("\n  \u2192 ")
+                    .append(one.expected);
         }
-        // 附上期望值：玩家用 NBT 工具改时需要知道该改成什么，只报不一致没法动手
-        String expected = mismatches.isEmpty()
-                ? "" : String.valueOf(mismatches.get(0).expected);
         ScrollView scroll = new ScrollView(context);
         android.widget.LinearLayout root = KcuUi.root(context);
         android.widget.LinearLayout card = KcuUi.card(context);
@@ -163,10 +165,6 @@ public final class KcuLaunchGate {
         card.addView(KcuUi.hint(context, names.toString()));
         card.addView(KcuUi.gap(context, 10));
         card.addView(KcuUi.hint(context, context.getString(R.string.kcu_uuid_note)));
-        if (!expected.isEmpty()) {
-            card.addView(KcuUi.gap(context, 10));
-            card.addView(KcuUi.status(context, expected));
-        }
 
         AlertDialog dialog = new AlertDialog.Builder(context).setView(scroll).create();
         android.widget.Button ok =
