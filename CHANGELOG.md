@@ -2058,3 +2058,69 @@ Caused by: java.util.zip.ZipException
 
 - run 39981928323 **attempt 2**：arm → **success**
 - run **39987735110**：新 workflow dispatch arm64 → **success**，`app-arm64` **169175404 B**
+
+## 0.43.0 — 2026-10-24
+
+执行者：**yuanbao**
+
+- **弹窗观感改造**：图标徽章 + 加大 + 修两个 UI bug
+- **小窗尺寸快照修复**：MC 无法操控 / 布局偏移的根因
+
+### 小窗根因：尺寸被"快照"成不可变值
+
+刷新机制其实是有的（`JVMActivity extends FCLActivity`，`onConfigurationChanged` 会刷 `currentDisplayMetrics`）。
+
+**但两处在构造时把它存死了：**
+
+| 位置 | 原代码 |
+|---|---|
+| `TouchPad.java` | `this.screenWidth = ...`（final 字段） |
+| `MenuView.kt` | `private val screenWidth = getScreenWidth()` |
+
+后果对上了你描述的三条：
+
+```java
+targetX = Math.max(0, Math.min(screenWidth, initialX + deltaX));
+```
+
+**指针被 clamp 在旧的小窗尺寸内** → 扩大后 MC 只能操控左上角一小块。菜单定位和拖拽也按旧尺寸 → 布局偏移、按钮偏小。
+
+**这是上游固有缺陷**，不是我们引入的。
+
+已改：TouchPad 删字段改为用时调用；MenuView 的 `val` 改 `get()`。
+
+### 弹窗
+
+新增 `iconBadge` / `header` / `fieldRow` / `editOf`。图标用**基础字符**（`↓ # ◇ ≡ !`）而非图片——风格统一、不新增 drawable、不会 emoji 化。
+
+卡片内边距 16→22dp，标题 19→21sp，输入框加了 46dp 最小高度。
+
+### 顺手修了两个真 bug
+
+| # | bug |
+|---|---|
+| 1 | **年龄页标题和说明渲染了两遍**（Activity 加一次，buildInto 又加一次） |
+| 2 | RadioButton 没设 id，`check(-1)` 选不中，默认 18 岁界面上没选中态 |
+
+第 1 条就是你说的"离谱"的直接体现。
+
+### CI 又被自己坑了一次
+
+上传 7 个文件 + 1 次 dispatch，v0.42.0 新加的 `cancel-in-progress` **把它们互相取消**了，首次查询 `cancelled`。重新 dispatch 才拿到结果。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `TouchPad.java` |
+| 行 | **287** |
+| 5 个不同字母 | `f l o a t` |
+| **SHA-1** | **`685e80366130387cb75c055248326976d16fdf8d`** |
+
+### 编译验证（PROVEN）
+
+run **40060988638**（arm64），`app-arm64` **169175625 B**。
+
+### 没验证
+
+小窗切换行为、图标字符显示效果 —— **都得实机看**。
