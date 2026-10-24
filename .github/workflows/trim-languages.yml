@@ -1,0 +1,100 @@
+name: trim-languages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  trim:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.KCU_PAT }}
+
+      - name: 裁剪语言目录（白名单之外全部删除）
+        run: |
+          set +e
+          OUT=/tmp/diag.txt
+          exec > >(tee $OUT) 2>&1
+          echo "CWD=$(pwd)"
+          RES=KCU/src/main/res
+          # 白名单：默认英文 + 中文（含港台变体）+ 两个【非语言】目录
+          # values-night = 夜间模式资源；values-v31 = API31+ 资源。二者不是语言，绝不可删。
+          KEEP="values values-zh values-zh-rHK values-zh-rTW values-night values-v31"
+
+          echo "--- 1. 删除前：全部 values* 目录及其文件清单 ---"
+          for d in $(ls -d $RES/values* 2>/dev/null); do
+            n=$(ls "$d" | wc -l)
+            echo "  $(basename $d) : $(ls "$d" | tr '\n' ' ')"
+          done
+
+          echo "--- 2. 删除白名单之外的 values-* 目录 ---"
+          DELETED=""
+          for d in $(ls -d $RES/values-* 2>/dev/null); do
+            b=$(basename "$d")
+            keep=0
+            for k in $KEEP; do [ "$b" = "$k" ] && keep=1; done
+            if [ "$keep" = "0" ]; then
+              echo "  DELETE $b"
+              git rm -r -q "$d"
+              DELETED="$DELETED $b"
+            else
+              echo "  KEEP    $b"
+            fi
+          done
+          echo "DELETED=$DELETED"
+
+          echo "--- 3. 校验：白名单目录必须都还在 ---"
+          for k in $KEEP; do
+            if [ -d "$RES/$k" ]; then echo "  OK  $k"; else echo "  MISSING $k !!!"; fi
+          done
+
+          echo "--- 4. 校验：默认 locale 仍完整（resource 入口数）---"
+          grep -c "<string" $RES/values/strings.xml
+          echo "  values-zh:"; grep -c "<string" $RES/values-zh/strings.xml
+
+          echo "--- 5. 提交 ---"
+          git config user.name "yuanbao"
+          git config user.email "yuanbao@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.KCU_PAT }}@github.com/${{ github.repository }}.git"
+          git add -A
+          echo "STAGED=$(git diff --cached --name-only | wc -l)"
+          if git diff --cached --quiet; then
+            echo "RESULT=NO_CHANGE"
+          else
+            git commit -q -m "refactor: 仅保留 cn/en 语言资源，移除其余 9 个外语目录 (yuanbao)"
+            echo "COMMIT_EXIT=$?"
+            git push origin "HEAD:${{ github.ref_name }}" 2>&1
+            echo "PUSH_EXIT=$? RESULT=DONE"
+          fi
+          echo "--- 剩余 values* ---"
+          ls -d $RES/values*
+          exit 0
+
+      - name: 输出诊断到 issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.KCU_PAT }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          body = open('/tmp/diag.txt', encoding='utf-8', errors='replace').read()
+          if len(body) > 60000: body = body[:60000]
+          payload = json.dumps({"title":"TRIM-LANGS-DIAG","body":body}).encode()
+          req = urllib.request.Request(
+              "https://api.github.com/repos/kongbai9288/KCU-Launcher/issues",
+              data=payload, method="POST")
+          req.add_header("Authorization", "Bearer " + os.environ["GH_TOKEN"])
+          req.add_header("Accept", "application/vnd.github+json")
+          req.add_header("Content-Type", "application/json")
+          try:
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  print("issue:", json.loads(r.read())["number"])
+          except Exception as e:
+              print("失败:", e)
+          PY
