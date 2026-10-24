@@ -1,6 +1,30 @@
 [
   {
     "type": "release",
+    "versionCode": 50,
+    "versionName": "0.50.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "用户要求把应用内关于改为 KCU launcher 是一个由架构师 kongbai9288 由 fcl 为主体其他项目为辅的开源源码可修改 GPL 软件。",
+          "追溯定位：AboutPage 第一百二十六行是 R.string.about_desc 的唯一引用点，整页关于描述就这一个字符串。",
+          "顺带查清 about_launcher 与 about_developer 是死字符串，值分别是 Fold Craft Launcher 与 FCL-Team，但源码引用为零只出现在文档与版本记录里不会显示在任何界面上。这个发现决定了判断：新文案说 kongbai9288 是架构师而 about_developer 存着 FCL-Team，两者不冲突因为后者根本不显示，故保留不动符合上一版定的上游署名保留。",
+          "拼写修正两处必须说明：用户原写 Flod craft laucher，Flod 少一个 r 应为 Fold，laucher 少一个 n 应为 Launcher。理由是这是上游项目的正式名称且带有法律署名性质，与 v0.48 包名案例一致。",
+          "句式：用户原句有两个由字，按语义理解第二个是以，照此顺句但核心信息一字未减，六个要素全部保留。",
+          "最终文案为两段，第一段是新描述，第二段保留原文案里已有的 UI 引导即点击开源许可可查看内置全文。",
+          "改了两个文件 values 默认 locale 与 values-zh 中文。中文那份原来是上游的原神风格元叙事，开头写着 KCU 是由 FCL-Team 基于 HMCL 的核心功能开发，这句在新的署名表述下是错的因为它把开发者说成 FCL-Team，故一并替换。它里面如果你要传播分发该软件请遵循 GPL-v3 协议的法律声明由新文案的遵循 GPL-v3 许可发布承接没有丢。",
+          "审核 pass。哈希回执：values/strings.xml 第 61 行，五个字母 s t r i n 拼成 strin，SHA-1 11ad20e26a410fd5dde5c207487faf383880a4ee。注意与 v0.41.0 取过的大写 Strin 字母集合相同但大小写不同故哈希不同。",
+          "冒烟测试：Actions run 40094103201 由 push 触发全矩阵并成功，五个产物分别为 all 326270734、x86_64 174896048、arm64 169200989、arm 161942460、x86 155589938 字节。",
+          "未验证：文案长度未实机验证，两段共约九十字小屏或大字号下可能截断；实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 49,
     "versionName": "0.49.0",
     "date": "2026.10.24",
