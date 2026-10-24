@@ -1,6 +1,33 @@
 [
   {
     "type": "release",
+    "versionCode": 53,
+    "versionName": "0.53.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "用户要求：改（修复 v0.52 审核发现的七个问题）；登录那一块离线账号以后可以陪迁移器直接迁移，正版和第三方账号都不行因为要保证账号的安全性；删除属性（图标的 monochrome 属性）。",
+          "删除 monochrome 属性：adaptive icon 的 monochrome 引用实心 foreground，安卓十三主题图标模式下会变成纯色六边形块，按用户要求删除该属性。",
+          "严重二修复：onFailure 等于 abort 现在真正生效，KCULauncher 接收 loadInOrder 的返回值，未全部成功时记日志并放弃本次启动，避免带着缺失的库继续跑导致崩溃点远离真正原因。",
+          "中等三修复：KcuManifest 注释改回 KCU 斜杠 FCL 语义恢复；选 JDK 对话框设为不可取消，按返回键不再导致启动静默终止；开发者页清除按钮下方加说明文案，告知会同时清除年龄声明。",
+          "低二修复：needsCopy 时间戳判定由更晚改为不等，修复从备份恢复时新文件 mtime 更早导致漏更新的问题，但同大小同时间戳仍无法识别；probeFromJar 在条目大小为非正数时改流式读取，避免负数组长度异常被吞导致版本探测恒失败。",
+          "严重一处理：新增 KcuAccountTransfer 离线账号迁移类，KcuAccountFlow 新增 findByName 与 createOffline 两个方法并接入迁移功能，使其不再是死代码；resolve 仍为统一登录预留未接线。",
+          "离线账号迁移契约：文件位于公共目录 accounts.json，只导出离线账号的 username 与 uuid，不导出皮肤。正版微软与第三方 authlib-injector 账号一律不导出也不导入，因为其存储含登录凭据，公共目录可被任意应用读取，导出等同明文泄露。",
+          "导入为一次性：只有 status 等于 pending 才导入，已有同名账号跳过不覆盖，导入完成后文件重写为 exported，因此同一份文件不会被导入两遍。",
+          "UUID 必须沿用：离线身份由 UUID 决定，世界数据归属按 UUID 判定，迁移时重新推导会让玩家失去原有存档归属。有 UUID 直接用，没有才按名字推导兜底。",
+          "接线位置：SplashActivity 进入主界面前，先导入再导出，顺序不可颠倒否则导出内容不含刚导入的账号。",
+          "审核 pass。哈希回执：KcuAccountTransfer.java 第 49 行 List 尖括号 Account accounts 分号，五个字母 L i s t A 拼成 ListA，SHA-1 9fe157ab90e897ad64146c86019b7b25dfbcb6bf。",
+          "冒烟测试：Actions run 40100642591 由 push 触发全矩阵并成功，五个产物分别为 all 326237210、x86_64 174863083、arm64 169165739、arm 161905178、x86 155554363 字节。",
+          "未验证：accounts.json 是否真的生成；放一份 pending 文件后账号是否被导入；跨设备迁移 UUID 是否保住存档归属；实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 52,
     "versionName": "0.52.0",
     "date": "2026.10.24",
