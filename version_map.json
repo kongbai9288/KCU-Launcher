@@ -1,6 +1,30 @@
 [
   {
     "type": "release",
+    "versionCode": 58,
+    "versionName": "0.58.0",
+    "date": "2026.10.25",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "补上审核发现的三个未接线问题：markCreated 无调用点、KcuUuid 无写入途径、KcuAccountFlow.resolve 为死代码。",
+          "修正 resolve 的危险兜底：原实现在没有同名账号时会退回任意一个在线账号，这意味着玩家填 Steve 却可能登录到某个微软账号上，属于把无关账号牵扯进来。这与我自己在 findByName 注释里批评的行为完全矛盾，因此删掉该兜底，改为同名复用否则按名称生成本地账号。",
+          "统一登录改走 resolve：finishWithOffline 先写入自定义标识再解析账号，顺序不能反，因为解析过程会读自定义值，先解析的话本次填写的自定义不生效。",
+          "新增自定义标识输入框：在名称填写阶段下方增加可选项，留空使用默认推导值，格式非法时提示且不发起请求。这解决了 KcuUuid 之前只有读取没有写入途径的问题。",
+          "接入 markCreated：挂在 Profiles.addProfile 而非 init 加载路径，因为 init 在行 121 直接 profiles.add 不走 addProfile，若挂在错误位置会导致迁移来的老实例被误标记为本启动器创建，从而永久跳过存档检测。",
+          "劝导界面增加期望值显示：玩家用 NBT 工具修改时需要知道该改成什么，只报告不一致无法动手。",
+          "审核 pass。哈希回执：KcuAccountFlow.java 第三十四行 if 括号 username 等于 null 或 username.trim 括号 isEmpty 括号，五个字母 i f u s e 拼成 ifuse，SHA-1 0e9287eeeac0991bb985eace5ae22a8af4a1fdd1。",
+          "冒烟测试：Actions run 40112374262 由 push 触发全矩阵并成功，五个产物分别为 all 326243806、x86_64 174866243、arm64 169173376、arm 161914439、x86 155563726 字节。",
+          "未验证：自定义标识输入框从未在真机显示；markCreated 是否真的写出标记文件未验证；resolve 修改后的账号解析行为未验证；实机安装仍为零验证。",
+          "剩余：KcuNativeOrder 的 abort 失败时玩家看不到提示；Mismatch 的 found 值仍未在界面显示。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 56,
     "versionName": "0.56.0",
     "date": "2026.10.25",
