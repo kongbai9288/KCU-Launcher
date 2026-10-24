@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.mio.ui.adapter.SpacingItemDecoration
 import com.mio.util.openLink
+import com.tungsten.fcl.activity.KcuLicenseActivity
+import com.tungsten.fcl.util.KcuUi
 import com.tungsten.fcl.R
 import com.tungsten.fcl.databinding.ItemAboutBinding
 import com.tungsten.fcl.databinding.ItemAboutDescBinding
@@ -57,11 +59,12 @@ class AboutPage(context: Context?, id: Int) : FCLPage(context, id, R.layout.page
 
 
     private fun openLinkAt(linkIndex: Int) {
-        val link = LINKS[linkIndex].link
-        if (link == null) {
-            joinQQGroup(QQ_GROUP_KEY)
-        } else {
-            openLink(context, link)
+        when (val link = LINKS[linkIndex].link) {
+            null -> joinQQGroup(QQ_GROUP_KEY)
+            LICENSE_MARK -> context.startActivity(
+                Intent(context, KcuLicenseActivity::class.java)
+            )
+            else -> openLink(context, link)
         }
     }
 
@@ -77,8 +80,12 @@ class AboutPage(context: Context?, id: Int) : FCLPage(context, id, R.layout.page
         }
     }
 
-    /** 链接行：标题资源与跳转链接（null 表示跳转 QQ 群），条目顺序即显示顺序 */
-    private data class LinkItem(val titleRes: Int, val link: String?)
+    /**
+     * 链接行：图标字符、标题、跳转链接。
+     * 图标用本地字符徽章而非网络图片，避免关于页产生任何联网请求。
+     * link 为 null 表示跳转 QQ 群，为 LICENSE_MARK 表示打开本地开源许可页。
+     */
+    private data class LinkItem(val glyph: String, val title: String, val link: String?)
 
     private class AboutAdapter(
         private val onLinkClick: (Int) -> Unit
@@ -121,7 +128,11 @@ class AboutPage(context: Context?, id: Int) : FCLPage(context, id, R.layout.page
                 holder.itemView.setOnClickListener {
                     onLinkClick(holder.bindingAdapterPosition - 1)
                 }
-                ItemAboutBinding.bind(holder.itemView).title.setText(LINKS[position - 1].titleRes)
+                val item = LINKS[position - 1]
+                val row = ItemAboutBinding.bind(holder.itemView)
+                row.title.text = item.title
+                row.icon.text = item.glyph
+                row.icon.background = KcuUi.badgeBackground()
             }
         }
 
@@ -137,13 +148,24 @@ class AboutPage(context: Context?, id: Int) : FCLPage(context, id, R.layout.page
         private const val TYPE_LINK = 1
         private const val QQ_GROUP_KEY = "9_Mnxe5x1l6L7giLuRYQyBh0iWBgCUbw"
 
+        /** 本地开源许可页的标记链接，不产生网络请求 */
+        private const val LICENSE_MARK = "kcu://licenses"
+
         private val LINKS = listOf(
-            LinkItem(R.string.about_launcher, "https://fcl-team.github.io/"),
-            LinkItem(R.string.about_developer, "https://github.com/FCL-Team"),
-            LinkItem(R.string.community_discord, "https://discord.gg/ffhvuXTwyV"),
-            LinkItem(R.string.community_qq, null),
-            LinkItem(R.string.about_sponsor, "https://afdian.com/@tungs"),
-            LinkItem(R.string.about_source, "https://github.com/FCL-Team/FoldCraftLauncher")
+            LinkItem("\u25C6", "KCU 启动器", "https://github.com/kongbai9288/KCU-Launcher"),
+            LinkItem("\u2261", "源代码仓库", "https://github.com/kongbai9288/KCU-Launcher"),
+            LinkItem("\u25CF", "QQ 交流群", null),
+
+            LinkItem("F", "Fold Craft Launcher（上游）", "https://github.com/FCL-Team/FoldCraftLauncher"),
+            LinkItem("P", "PojavLauncher", "https://github.com/PojavLauncherTeam/PojavLauncher"),
+            LinkItem("H", "HMCL", "https://github.com/HMCL-dev/HMCL"),
+            LinkItem("J", "Android-OpenJDK-Build", "https://github.com/HMCL-dev/Android-OpenJDK-Build"),
+            LinkItem("T", "Terracotta", "https://github.com/FCL-Team/Terracotta"),
+            LinkItem("S", "SDL3", "https://github.com/libsdl-org/SDL"),
+            LinkItem("L", "LWJGL", "https://github.com/LWJGL/lwjgl3"),
+            LinkItem("M", "MobileGlues", "https://github.com/MobileGL-Dev/MobileGlues"),
+
+            LinkItem("\u00A7", "开源许可", LICENSE_MARK)
         )
     }
 }
