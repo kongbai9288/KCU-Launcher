@@ -4,6 +4,7 @@
     "name": "Fold Craft Launcher",
     "spdx": "GPL-3.0",
     "note": "本项目的直接上游",
+    "licenseFile": "GPL-3.0.txt",
     "url": "https://github.com/FCL-Team/FoldCraftLauncher"
   },
   {
@@ -11,6 +12,7 @@
     "name": "PojavLauncher",
     "spdx": "LGPL-3.0",
     "note": "",
+    "licenseFile": "LGPL-3.0.txt",
     "url": "https://github.com/PojavLauncherTeam/PojavLauncher"
   },
   {
@@ -18,6 +20,7 @@
     "name": "HMCL",
     "spdx": "GPL-3.0",
     "note": "",
+    "licenseFile": "GPL-3.0.txt",
     "url": "https://github.com/HMCL-dev/HMCL"
   },
   {
@@ -25,6 +28,7 @@
     "name": "Android-OpenJDK-Build",
     "spdx": "官方仓库未声明 SPDX",
     "note": "构建脚本仓库，产物自身的许可请以 OpenJDK 官方为准",
+    "licenseFile": "",
     "url": "https://github.com/FCL-Team/Android-OpenJDK-Build"
   },
   {
@@ -32,6 +36,7 @@
     "name": "SDL3",
     "spdx": "Zlib",
     "note": "",
+    "licenseFile": "Zlib.txt",
     "url": "https://github.com/libsdl-org/SDL"
   },
   {
@@ -39,6 +44,7 @@
     "name": "LWJGL",
     "spdx": "BSD-3-Clause",
     "note": "",
+    "licenseFile": "BSD-3-Clause.txt",
     "url": "https://github.com/LWJGL/lwjgl3"
   },
   {
@@ -46,6 +52,7 @@
     "name": "MobileGlues",
     "spdx": "LGPL-2.1",
     "note": "渲染器为可替换组件，不随本应用分发",
+    "licenseFile": "LGPL-2.1.txt",
     "url": "https://github.com/MobileGL-Dev/MobileGlues"
   }
 ]
