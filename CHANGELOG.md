@@ -2238,3 +2238,57 @@ TouchPad / MenuView / ControlButton / ControlDirection / FCLInput / TouchControl
 
 run **40067932184** 全矩阵 success，5 产物：
 all 326243965 / x86_64 174872036 / **arm64 169175968** / arm 161916555 / x86 155564861 B
+
+## 0.46.0 — 2026-10-24
+
+执行者：**yuanbao**
+
+- **关于页与开源许可本地化**（v0.20.0 提的，欠了很久）
+
+### 关于页原来全在推上游
+
+6 条链接，条条指向 FCL，连**赞助都指向上游作者**。我们叫 KCU，不该这样。
+
+已重排三组：本应用 / 上游与开源组件 / 许可，**赞助入口移除**。
+
+### 图标：字符徽章，零联网
+
+沿用 KcuUi 方案，不新增 drawable、不拉远程图。
+
+图标位必须 `auto_text_tint="false"` + 白字 —— 否则 v0.22.0 那个"黑字压强调色底"的坑会再踩一次。
+
+### SPDX 全部取自官方 API，不凭印象
+
+| 项目 | SPDX |
+|---|---|
+| Fold Craft Launcher | GPL-3.0 |
+| PojavLauncher | **LGPL-3.0**（不是 GPL） |
+| HMCL | GPL-3.0 |
+| SDL3 | Zlib |
+| LWJGL | BSD-3-Clause |
+| MobileGlues | LGPL-2.1（与 v0.36 二进制证据一致） |
+
+**两个查不到的如实标注**：Android-OpenJDK-Build 官方 license 字段为空 → 标"官方仓库未声明"；Terracotta 搜不到 → **直接不列**。
+
+### 上传前拦下两个必错项
+
+1. **Kotlin 顶层函数不能 `import com.mio.util.openLink`** —— 它编译成 `AndroidUtilKt`，已改
+2. 新建 Activity **没在 Manifest 注册** → `startActivity` 直接崩
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuLicenseActivity.java` |
+| 行 | **97** |
+| 5 个不同字母 | `r o w s e` |
+| **SHA-1** | **`4ed3e64a49466f0cc9a5b2e700579fc6bef0bd6e`** |
+
+### 编译验证（PROVEN）
+
+run **40073514177** 全矩阵 success，5 产物：
+all 326251249 / x86_64 174875280 / **arm64 169178690** / arm 161918485 / x86 155568215 B
+
+### 遗留
+
+`about_desc` 仍是上游介绍文案；许可证**全文**未内置（只有 SPDX + 链接）。
