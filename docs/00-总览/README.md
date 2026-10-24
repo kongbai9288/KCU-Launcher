@@ -20,7 +20,7 @@
 
 ### PROVEN（有产物为证）
 
-- APK 持续编译通过（最新 run 40060988638，app-arm64 169175625 B）；**五个架构均已验证可构建**（arm 由 run 39981928323 attempt 2 补验）
+- APK 持续编译通过（最新 run 40065239693 **全矩阵**，5 产物：all 326244921 / x86_64 174872477 / arm64 169176091 / arm 161916596 / x86 155565566 B）
 - 包名已改为 `com.kcu.launcher`
 - 签名已接通并验签通过（`CN=kbs`，SHA-256 `d4e860232e977157c41459d7f139f9087036feb38623f07bd2c2f6575db4db4e`）
 - 公共目录根改造完成（`FCLPath`，marker 固化）
@@ -45,7 +45,8 @@
 - 导入版本显示层已接：列表副标题与主页卡片显示"未知"或探测到的真实版本；**标题仍为目录名 id**（改它会影响搜索排序）
 - CI 已加并发控制与 gradle 首次失败重试；66 条噪声 issue 已清理
 - 弹窗已改为图标徽章 + 大尺寸；小窗尺寸快照已修（TouchPad/MenuView）
-- **未做全仓排查**：其他类若也快照屏幕尺寸，小窗问题仍在
+- 屏幕尺寸快照已全仓排查并修完（TouchPad / MenuView / ControlButton / ControlDirection / FCLInput）
+- **遗留**：`GameMenu:797-801` 传给 TouchController 的尺寸仍是构造时快照，其 resize 接口未确认
 - 两个输入开关（`KCU_DP_THRESHOLD` / `KCU_MOUSE_DISGUISE`）效果未验证
 - manifest 是否真的生成、内容是否正确未确认
 - .so 双层目录同步行为未确认
