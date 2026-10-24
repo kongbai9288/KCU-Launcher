@@ -36,16 +36,16 @@ jobs:
           echo "--- git 状态 ---"
           git config user.name "yuanbao"
           git config user.email "yuanbao@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git remote set-url origin "https://x-access-token:${{ secrets.KCU_PAT }}@github.com/${{ github.repository }}.git"
           git add -A
           echo "STAGED=$(git diff --cached --name-only | wc -l)"
           echo "--- porcelain head ---"; git status --porcelain | head -8
           if git diff --cached --quiet; then
             echo "RESULT=NO_CHANGE"
           else
-            git commit -m "refactor: 包名迁移 com.tungsten.fcl*/com.mio -> com.kongbai.kculauncher* (yuanbao)"
+            git commit -q -m "refactor: 包名迁移 com.tungsten.fcl*/com.mio -> com.kongbai.kculauncher* (yuanbao)"
             echo "COMMIT_EXIT=$?"
-            git push origin "HEAD:${{ github.ref_name }}"
+            git push origin "HEAD:${{ github.ref_name }}" 2>&1
             echo "PUSH_EXIT=$? RESULT=DONE"
           fi
           echo "--- git log ---"; git log --oneline -2
