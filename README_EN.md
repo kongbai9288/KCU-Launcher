@@ -1,18 +1,17 @@
 <div align="center">
-    <img width="75" src="/FCL/src/main/res/drawable/img_app.png"></img>
+    <img width="75" src="/KCU/src/main/res/drawable/img_app.png"></img>
 </div>
 
-<h1 align="center">Fold Craft Launcher</h1>
+<h1 align="center">KCU Launcher</h1>
 
 <div align="center">
 
-[![Android CI](https://github.com/FCL-Team/FoldCraftLauncher/actions/workflows/build.yml/badge.svg)](https://github.com/FCL-Team/FoldCraftLauncher/actions/workflows/build.yml)
-![Downloads](https://img.shields.io/github/downloads/FCL-Team/FoldCraftLauncher/total?style=flat-square&color=f18cb9)
-![Release](https://img.shields.io/github/v/release/FCL-Team/FoldCraftLauncher?style=flat-square&color=f18cb9)
+[![Android CI](https://github.com/kongbai9288/KCU-Launcher/actions/workflows/build.yml/badge.svg)](https://github.com/kongbai9288/KCU-Launcher/actions/workflows/build.yml)
+![Downloads](https://img.shields.io/github/downloads/kongbai9288/KCU-Launcher/total?style=flat-square&color=f18cb9)
+![Release](https://img.shields.io/github/v/release/kongbai9288/KCU-Launcher?style=flat-square&color=f18cb9)
 
 [![Discord](https://img.shields.io/badge/Discord-red?logo=discord&logoColor=white)](https://discord.gg/ffhvuXTwyV)
 [![QQ](https://img.shields.io/badge/QQ-green)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=LwxydGEvBZJnn09sXOjkQo9tuuLcYwx5&authKey=seyY5pPUCIHMWS5FqVryq926T0G2GarSXetpxxV9DJxBVt%2FPcg1vxN%2F%2FXpsCowyk&noverify=0&group_code=762054349)
-[![Sponsor](https://img.shields.io/badge/sponsor-blue?logo=GitHub-Sponsors)](https://afdian.com/@tungs)
 
 </div>
 
@@ -20,7 +19,7 @@
 [简体中文](./README.md) | English | [Русский язык](./README_RU.md)
 
 > ✨ **Project Introduction**  
-> 「Fold Craft Launcher」 is a Minecraft: Java Edition launcher for Android platforms developed by the FCL Team. Built upon the core functionalities of [HMCL](https://github.com/HMCL-dev/HMCL) and using the [Amethyst-Android](https://github.com/AngelAuraMC/Amethyst-Android) backend, it enables users to enjoy Java Edition MC on mobile devices, supporting mod loading and operation across all versions.
+> 「KCU Launcher」 is a Minecraft: Java Edition launcher for Android, a derivative of [Fold Craft Launcher](https://github.com/FCL-Team/FoldCraftLauncher) by the FCL Team. Built upon the core functionalities of [HMCL](https://github.com/HMCL-dev/HMCL) and the PojavLauncher backend, it enables users to enjoy Java Edition MC on mobile devices, supporting mod loading and operation across all versions.
 
 ---
 
@@ -33,7 +32,7 @@
 ⚙️ **Key Highlights**  
 - Built-in multi-version Java runtimes (Java 8/17/21/25) with custom Java import support
 - Virtual mouse and customizable key mapping
-- FCL↔ZalithLauncher2 control layout conversion, importing a ZL2 layout converts it automatically
+- KCU↔ZalithLauncher2 control layout conversion, importing a ZL2 layout converts it automatically
 - Shaders support (requires VirGL/Zink/MG renderers)
 - Dynamic resource management (mods/modpacks/textures/shaders/saves)
 - Personalized theme customization (background/color schemes)
@@ -59,14 +58,14 @@ This project is licensed under **[GPL-3.0 License](https://www.gnu.org/licenses/
 
 ## 🌍 Translation
 
-We'd love your help with translations! The project's localization is managed on [Weblate](https://hosted.weblate.org/projects/foldcraftlauncher/) — no tools needed, just translate in your browser.
+We'd love your help with translations! Most string resources are inherited from upstream; upstream localization is managed on [Weblate](https://hosted.weblate.org/projects/foldcraftlauncher/) — no tools needed, just translate in your browser.
 
 ---
 
 ## 🤝 Contributions & Acknowledgements
 ### Contributors Wall
-<a href="https://github.com/FCL-Team/FoldCraftLauncher/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=FCL-Team/FoldCraftLauncher" />
+<a href="https://github.com/kongbai9288/KCU-Launcher/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=kongbai9288/KCU-Launcher" />
 </a>
 
 ### Related Projects
@@ -77,7 +76,7 @@ We'd love your help with translations! The project's localization is managed on 
 - [EasyTier](https://github.com/EasyTier/EasyTier): underlying mesh networking for LAN play
 - [Terracotta](https://github.com/burningtnt/Terracotta): LAN play solution based on EasyTier (Terracotta module JNI wrapper)
 - [TouchController](https://github.com/TouchController/TouchController): touch controller dependency
-- [NG-GL4ES](https://github.com/ShirosakiMio/NG-GL4ES): gl4es fork renderer (prebuilt aar shipped with FCL)
+- [NG-GL4ES](https://github.com/ShirosakiMio/NG-GL4ES): gl4es fork renderer (prebuilt aar shipped with KCU)
 - [FCLRendererPlugin](https://github.com/ShirosakiMio/FCLRendererPlugin): renderer plugin extension
 - [FCLDriverPlugin](https://github.com/FCL-Team/FCLDriverPlugin): driver (Turnip etc.) plugin extension
 
