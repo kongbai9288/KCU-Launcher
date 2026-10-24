@@ -481,3 +481,13 @@
 232. **检查 UI 是否被重复构建**：`KcuAgeActivity` 与 `KcuAgeGate.buildInto` 都加了标题与说明，导致渲染两遍。把 UI 构建收敛到单一方法，调用方不要再补一份。
 233. **RadioButton 用 RadioGroup.check 前必须设 id**：未设 id 时 `getId()` 返回 -1，`check(-1)` 选不中任何项，表现为"默认值在界面上没有选中态"。
 234. **连续多次 push 加 dispatch 会被 cancel-in-progress 互相取消**：批量上传文件后不要立即 dispatch，等 push 触发的构建跑完或接受被取消，重新触发一次即可。
+
+---
+
+## 37. 追加硬规则（v44，2026-10-24 13:2x）
+
+235. **"修了一处"不等于"修完"**：v0.43.0 只修 TouchPad/MenuView 并标注"未做全仓排查"，v0.44.0 排查后发现 ControlButton/ControlDirection/FCLInput 同样快照。**同类写法必须 code search 全量检索后再声称修复完成。**
+236. **一个类可能有多个构造路径**：`ControlDirection` 两个构造函数各有一处对 final 字段的赋值，只删声明和其中一处赋值会导致"对已删字段赋值"编译失败。删除前先 grep 该字段的全部赋值点。
+237. **用正则批量改标识符时必须加 `\b` 边界**：`\bscreenWidth\b` 不会误伤 `mScreenWidth` 或 `getScreenWidth`（前导为字母，不构成词边界）。
+238. **哈希取字碰撞已出现三次**（`publi` ×2、`float` ×2）：取材行若以 `public` / `float` 等常见前缀开头必然碰撞。取字行应选含特征标识符（如 `baseInfo.setXPosition`）的行。
+239. **push 触发的构建会被后续 push 取消**（cancel-in-progress），批量上传后只有最后一次能跑完。这正是"一次提交验证全矩阵"的正确方式，但也意味着前几次上传不会各自得到构建结果。
