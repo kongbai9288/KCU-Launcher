@@ -68,8 +68,8 @@ public final class KcuLaunchGate {
         ScrollView scroll = new ScrollView(context);
         android.widget.LinearLayout root = KcuUi.root(context);
         android.widget.LinearLayout card = KcuUi.card(context);
-        card.addView(KcuUi.title(context, context.getString(R.string.kcu_pick_java_title)));
-        card.addView(KcuUi.gap(context, 8));
+        card.addView(KcuUi.header(context, "\u2261", context.getString(R.string.kcu_pick_java_title)));
+        card.addView(KcuUi.gap(context, 12));
         card.addView(KcuUi.body(context, context.getString(R.string.kcu_pick_java_hint)));
         card.addView(KcuUi.gap(context, 16));
 
