@@ -147,7 +147,7 @@
 
 54. **.so 不能从公共目录直接加载**：`/sdcard` 是 noexec，`dlopen` 会报 `couldn't map ... segment 1: Permission denied`。结构必须是"公共目录存素材 + 启动时校验复制到私有目录 + `System.load` 只认私有路径"。禁止 root / 改 SELinux / hook linker 绕过。
 55. **可执行文件不能从 filesDir execve**：Android 10+ W^X，`getFilesDir()` label 是 `app_data_file`（可写不可执行），`nativeLibraryDir` 是 `exec_type`（可执行不可写）。需执行的东西只能打包进 `jniLibs/<abi>/` 命名成 `libxxx.so`，且 ELF interpreter 必须是 `/system/bin/linker64`（Bionic）。`sh` 走系统 `/system/bin/sh`，不受此限。
-56. **无障碍服务读不到游戏画面**：游戏由 `KCUBridge` 用 `Surface` + `SurfaceTexture` + EGL 渲染，不在 View 层级内，`AccessibilityNodeInfo` 树里是空的。抓屏只能走 MediaProjection + OCR。任何基于无障碍树的读屏方案一律判定为不可行，不许写。
+56. **无障碍服务读不到游戏画面**：游戏由 `FCLBridge` 用 `Surface` + `SurfaceTexture` + EGL 渲染，不在 View 层级内，`AccessibilityNodeInfo` 树里是空的。抓屏只能走 MediaProjection + OCR。任何基于无障碍树的读屏方案一律判定为不可行，不许写。
 57. **屏幕内容属敏感个人信息**：需《个人信息保护法》要求的**单独同意**，不能混进一揽子协议。实现必须包含：独立授权页、可关总开关、默认端侧不出设备、不上传不训练、隐私政策单列。`FLAG_SECURE` 黑屏不绕过。
 58. **ABI 全打（4 架构）**：x86 / x86_64 的 natives substitution 修正为 P0。任一架构目录缺失某个 .so 会导致该架构设备直接崩（64 位全有或全无规则，见 #22）。
 59. **NDK 统一 27.0.12077973**：FCL 用 27、ZL2 用 25，混用冲突。引入 ZL2 native 模块前必须验证其能在 NDK 27 下编译。
@@ -243,7 +243,7 @@
 109. **点击判定阈值不要照抄 100ms / 10px**：上游 `TouchPad` 与 `ControlButton` 用此值判定单击，对触摸过严，手指正常点击常超 100ms 导致落空。若改动建议 250ms / 16px。
 110. **`MouseMoveMode` 两种语义差别极大**：`CLICK` 是绝对定位（手指位置即光标位置），`SLIDE` 是相对位移（按下点非光标位置）。用户报"点不到位置"时应先确认是否处于 SLIDE 模式，切 CLICK 即可零改码解决。
 111. **不要为采样精度问题整体替换输入层**：输入最终过 `CallbackBridge` → `libpojavexec` 的 `input_bridge_v3.c`（native）。换 Java 层要重新对齐 native 事件协议，风险高，且目标实现同样没解决历史点问题。
-112. **指针捕获路径的历史点累加是正确写法不是 bug**：`KCUInput.handleMouse` 里累加 `getHistoricalX()` 看起来像把绝对坐标相加，但指针捕获模式下 `getX()` 语义本就是相对增量，累加正确。不要"修复"它。
+112. **指针捕获路径的历史点累加是正确写法不是 bug**：`FCLInput.handleMouse` 里累加 `getHistoricalX()` 看起来像把绝对坐标相加，但指针捕获模式下 `getX()` 语义本就是相对增量，累加正确。不要"修复"它。
 
 ---
 
@@ -260,7 +260,7 @@
 
 ## 15. 追加硬规则（v12，2026-10-19 13:5x，TouchController 实况）
 
-119. **不要重新实现上游已有的集成**：FCL 主线 1.3.4.0 已内置 TouchController（`com/kongbai/kculauncher/mio/touchcontroller/`，`libs.touchcontroller`）。自动链路：ModChecker 检测 mod → `setHasTouchController(true)` → GameMenu 创建实例。装了 mod 就生效。**动手前先搜上游是否已实现。**
+119. **不要重新实现上游已有的集成**：FCL 主线 1.3.4.0 已内置 TouchController（`com/mio/touchcontroller/`，`libs.touchcontroller`）。自动链路：ModChecker 检测 mod → `setHasTouchController(true)` → GameMenu 创建实例。装了 mod 就生效。**动手前先搜上游是否已实现。**
 120. **TouchController 走 Unix Domain Socket 不是 UDP**：环境变量是 `TOUCH_CONTROLLER_PROXY_SOCKET`（值 = socket 名），不是 `TOUCH_CONTROLLER_PROXY`（值 = 端口）。旧版文档（v0.0.9 时代）的 UDP 说法已过时。
 121. **socketName 保持 "FoldCraftLauncher" 不改**：它是本地 IPC 通道名，非用户可见品牌。改名收益为零、但可能触发 mod 侧硬编码导致断连，风险不对称。
 122. **依赖版本以官方 `properties.bzl` 为准**：TouchController 的 proxy client 版本定义在 `touchcontroller/proxy/client/properties.bzl`（当前 0.0.8），不要用 fork 里锁定的旧版本（FCL 分支是 0.0.3，主线是 0.0.5）。
@@ -271,9 +271,9 @@
 ## 16. 追加硬规则（v13，2026-10-20，包名迁移）
 
 124. **applicationId 与 namespace 可以且应当分离**：`applicationId` 决定 APK 唯一标识（用户可见、可共存、可签名），`namespace` 决定 R 文件包名。改品牌只需改 `applicationId`，不要动 `namespace`——动它就必须同步改上千个源码文件的 package 声明，否则 R 文件找不到直接编译失败。
-125. **不要全量重命名源码包名**：本仓库含 "com.kongbai.kculauncher" 的文件约 1200 个（GitHub code search 实测 total_count=1196）。收益为零（内部实现用户不可见），风险极高（漏一个 import 就崩）。
-126. **改 applicationId 时必须同步检查硬编码 authority**：`${applicationId}` 会自动跟随，但**硬编码字符串不会**。本例中 debug 变体的 `file_browser_provider` resValue 是硬编码的 `"com.kongbai.kculauncher.debug.provider"`，必须手动改。
-127. **`com.kongbai.kculauncher.core` / `com.kongbai.kculauncher.library` 是独立包不是子包**：Manifest 里 4 个硬编码类引用指向它们。因为源码包名整体不动，这些引用保持有效，不要"顺手改"。
+125. **不要全量重命名源码包名**：本仓库含 "com.tungsten.fcl" 的文件约 1200 个（GitHub code search 实测 total_count=1196）。收益为零（内部实现用户不可见），风险极高（漏一个 import 就崩）。
+126. **改 applicationId 时必须同步检查硬编码 authority**：`${applicationId}` 会自动跟随，但**硬编码字符串不会**。本例中 debug 变体的 `file_browser_provider` resValue 是硬编码的 `"com.tungsten.fcl.debug.provider"`，必须手动改。
+127. **`com.tungsten.fclcore` / `com.tungsten.fcllibrary` 是独立包不是子包**：Manifest 里 4 个硬编码类引用指向它们。因为源码包名整体不动，这些引用保持有效，不要"顺手改"。
 128. **CI 排队超过 10 分钟不等于失败，也不等于成功**：必须看到 conclusion 才能下结论。排队期间只能报 NOT PROVEN，不能凭"已提交"宣称成功。
 
 ---
@@ -334,7 +334,7 @@
 155. **不要用"目录是否存在"作为持久状态的判定依据**：目录存在性可被外部改变（本项目的迁移工具就会创建目录），一旦变化状态即漂移。需要持久决策时写入 marker 文件固化，之后不再看存在性。
 156. **误判后要能自愈**：若首次决策发生在权限未授予时（`File.exists()` 静默返回 false），marker 写入失败必须**不阻断**，让下次启动重新判定。把失败固化下来等于把误判钉死。
 157. **判定"有数据"要看实际内容目录而非外壳**：判定 FCL 有无数据应看 `FCL/.minecraft`，不是 `FCL/`——`log`/`control` 等目录可能单独残留形成空壳目录导致误判。
-158. **静态字段初始化期可能早于权限授予与 Context 可用**：`Config.java:149` 在字段初始化期引用 `KCUPath.SHARED_COMMON_DIR`，导致 `KCUPath` 静态初始化早于 `loadPaths(context)`。凡在此阶段做的判定都要假设"可能无权限"。
+158. **静态字段初始化期可能早于权限授予与 Context 可用**：`Config.java:149` 在字段初始化期引用 `FCLPath.SHARED_COMMON_DIR`，导致 `FCLPath` 静态初始化早于 `loadPaths(context)`。凡在此阶段做的判定都要假设"可能无权限"。
 159. **根路径是整个公共目录体系的地基**：manifest 契约、自定义 .so 双层目录、迁移工具对齐全部依赖它。地基会漂移则上层设计全部不可靠，必须先固化再往上盖。
 
 ---
@@ -397,7 +397,7 @@
 ## 28. 追加硬规则（v34，2026-10-23 00:1x）
 
 190. **不要用 ElementTree 写回 Android 布局 XML**：它会把属性**追加**而非替换，导致同一元素出现两个互斥约束（如同时有 `layout_constraintTop_toTopOf` 与 `layout_constraintTop_toBottomOf`），并压成单行、可能改写命名空间前缀。**删除元素可用 ET，新增/修改属性一律手工重写整个文件**，改完校验关键属性的出现次数。这是本项目第二次踩（v0.28.0 是前缀丢失）。
-191. **覆写生命周期方法前必须确认父类有该方法**：`KCUCommonUI` 没有 `onStart`/`onStop`（源码注释明示"替代原 onStart/onStop 生命周期"），加 `@Override` 会直接编译失败。页面恢复刷新应挂 `OnAttachStateChangeListener.onViewAttachedToWindow`。
+191. **覆写生命周期方法前必须确认父类有该方法**：`FCLCommonUI` 没有 `onStart`/`onStop`（源码注释明示"替代原 onStart/onStop 生命周期"），加 `@Override` 会直接编译失败。页面恢复刷新应挂 `OnAttachStateChangeListener.onViewAttachedToWindow`。
 192. **优先用静态无参 API 而非实例属性**：`Profiles.getSelectedVersion()`（静态）比 `Profiles.getSelectedProfile().selectedVersion`（依赖 getter 形式）稳，后者在 Kotlin/Java 互调时形式可能不同。
 193. **取哈希回执时注意取字碰撞**：以 `public` 开头的方法声明行，前 5 个不同字母恒为 p/u/b/l/i，会与所有同类行碰撞。取字行应选含特征标识符的那一行。
 
@@ -486,7 +486,7 @@
 
 ## 37. 追加硬规则（v44，2026-10-24 13:2x）
 
-235. **"修了一处"不等于"修完"**：v0.43.0 只修 TouchPad/MenuView 并标注"未做全仓排查"，v0.44.0 排查后发现 ControlButton/ControlDirection/KCUInput 同样快照。**同类写法必须 code search 全量检索后再声称修复完成。**
+235. **"修了一处"不等于"修完"**：v0.43.0 只修 TouchPad/MenuView 并标注"未做全仓排查"，v0.44.0 排查后发现 ControlButton/ControlDirection/FCLInput 同样快照。**同类写法必须 code search 全量检索后再声称修复完成。**
 236. **一个类可能有多个构造路径**：`ControlDirection` 两个构造函数各有一处对 final 字段的赋值，只删声明和其中一处赋值会导致"对已删字段赋值"编译失败。删除前先 grep 该字段的全部赋值点。
 237. **用正则批量改标识符时必须加 `\b` 边界**：`\bscreenWidth\b` 不会误伤 `mScreenWidth` 或 `getScreenWidth`（前导为字母，不构成词边界）。
 238. **哈希取字碰撞已出现三次**（`publi` ×2、`float` ×2）：取材行若以 `public` / `float` 等常见前缀开头必然碰撞。取字行应选含特征标识符（如 `baseInfo.setXPosition`）的行。
@@ -505,7 +505,7 @@
 
 ## 39. 追加硬规则（v46，2026-10-24 15:2x）
 
-244. **从 Java 调 Kotlin 顶层函数要用 `XxxKt` 类名**：`AndroidUtil.kt` 里的 `fun openLink` 编译为 `AndroidUtilKt.openLink`，`import com.kongbai.kculauncher.mio.util.openLink` 不存在。同类：`AndroidUtilKt.getScreenWidth()`。
+244. **从 Java 调 Kotlin 顶层函数要用 `XxxKt` 类名**：`AndroidUtil.kt` 里的 `fun openLink` 编译为 `AndroidUtilKt.openLink`，`import com.mio.util.openLink` 不存在。同类：`AndroidUtilKt.getScreenWidth()`。
 245. **新建 Activity 必须同步注册 Manifest**：未注册时 `startActivity` 直接崩溃，编译期发现不了。新增 Activity 后第一步就是改 Manifest 并设 `exported`。
 246. **图标位要显式关掉主题 tint**：`app:auto_text_tint="false"` + 白色文字，否则自动 tint 成黑字压在强调色底上看不见（与 v0.22.0 同源）。
 247. **许可证标识必须查官方 API 的 `license.spdx_id`，不能凭印象**：实测 PojavLauncher 是 LGPL-3.0 而非 GPL-3.0，凭印象就会写错。查不到的如实标注"未声明"或干脆不列，不要猜。
@@ -521,3 +521,15 @@
 252. **多语言文案改动要如实说明覆盖范围**：本轮只改了 `values/` 与 `values-zh/`，其余 10 个语言仍是旧文案。不能因为"改了"就声称完成。
 253. **哈希取字规则修正（规则 193 的补丁）**：取字从**行首**开始，行首是 `public`/`private`/`protected`/`float`/`package` 就必然碰撞，与行尾有无特征标识符无关。选材时应跳过 `package`/`import`/`@Override`/注释行，并排除历史已用值。
 254. **新增 assets 文件后要在上传前 stat 校验**：清单里引用的每个文件名都要确认真实存在，否则运行时才暴露。
+
+---
+
+## 41. 追加硬规则（v48，2026-10-24 18:3x）
+
+255. **改 Java 包名必须同步改 JNI**：`FindClass("com/tungsten/...")` 的字符串要与 Java 类全限定名逐字一致。只改 Java 能编译过，装上去一启动就崩。
+256. **`\b` 词边界匹配不到 `FCLTextView_auto_tint`**：下划线是单词字符，R 字段引用不构成词边界。做标识符全局替换时要单独处理，否则与 `attrs.xml` 的 `declare-styleable` 改名后对不上。
+257. **Kotlin 字符串模板 `${X.y}` 内的标识符也要参与重命名**：把整个字符串当字面量保护会漏掉模板内的代码标识符，导致 import 改了而模板内没改。
+258. **改类名的同时必须改文件名**：public 类名与文件名不一致直接编译失败。内容替换脚本之后要有独立的重命名步骤。
+259. **`FCL_VERSION_CODE` 不能改**：它是 MobileGlues 的启动器白名单环境变量名，改了渲染器判定 unsupported，忽略玩家全部配置。
+260. **默认 `GITHUB_TOKEN` 无法 push `.github/workflows/*`**：报 `refusing to allow a GitHub App to create or update workflow without workflows permission`。需要 PAT secret，或把 workflow 文件排除出提交。
+261. **包目录在模块目录之下**（如 `FCL/src/main/java/com/...`），迁移脚本不能假定固定前缀，要遍历查找以 `java`/`kotlin` 结尾的目录。
