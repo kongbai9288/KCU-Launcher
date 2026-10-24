@@ -1,6 +1,36 @@
 [
   {
     "type": "release",
+    "versionCode": 43,
+    "versionName": "0.43.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "用户反馈三点：弹窗与填写栏非常离谱没有审美，应当大且有图标示意；小窗要么禁用要么能正常横屏小窗且倾向后者；从小窗回到正常页面会出毛病，包括布局位置不对、扩大后按钮很小、操作页面偏移、MC 无法操控。",
+          "小窗根因追溯：尺寸来源链为 AndroidUtilKt.getScreenWidth 到 DisplayUtil.currentDisplayMetrics.widthPixels，而 getDisplayMetrics 在多窗口下取 activity.resources.displayMetrics 即窗口尺寸、否则取 getRealMetrics 即屏幕真实尺寸。JVMActivity 继承 FCLActivity，其 onConfigurationChanged 会调 refreshDisplayMetrics，所以刷新机制本身是存在的。",
+          "但两处把尺寸快照成了不可变值：TouchPad.java 原 final 字段在构造时赋值；MenuView.kt 原 private val 等于 getScreenWidth 在构造时求值。使用点分别是 TouchPad 的指针 clamp 行 286 与 287、左半屏判定行 318，以及 MenuView 的菜单定位行 97 与 98、拖拽 clamp 行 173 至 179。",
+          "症状对应关系：构造后切全屏数值不更新，指针被 clamp 在旧小窗尺寸内导致 MC 只能操控左上角一小块；菜单定位与拖拽范围按旧尺寸算导致布局位置不对与按钮偏小。三条症状与用户描述一一对应，属上游固有缺陷而非本项目引入。",
+          "修法：TouchPad 删除 final 字段与构造赋值改为使用时直接调用 AndroidUtilKt.getScreenWidth；MenuView 的 val 改为 get 使每次访问重新计算。JVMActivity 已有的两层 OnGlobalLayoutListener 负责强制分辨率 letterbox，本轮未动。",
+          "弹窗观感改造：KcuUi 新增 iconBadge 圆形强调色底加白色符号四十六 dp、header 图标加大标题横排、fieldRow 前置图标加输入区横排、editOf 从输入行取出 EditText。图标用基础字符而非图片资源，选用 down 井号 菱形 恒等 感叹号 等基础符号，保证风格统一、不新增 drawable、避免设备字体 emoji 化。",
+          "加大项：卡片内边距十六 dp 改二十二 dp；标题字号十九 sp 改二十一 sp；输入框内边距十二 dp 改十四 dp；输入框最小高度新增四十六 dp。",
+          "顺带修掉两个真实 UI bug：其一是年龄页标题与说明重复渲染两遍，原因是 KcuAgeActivity 加了一次而 KcuAgeGate.buildInto 又加了一次，删除 Activity 里的重复；其二是 RadioButton 未设 id 导致 group.check 传负一选不中任何项，默认十八岁在界面上没有选中态，补 rb.setId(i+1)。",
+          "会导致的错误逐条处置：TouchPad 删字段后残留引用（grep 确认零处）；MenuView 改 getter 后语义变化（val 改 get 对外用法不变）；每次触摸调 getScreenWidth 的开销（只读一个 int 字段可忽略）；currentDisplayMetrics 未初始化（lateinit 且 FCLActivity.onCreate 已 init）；fieldRow 取 child 越界（容器固定两个子元素）；图标字符设备不支持显示豆腐块（选用基础符号但需实机确认）；删重复标题后页面变空（buildInto 内仍构建标题与说明）。",
+          "对用户使用逻辑的影响：小窗切全屏或全屏切小窗时指针范围与菜单定位按新尺寸重算；年龄页标题只出现一次且默认十八岁有选中态；导入页改为图标标题加两个带图标输入框。",
+          "对未来的影响：其他类若也快照尺寸问题仍在且本轮未做全仓排查；图标字符方案依赖设备字体若要更稳妥可换矢量 drawable；禁用小窗开关未做因为用户倾向修复方案。",
+          "对代码逻辑的影响：TouchPad 少两个字段开销极小；MenuView 属性改 getter 开销极小；KcuUi 新增四个方法未改已有签名保持向后兼容。",
+          "审核 pass。哈希回执：TouchPad.java 第 287 行 float targetX 等于 Math.max(0, Math.min(AndroidUtilKt.getScreenWidth(), initialX + deltaX))，5 字母 float，SHA-1 685e80366130387cb75c055248326976d16fdf8d。取材行即 MC 无法操控那个症状的直接修复点。",
+          "CI 事故：上传七个文件共七次 push 加一次 dispatch，v0.42.0 新加的 cancel-in-progress 把它们互相取消，首次查询结果为 cancelled，重新 dispatch 后成功。这是 v0.42.0 已记录已知限制的首次实际触发。",
+          "冒烟测试：Actions run 40060988638 以 dispatch arch 等于 arm64 成功，产物 app-arm64 169175625 字节。",
+          "未验证项：小窗切换行为需实机、图标字符显示效果需实机。实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 42,
     "versionName": "0.42.0",
     "date": "2026.10.24",
