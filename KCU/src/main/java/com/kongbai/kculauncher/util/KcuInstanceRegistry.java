@@ -28,6 +28,15 @@ public final class KcuInstanceRegistry {
     private static final String FILE_NAME = "registry.json";
     private static final int SCHEMA_VERSION = 1;
 
+    /**
+     * 实例目录下的创建标记。
+     *
+     * 注册表是缓存，可能被清理或丢失；标记随实例目录本身走。
+     * 启动时先查注册表，未登记再查标记文件 —— 一次 stat，开销极低，
+     * 比每次启动都扫描存档目录便宜得多。
+     */
+    private static final String MARKER_FILE = ".kcu_instance";
+
     /** 该实例由本启动器创建 */
     public static final String OWNER_KCU = "kcu";
     /** 该实例首次出现时不在注册表中，来源不明 */
@@ -100,22 +109,54 @@ public final class KcuInstanceRegistry {
     }
 
     /**
-     * 判定实例归属。
+     * 判定实例归属，未登记时按创建标记补登记并写回注册表。
      *
-     * 已登记的直接返回记录值；未登记的不写入任何东西 —— 归属判定发生在启动流程中，
-     * 此时擅自"顺手登记"，等于把来源不明的实例当成自己创建的，与保守原则冲突。
+     * 这是启动路径上的性能设计：由本启动器创建的实例只需查一次注册表即可跳过
+     * 存档扫描；只有来源不明的实例才会走耗时的目录遍历。
+     * 补登记的依据是实例目录内由本启动器写入的标记文件，不是猜测。
      */
     public static String query(String dir) {
         if (dir == null || dir.isEmpty()) {
             return OWNER_UNKNOWN;
         }
-        Entry entry = readAll().get(dir);
-        return entry == null ? OWNER_UNKNOWN : entry.owner;
+        Map<String, Entry> map = readAll();
+        Entry entry = map.get(dir);
+        if (entry != null) {
+            return entry.owner;
+        }
+        if (!new File(dir, MARKER_FILE).isFile()) {
+            return OWNER_UNKNOWN;
+        }
+        Entry fresh = new Entry();
+        fresh.owner = OWNER_KCU;
+        fresh.createdAt = System.currentTimeMillis();
+        fresh.lastSeen = System.currentTimeMillis();
+        map.put(dir, fresh);
+        write(map);
+        return OWNER_KCU;
     }
 
-    /** 登记一个由本启动器创建的实例 */
-    public static void register(String dir, String version) {
+    /**
+     * 标记一个由本启动器创建的实例：写实例目录内的标记文件并登记到注册表。
+     *
+     * 标记文件先写：注册表只是缓存，标记才是随实例走的依据。
+     * 标记写失败会连带跳过登记，避免注册表里出现没有依据的记录。
+     */
+    public static void markCreated(String dir, String version) {
         if (dir == null || dir.isEmpty()) {
+            return;
+        }
+        File instance = new File(dir);
+        try {
+            if (!instance.isDirectory()) {
+                instance.mkdirs();
+            }
+            File marker = new File(instance, MARKER_FILE);
+            if (!marker.isFile()) {
+                marker.createNewFile();
+            }
+        } catch (Throwable ignored) {
+            // 标记写不进去（多为权限问题）时不登记，下次启动会重新尝试
             return;
         }
         Map<String, Entry> map = readAll();
