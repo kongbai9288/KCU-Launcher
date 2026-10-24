@@ -50,10 +50,12 @@ jobs:
           set -e
           git config user.name "yuanbao"
           git config user.email "yuanbao@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
           git add -A
+          echo "STAGED=$(git diff --cached --name-only | wc -l)"
           if git diff --cached --quiet; then
             echo "无改动，跳过提交"
           else
-            git commit -m "refactor: 包名迁移 com.tungsten.fcl*/com.mio -> com.kongbai.kculauncher*，模块与项目名去 FCL 化 (yuanbao)"
-            git push
+            git commit -m "refactor: 包名迁移 com.tungsten.fcl*/com.mio -> com.kongbai.kculauncher*，模块与项目名去 FCL 化 (yuanbao)" 2>&1 | tail -5
+            git push origin HEAD:${{ github.ref_name }} 2>&1 | tail -10
           fi
