@@ -53,6 +53,13 @@ object Profiles {
     fun addProfile(profile: Profile) {
         registerProfileSave(profile)
         profiles.add(profile)
+        // 标记实例由本启动器创建：启动路径据此跳过存档扫描。
+        // 只在新建时标（init 加载已有实例不走这里），迁移来的实例不会被误标
+        runCatching {
+            com.kongbai.kculauncher.util.KcuInstanceRegistry.markCreated(
+                profile.gameDir.absolutePath, profile.selectedVersion
+            )
+        }
         onProfilesChanged()
     }
 
