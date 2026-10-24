@@ -62,8 +62,6 @@ public class ControlButton extends AppCompatButton implements CustomView {
     private final GameMenu menu;
     private Path boundaryPath;
     private final Paint boundaryPaint;
-    private final int screenWidth;
-    private final int screenHeight;
     private int cursorMode;
 
     private BooleanProperty visibilityProperty;
@@ -149,8 +147,6 @@ public class ControlButton extends AppCompatButton implements CustomView {
         selectedPaint.setStrokeWidth(4);
         handlePaint.setAntiAlias(true);
         handlePaint.setStyle(Paint.Style.FILL);
-        screenWidth = AndroidUtilKt.getScreenWidth();
-        screenHeight = AndroidUtilKt.getScreenHeight();
 
         notifyListener = invalidate -> Schedulers.androidUIThread().execute(() -> {
             notifyData();
@@ -213,11 +209,11 @@ public class ControlButton extends AppCompatButton implements CustomView {
             height = ConvertUtils.dip2px(getContext(), data.getBaseInfo().getAbsoluteHeight());
         } else {
             width = data.getBaseInfo().getPercentageWidth().getReference() == BaseInfoData.PercentageSize.Reference.SCREEN_WIDTH ?
-                    (int) (screenWidth * (data.getBaseInfo().getPercentageWidth().getSize() / 1000f)) :
-                    (int) (screenHeight * (data.getBaseInfo().getPercentageWidth().getSize() / 1000f));
+                    (int) (AndroidUtilKt.getScreenWidth() * (data.getBaseInfo().getPercentageWidth().getSize() / 1000f)) :
+                    (int) (AndroidUtilKt.getScreenHeight() * (data.getBaseInfo().getPercentageWidth().getSize() / 1000f));
             height = data.getBaseInfo().getPercentageHeight().getReference() == BaseInfoData.PercentageSize.Reference.SCREEN_WIDTH ?
-                    (int) (screenWidth * (data.getBaseInfo().getPercentageHeight().getSize() / 1000f)) :
-                    (int) (screenHeight * (data.getBaseInfo().getPercentageHeight().getSize() / 1000f));
+                    (int) (AndroidUtilKt.getScreenWidth() * (data.getBaseInfo().getPercentageHeight().getSize() / 1000f)) :
+                    (int) (AndroidUtilKt.getScreenHeight() * (data.getBaseInfo().getPercentageHeight().getSize() / 1000f));
         }
         ViewGroup.LayoutParams layoutParams = getLayoutParams();
         layoutParams.width = width;
@@ -228,8 +224,8 @@ public class ControlButton extends AppCompatButton implements CustomView {
         post(() -> {
             int x;
             int y;
-            x = Math.round((screenWidth - width) * (data.getBaseInfo().getXPosition() / 1000f));
-            y = Math.round((screenHeight - height) * (data.getBaseInfo().getYPosition() / 1000f));
+            x = Math.round((AndroidUtilKt.getScreenWidth() - width) * (data.getBaseInfo().getXPosition() / 1000f));
+            y = Math.round((AndroidUtilKt.getScreenHeight() - height) * (data.getBaseInfo().getYPosition() / 1000f));
             setX(x);
             setY(y);
         });
@@ -442,8 +438,8 @@ public class ControlButton extends AppCompatButton implements CustomView {
                             menu.getViewManager().selectView(this);
                         }
                     } else {
-                        getData().getBaseInfo().setXPosition(Math.round((1000 * getX()) / (screenWidth - getMeasuredWidth())));
-                        getData().getBaseInfo().setYPosition(Math.round((1000 * getY()) / (screenHeight - getMeasuredHeight())));
+                        getData().getBaseInfo().setXPosition(Math.round((1000 * getX()) / (AndroidUtilKt.getScreenWidth() - getMeasuredWidth())));
+                        getData().getBaseInfo().setYPosition(Math.round((1000 * getY()) / (AndroidUtilKt.getScreenHeight() - getMeasuredHeight())));
                         menu.getViewManager().saveController();
                     }
                     menu.getViewManager().showEditBar(this);
@@ -566,8 +562,8 @@ public class ControlButton extends AppCompatButton implements CustomView {
         int width = getWidth();
         int height = getHeight();
         // 位置夹到屏内后与尺寸一起写回，保证刷新后视觉位置不变
-        float x = Math.max(0, Math.min(screenWidth - width, getX()));
-        float y = Math.max(0, Math.min(screenHeight - height, getY()));
+        float x = Math.max(0, Math.min(AndroidUtilKt.getScreenWidth() - width, getX()));
+        float y = Math.max(0, Math.min(AndroidUtilKt.getScreenHeight() - height, getY()));
         setX(x);
         setY(y);
         if (baseInfo.getSizeType() == BaseInfoData.SizeType.ABSOLUTE) {
@@ -578,14 +574,14 @@ public class ControlButton extends AppCompatButton implements CustomView {
             baseInfo.getPercentageWidth().setSize(pixelToPermille(width, baseInfo.getPercentageWidth().getReference()));
             baseInfo.getPercentageHeight().setSize(pixelToPermille(height, baseInfo.getPercentageHeight().getReference()));
         }
-        baseInfo.setXPosition(Math.round((1000 * x) / (screenWidth - width)));
-        baseInfo.setYPosition(Math.round((1000 * y) / (screenHeight - height)));
+        baseInfo.setXPosition(Math.round((1000 * x) / (AndroidUtilKt.getScreenWidth() - width)));
+        baseInfo.setYPosition(Math.round((1000 * y) / (AndroidUtilKt.getScreenHeight() - height)));
         notifyData();
         menu.getViewManager().saveController();
     }
 
     private int pixelToPermille(int pixel, BaseInfoData.PercentageSize.Reference reference) {
-        int base = reference == BaseInfoData.PercentageSize.Reference.SCREEN_WIDTH ? screenWidth : screenHeight;
+        int base = reference == BaseInfoData.PercentageSize.Reference.SCREEN_WIDTH ? AndroidUtilKt.getScreenWidth() : AndroidUtilKt.getScreenHeight();
         return Math.max(1, Math.min(1000, Math.round(pixel * 1000f / base)));
     }
 
@@ -611,8 +607,8 @@ public class ControlButton extends AppCompatButton implements CustomView {
             float deltaX = (event.getX() - downX) * (float) menu.getMenuSetting().getMouseSensitivity();
             float deltaY = (event.getY() - downY) * (float) menu.getMenuSetting().getMouseSensitivity();
             if (menu.getCursorMode() == FCLBridge.CursorEnabled) {
-                float targetX = Math.max(0, Math.min(screenWidth, initialX + deltaX));
-                float targetY = Math.max(0, Math.min(screenHeight, initialY + deltaY));
+                float targetX = Math.max(0, Math.min(AndroidUtilKt.getScreenWidth(), initialX + deltaX));
+                float targetY = Math.max(0, Math.min(AndroidUtilKt.getScreenHeight(), initialY + deltaY));
                 menu.getInput().setPointerId(getData().getId());
                 menu.getInput().setPointer(targetX, targetY, getData().getId());
             } else if (menu.getBridge() != null) {
@@ -634,8 +630,8 @@ public class ControlButton extends AppCompatButton implements CustomView {
         if (getData().getEvent().isMovable()) {
             int deltaX = (int) (event.getX() - downX);
             int deltaY = (int) (event.getY() - downY);
-            float targetX = Math.max(0, Math.min(screenWidth - getWidth(), getX() + deltaX));
-            float targetY = Math.max(0, Math.min(screenHeight - getHeight(), getY() + deltaY));
+            float targetX = Math.max(0, Math.min(AndroidUtilKt.getScreenWidth() - getWidth(), getX() + deltaX));
+            float targetY = Math.max(0, Math.min(AndroidUtilKt.getScreenHeight() - getHeight(), getY() + deltaY));
             setX(targetX);
             setY(targetY);
         }
