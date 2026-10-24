@@ -3,8 +3,8 @@
  * 原文件位于 OpenJDK java.base（https://github.com/openjdk/jdk17u/blob/master/src/java.base/share/native/libjava/jni_util.h），
  * 动态链接构建下只需这几个空实现宏。
  */
-#ifndef FCL_JSOUND_JNI_UTIL_H
-#define FCL_JSOUND_JNI_UTIL_H
+#ifndef KCU_JSOUND_JNI_UTIL_H
+#define KCU_JSOUND_JNI_UTIL_H
 
 #define CHECK_NULL(x) do { if ((x) == NULL) return; } while (0)
 

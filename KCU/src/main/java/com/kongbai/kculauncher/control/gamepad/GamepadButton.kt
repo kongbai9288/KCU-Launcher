@@ -10,7 +10,7 @@ class GamepadButton : GamepadEmulatedButton() {
             if (!isDown) return
             isToggled = !isToggled
             keycodes.forEach {
-                Gamepad.getFCLInput()?.sendKeyEvent(it, isToggled)
+                Gamepad.getKCUInput()?.sendKeyEvent(it, isToggled)
             }
             return
         }
@@ -20,7 +20,7 @@ class GamepadButton : GamepadEmulatedButton() {
     override fun resetButtonState() {
         if(!isDown && isToggleable) {
             keycodes.forEach {
-                Gamepad.getFCLInput()?.sendKeyEvent(it, false)
+                Gamepad.getKCUInput()?.sendKeyEvent(it, false)
             }
             isToggled = false;
         } else {

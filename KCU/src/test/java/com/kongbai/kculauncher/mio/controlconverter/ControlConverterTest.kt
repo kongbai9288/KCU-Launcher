@@ -56,9 +56,9 @@ class ControlConverterTest {
     fun colorConversions() {
         // ZL 颜色是有符号 Long、ARGB 在高 32 位（Long.MIN_VALUE = 50% 黑，不是透明）
         assertEquals(-2147483648L, CcUtils.zlColorToFcl(CcJson.inum(Long.MIN_VALUE), 0))
-        // 0xFFFFFFFF_00000000（高 32 位 ARGB 白色）-> FCL int -1
+        // 0xFFFFFFFF_00000000（高 32 位 ARGB 白色）-> KCU int -1
         assertEquals(-1L, CcUtils.zlColorToFcl(CcJson.inum(-4294967296L), 0))
-        // FCL int ARGB -> ZL：值左移 32 位
+        // KCU int ARGB -> ZL：值左移 32 位
         assertEquals(-4294967296L, CcUtils.fclArgbToZlColor(-1L))
         assertEquals(Long.MIN_VALUE, CcUtils.fclArgbToZlColor(-2147483648L))
     }
@@ -72,12 +72,12 @@ class ControlConverterTest {
         assertEquals(194L, CcUtils.convertKeyToFcl(ctx, "GLFW_KEY_F25", false))
         // 旧版键名别名归一化
         assertEquals(17L, CcUtils.convertKeyToFcl(ctx, "key.keyboard.w", false))
-        // FCL 键码 121 (KPCOMMA) -> 小数点
+        // KCU 键码 121 (KPCOMMA) -> 小数点
         assertEquals(
             CcUtils.ZlEvent("key", "GLFW_KEY_KP_DECIMAL"),
             CcUtils.convertKeyToZl(ctx, 121, false),
         )
-        // FCL 键码 0 (RESERVED) -> UNKNOWN(240)
+        // KCU 键码 0 (RESERVED) -> UNKNOWN(240)
         assertEquals(
             CcUtils.ZlEvent("key", "GLFW_KEY_UNKNOWN"),
             CcUtils.convertKeyToZl(ctx, 0, false),
@@ -91,7 +91,7 @@ class ControlConverterTest {
 
     // --- 金样对拍 ---
 
-    /** FCL -> ZL：与 Go 基准（确定性 ID、lossless=true）语义一致。 */
+    /** KCU -> ZL：与 Go 基准（确定性 ID、lossless=true）语义一致。 */
     @Test
     fun goldenFclToZlSemanticMatch() {
         val input = CcJson.loadJson(loadRes("test_fcl_layout.json"))
@@ -101,7 +101,7 @@ class ControlConverterTest {
         assertTrue("semantic diff at $diff", diff == null)
     }
 
-    /** FCL -> ZL：与 Go 基准逐字节一致（还原 HTML 转义后）。 */
+    /** KCU -> ZL：与 Go 基准逐字节一致（还原 HTML 转义后）。 */
     @Test
     fun goldenFclToZlByteMatch() {
         val input = CcJson.loadJson(loadRes("test_fcl_layout.json"))
@@ -114,7 +114,7 @@ class ControlConverterTest {
     }
 
     /**
-     * FCL -> ZL -> FCL：lossless 元数据还原。
+     * KCU -> ZL -> KCU：lossless 元数据还原。
      *
      * cc.py 语义：按钮/分组/方向控件/事件/几何完整还原；样式名会重命名为
      * "ZL {原名} {uuid前6}"（按钮的 style 引用同步改写，功能一致）。
@@ -197,7 +197,7 @@ class ControlConverterTest {
         return sortById(out)
     }
 
-    /** 真实 ZL2 布局（ZalithLauncher2 assets/default_layout.json，v10）可转换为合法 FCL 并回转。 */
+    /** 真实 ZL2 布局（ZalithLauncher2 assets/default_layout.json，v10）可转换为合法 KCU 并回转。 */
     @Test
     fun zl2DefaultLayoutConvertsAndBack() {
         val zlInput = CcJson.loadJson(loadRes("zl2_default_layout.json"))

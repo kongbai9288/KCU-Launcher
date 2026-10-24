@@ -111,7 +111,7 @@ public class McbbsModpackLocalInstallTask extends Task<Void> {
             Version patch = new Version(PATCH_NAME).setLibraries(manifest.getLibraries());
             dependencies.add(repository.saveAsync(version.addPatch(patch)));
         } else if (mcbbsPatch.isPresent()) {
-            // This mcbbs modpack was installed by FCL.
+            // This mcbbs modpack was installed by KCU.
             Version patch = mcbbsPatch.get().setLibraries(manifest.getLibraries());
             dependencies.add(repository.saveAsync(version.addPatch(patch)));
         } else {

@@ -1,5 +1,5 @@
 //
-// utils.c — 自 Amethyst-Android 迁移，JNI 类名已调整为 FCL 的 KCUBridge
+// utils.c — 自 Amethyst-Android 迁移，JNI 类名已调整为 KCU 的 KCUBridge
 // （android.view.Surface 与 android.os.OpenJDKNativeRegister 为运行时类挂钩，保留原类名）
 //
 #include <jni.h>
@@ -103,7 +103,7 @@ bool notifyLauncher(JNIEnv *dvm_env, int type, int actions[], int len) {
             pojav_environ->method_notifyLauncher, type, actionArray);
 }
 
-JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_setupBridgeSurfaceAWT(JNIEnv *env, jclass clazz, jlong surface) {
+JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_setupBridgeSurfaceAWT(JNIEnv *env, jclass clazz, jlong surface) {
     shared_awt_surface = surface;
 }
 
@@ -126,7 +126,7 @@ JNIEXPORT jint JNICALL Java_android_os_OpenJDKNativeRegister_nativeRegisterNativ
     return (jint) result;
 }
 
-JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_setLdLibraryPath(JNIEnv *env, jobject jobject, jstring ldLibraryPath) {
+JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_setLdLibraryPath(JNIEnv *env, jobject jobject, jstring ldLibraryPath) {
     android_update_LD_LIBRARY_PATH_t android_update_LD_LIBRARY_PATH;
 
     void *libdl_handle = dlopen("libdl.so", RTLD_LAZY);
@@ -134,7 +134,7 @@ JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_se
     if (updateLdLibPath == NULL) {
         updateLdLibPath = dlsym(libdl_handle, "__loader_android_update_LD_LIBRARY_PATH");
         char *error = dlerror();
-        __android_log_print(error == NULL ? ANDROID_LOG_INFO : ANDROID_LOG_ERROR, "FCL", "loading %s (error = %s)", "libdl.so", error);
+        __android_log_print(error == NULL ? ANDROID_LOG_INFO : ANDROID_LOG_ERROR, "KCU", "loading %s (error = %s)", "libdl.so", error);
     }
 
     android_update_LD_LIBRARY_PATH = (android_update_LD_LIBRARY_PATH_t) updateLdLibPath;
@@ -143,7 +143,7 @@ JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_se
     (*env)->ReleaseStringUTFChars(env, ldLibraryPath, ldLibPathUtf);
 }
 
-JNIEXPORT jlong JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_dlopen(JNIEnv* env, jobject jobject, jstring name) {
+JNIEXPORT jlong JNICALL Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_dlopen(JNIEnv* env, jobject jobject, jstring name) {
     dlerror();
 
     char const* lib_name = (*env)->GetStringUTFChars(env, name, 0);
@@ -159,16 +159,16 @@ JNIEXPORT jlong JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_d
 
     char * error = dlerror();
     if(error != NULL && handle == NULL) {
-        FCL_LOG("DLOPEN: loading %s (error = %s)", lib_name, error);
+        KCU_LOG("DLOPEN: loading %s (error = %s)", lib_name, error);
     } else {
-        FCL_LOG("DLOPEN: loading %s", lib_name);
+        KCU_LOG("DLOPEN: loading %s", lib_name);
     }
 
     (*env)->ReleaseStringUTFChars(env, name, lib_name);
     return (jlong) handle;
 }
 
-JNIEXPORT jint JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_chdir(JNIEnv* env, jobject jobject, jstring path) {
+JNIEXPORT jint JNICALL Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_chdir(JNIEnv* env, jobject jobject, jstring path) {
     char const* dir = (*env)->GetStringUTFChars(env, path, 0);
 
     int b = chdir(dir);
@@ -177,7 +177,7 @@ JNIEXPORT jint JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_ch
     return b;
 }
 
-JNIEXPORT jint JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_executeBinary(JNIEnv *env, jclass clazz, jobjectArray cmdArgs) {
+JNIEXPORT jint JNICALL Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_executeBinary(JNIEnv *env, jclass clazz, jobjectArray cmdArgs) {
     jclass exception_cls = (*env)->FindClass(env, "java/lang/UnsatisfiedLinkError");
     jstring execFile = (*env)->GetObjectArrayElement(env, cmdArgs, 0);
 
@@ -188,7 +188,7 @@ JNIEXPORT jint JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_ex
 
     char *exec_error_c = dlerror();
     if (exec_error_c != NULL) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "Error: %s", exec_error_c);
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "Error: %s", exec_error_c);
         (*env)->ThrowNew(env, exception_cls, exec_error_c);
         return -1;
     }
@@ -198,7 +198,7 @@ JNIEXPORT jint JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_ex
 
     exec_error_c = dlerror();
     if (exec_error_c != NULL) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "Error: %s", exec_error_c);
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "Error: %s", exec_error_c);
         (*env)->ThrowNew(env, exception_cls, exec_error_c);
         return -1;
     }
@@ -212,7 +212,7 @@ JNIEXPORT jint JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_ex
 
 // WARNING: This does not release the global ref, this can be a memory leak
 JNIEXPORT jstring JNICALL
-Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_jObjectToString(JNIEnv *env, jclass clazz, jobject object) {
+Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_jObjectToString(JNIEnv *env, jclass clazz, jobject object) {
     if (object == NULL) {
         return NULL;
     }
@@ -229,7 +229,7 @@ Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_jObjectToString(JNIEnv *e
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_getJavaVMPointer(JNIEnv *env, jclass clazz) {
+Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_getJavaVMPointer(JNIEnv *env, jclass clazz) {
     JavaVM *vm;
     if ((*env)->GetJavaVM(env, &vm) != JNI_OK) {
         return -1;

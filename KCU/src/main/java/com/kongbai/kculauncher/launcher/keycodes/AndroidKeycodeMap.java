@@ -7,20 +7,20 @@ import java.util.Arrays;
 public class AndroidKeycodeMap {
 
     private static final int[] ANDROID_KEYCODES = new int[99];
-    private static final int[] FCL_KEYCODES = new int[99];
+    private static final int[] KCU_KEYCODES = new int[99];
 
     private static int count = 0;
 
     private static void add(int androidKeycode, int fclKeycode) {
         ANDROID_KEYCODES[count] = androidKeycode;
-        FCL_KEYCODES[count] = fclKeycode;
+        KCU_KEYCODES[count] = fclKeycode;
         count++;
     }
 
     public static int convertKeycode(int androidKeycode) {
         int index = Arrays.binarySearch(ANDROID_KEYCODES, androidKeycode);
         if (index >= 0)
-            return FCL_KEYCODES[index];
+            return KCU_KEYCODES[index];
         return KCUKeycodes.KEY_UNKNOWN;
     }
 

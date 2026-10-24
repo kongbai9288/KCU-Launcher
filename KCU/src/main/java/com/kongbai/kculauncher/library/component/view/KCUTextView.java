@@ -56,9 +56,9 @@ public class KCUTextView extends AppCompatTextView {
     public KCUTextView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUTextView);
-        autoTint = typedArray.getBoolean(R.styleable.FCLTextView_auto_text_tint, false);
-        autoBackgroundTint = typedArray.getBoolean(R.styleable.FCLTextView_auto_text_background_tint, false);
-        useThemeColor = typedArray.getBoolean(R.styleable.FCLTextView_use_theme_color, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCUTextView_auto_text_tint, false);
+        autoBackgroundTint = typedArray.getBoolean(R.styleable.KCUTextView_auto_text_background_tint, false);
+        useThemeColor = typedArray.getBoolean(R.styleable.KCUTextView_use_theme_color, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }
@@ -66,9 +66,9 @@ public class KCUTextView extends AppCompatTextView {
     public KCUTextView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUTextView);
-        autoTint = typedArray.getBoolean(R.styleable.FCLTextView_auto_text_tint, false);
-        autoBackgroundTint = typedArray.getBoolean(R.styleable.FCLTextView_auto_text_background_tint, false);
-        useThemeColor = typedArray.getBoolean(R.styleable.FCLTextView_use_theme_color, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCUTextView_auto_text_tint, false);
+        autoBackgroundTint = typedArray.getBoolean(R.styleable.KCUTextView_auto_text_background_tint, false);
+        useThemeColor = typedArray.getBoolean(R.styleable.KCUTextView_use_theme_color, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }

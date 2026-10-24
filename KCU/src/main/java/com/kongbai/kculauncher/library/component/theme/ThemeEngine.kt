@@ -113,7 +113,7 @@ object ThemeEngine {
         notifyThemeChanged()
     }
 
-    /** 亮暗判断：FCL 自身主题模式（0 跟随系统 / 1 强制亮 / 2 强制暗）优先于 uiMode */
+    /** 亮暗判断：KCU 自身主题模式（0 跟随系统 / 1 强制亮 / 2 强制暗）优先于 uiMode */
     @JvmStatic
     fun isNightMode(context: Context): Boolean {
         val themeMode =

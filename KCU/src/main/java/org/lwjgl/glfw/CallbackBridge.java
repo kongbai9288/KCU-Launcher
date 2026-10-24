@@ -405,7 +405,7 @@ public class CallbackBridge {
         }
     }
 
-    public static void setFCLBridge(KCUBridge fclBridge) {
+    public static void setKCUBridge(KCUBridge fclBridge) {
         CallbackBridge.fclBridge = fclBridge;
     }
 

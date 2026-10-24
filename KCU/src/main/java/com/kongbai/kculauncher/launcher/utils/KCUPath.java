@@ -57,8 +57,8 @@ public class KCUPath {
         if (new File(legacy, KCU_ROOT_MARKER).exists()) {
             return legacy.getAbsolutePath();
         }
-        // 首次决策：仅当 FCL 下确有游戏数据时沿用，避免空壳目录抢占
-        // 判定 .minecraft 而非 FCL 本身，因为 log/control 等目录可能单独残留
+        // 首次决策：仅当 KCU 下确有游戏数据时沿用，避免空壳目录抢占
+        // 判定 .minecraft 而非 KCU 本身，因为 log/control 等目录可能单独残留
         boolean legacyHasData = new File(legacy, ".minecraft").exists();
         File chosen = legacyHasData ? legacy : kcu;
         try {

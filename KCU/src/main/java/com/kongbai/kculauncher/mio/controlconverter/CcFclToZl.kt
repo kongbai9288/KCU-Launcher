@@ -5,7 +5,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 
 /**
- * FCL -> ZL2 主流程（对应 cc.py fcl_to_zl / normalize_zl_layout）。
+ * KCU -> ZL2 主流程（对应 cc.py fcl_to_zl / normalize_zl_layout）。
  *
  * 默认调用参数与原 Go JNI 一致：includeDirections=false, strict=false,
  * aspect=16/9, lossless=true, absoluteAsPercentage=false。
@@ -13,7 +13,7 @@ import com.google.gson.JsonObject
  */
 object CcFclToZl {
 
-    /** 排序键：把 ZL 按钮几何换算回 FCL 面积占比（cc.py fcl_to_zl 内联逻辑）。 */
+    /** 排序键：把 ZL 按钮几何换算回 KCU 面积占比（cc.py fcl_to_zl 内联逻辑）。 */
     fun zlButtonAreaRatio(button: JsonObject, aspect: Double): Double {
         val pos = button.optObj("position") ?: JsonObject()
         val buttonSize = button.optObj("buttonSize") ?: JsonObject()

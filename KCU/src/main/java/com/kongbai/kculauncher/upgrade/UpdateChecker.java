@@ -47,8 +47,8 @@ public class UpdateChecker {
      */
     /**
      * 上游更新源已停用。
-     * 原实现向 FCL 官方仓库（GitHub raw / Gitee）拉取版本表。KCU 版本号与 FCL 不同源，
-     * 直接比较会让用户被提示去下载 FCL 的 APK，属错误行为。
+     * 原实现向 KCU 官方仓库（GitHub raw / Gitee）拉取版本表。KCU 版本号与 KCU 不同源，
+     * 直接比较会让用户被提示去下载 KCU 的 APK，属错误行为。
      * KCU 尚未建立自有更新源（产物目前仅为 Actions artifacts，无稳定下载直链），故此处不联网。
      */
     public Task<?> showCurrentChangelog(Context context) {

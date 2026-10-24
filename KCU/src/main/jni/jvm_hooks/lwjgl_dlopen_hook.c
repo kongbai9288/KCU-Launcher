@@ -26,11 +26,11 @@ static jlong ndlopen_bugfix(__attribute__((unused)) JNIEnv *env,
 
     // Oveeride vulkan loading to let us load vulkan ourselves
     if(strstr(filename, "libvulkan.so") == filename) {
-        FCL_LOG("LWJGL linkerhook: replacing load for libvulkan.so with custom driver");
+        KCU_LOG("LWJGL linkerhook: replacing load for libvulkan.so with custom driver");
         return (jlong) maybe_load_vulkan();
     }
 
-    // FCL 特有：插件渲染器（如 VirGL）通过 RENDERER_HANDLE 环境变量直接返回已加载的库句柄
+    // KCU 特有：插件渲染器（如 VirGL）通过 RENDERER_HANDLE 环境变量直接返回已加载的库句柄
     if (getenv("RENDERER_HANDLE") != NULL && strstr(filename,"plugin")) {
         return (jlong) strtol(getenv("RENDERER_HANDLE"), NULL, 10);
     }
@@ -50,10 +50,10 @@ static jlong ndlopen_bugfix(__attribute__((unused)) JNIEnv *env,
  * Install the LWJGL dlopen hook. This allows us to mitigate linker bugs and add custom library overrides.
  */
 void installLwjglDlopenHook(JNIEnv *env) {
-    FCL_LOG("Installing LWJGL dlopen() hook");
+    KCU_LOG("Installing LWJGL dlopen() hook");
     jclass dynamicLinkLoader = (*env)->FindClass(env, "org/lwjgl/system/linux/DynamicLinkLoader");
     if(dynamicLinkLoader == NULL) {
-        FCL_LOG("Failed to find the target class");
+        KCU_LOG("Failed to find the target class");
         (*env)->ExceptionClear(env);
         return;
     }
@@ -61,7 +61,7 @@ void installLwjglDlopenHook(JNIEnv *env) {
             {"ndlopen", "(JI)J", &ndlopen_bugfix}
     };
     if((*env)->RegisterNatives(env, dynamicLinkLoader, ndlopenMethod, 1) != 0) {
-        FCL_LOG("Failed to register the hooked method");
+        KCU_LOG("Failed to register the hooked method");
         (*env)->ExceptionClear(env);
     }
 }

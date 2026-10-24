@@ -27,7 +27,7 @@ static jbyteArray stringToBytes(JNIEnv *env, const char* string) {
 static void replaceLibPathInEnvBlock(JNIEnv *env, jbyteArray* envBlock, jint* envc, const char* directory) {
     static bool env_block_replacement_warning = false;
     if(*envBlock != NULL && !env_block_replacement_warning) {
-        FCL_LOG("exec_hooks WARN: replaceLibPathInEnvBlock does not preserve original env. Please notify PojavLauncherTeam if you need that feature");
+        KCU_LOG("exec_hooks WARN: replaceLibPathInEnvBlock does not preserve original env. Please notify PojavLauncherTeam if you need that feature");
         env_block_replacement_warning = true;
     }
     char envStr[1024];
@@ -82,7 +82,7 @@ void hookExec(JNIEnv *env) {
         hookClass = (*env)->FindClass(env, "java/lang/UNIXProcess");
     }
     if (hookClass == NULL) {
-        FCL_LOG("Failed to find the target class for forkAndExec");
+        KCU_LOG("Failed to find the target class for forkAndExec");
         (*env)->ExceptionClear(env);
         return;
     }
@@ -90,9 +90,9 @@ void hookExec(JNIEnv *env) {
             {"forkAndExec", "(I[B[B[BI[BI[B[IZ)I", (void *) &hooked_ProcessImpl_forkAndExec}
     };
     if ((*env)->RegisterNatives(env, hookClass, methods, 1) != 0) {
-        FCL_LOG("Failed to register the hooked forkAndExec method");
+        KCU_LOG("Failed to register the hooked forkAndExec method");
         (*env)->ExceptionClear(env);
         return;
     }
-    FCL_LOG("Registered forkAndExec");
+    KCU_LOG("Registered forkAndExec");
 }

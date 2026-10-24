@@ -214,7 +214,7 @@ class ControllerManagePage(context: Context, id: Int) :
             // 拷贝/ZL2 识别转换/完整解析都在后台执行，回调本身在主线程，大文件导入不能阻塞主线程（ANR）
             Task.supplyAsync {
                 var content = FileUtils.readText(files[0].toFile(activity, File(KCUPath.CACHE_DIR)))
-                // 导入时自动识别 ZalithLauncher2 布局，先转换为 FCL 格式再导入
+                // 导入时自动识别 ZalithLauncher2 布局，先转换为 KCU 格式再导入
                 var convertedFromZl2 = false
                 if (LayoutConverter.isZl2Layout(content)) {
                     val input = File(KCUPath.CACHE_DIR, "import_zl2_" + System.currentTimeMillis() + ".json")
@@ -294,7 +294,7 @@ class ControllerManagePage(context: Context, id: Int) :
         }
     }
 
-    /** 直接分享原始 FCL 控制布局 JSON 文件 */
+    /** 直接分享原始 KCU 控制布局 JSON 文件 */
     private fun shareDirect() {
         val file = File(KCUPath.CONTROLLER_DIR, selectedController!!.fileName)
         shareFile(file, R.string.control_share, getMimeType(file.absolutePath))
@@ -310,7 +310,7 @@ class ControllerManagePage(context: Context, id: Int) :
         dialog.show()
         val controller = selectedController!!
         val input = File(KCUPath.CONTROLLER_DIR, controller.fileName)
-        // 输出到公共目录 FCL/share/，便于文件管理器定位
+        // 输出到公共目录 KCU/share/，便于文件管理器定位
         val output = File(KCUPath.SHARE_DIR, controller.id + "_zl2.json")
         output.delete()
         Task.supplyAsync {

@@ -96,7 +96,7 @@ public class JVMActivity extends KCUActivity implements TextureView.SurfaceTextu
     private int lastLetterboxWidth = -1;
     private int lastLetterboxHeight = -1;
 
-    public static void setFCLBridge(KCUBridge fclBridge, MenuType menuType) {
+    public static void setKCUBridge(KCUBridge fclBridge, MenuType menuType) {
         JVMActivity.fclBridge = fclBridge;
         JVMActivity.menuType = menuType;
     }

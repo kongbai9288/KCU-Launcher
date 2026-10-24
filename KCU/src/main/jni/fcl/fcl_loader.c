@@ -21,7 +21,7 @@ static volatile jmethodID log_method;
 static JavaVM *log_pipe_jvm;
 static int fclFd[2];
 static pthread_t logger;
-static jobject object_FCLBridge;
+static jobject object_KCUBridge;
 
 void correctUtfBytes(char *bytes) {
     char three = 0;
@@ -87,7 +87,7 @@ static void *logger_thread() {
         memset(buffer, '\0', sizeof(buffer));
         _s = read(fclFd[0], buffer, sizeof(buffer) - 1);
         if (_s < 0) {
-            __android_log_print(ANDROID_LOG_ERROR, "FCL", "Failed to read log!");
+            __android_log_print(ANDROID_LOG_ERROR, "KCU", "Failed to read log!");
             close(fclFd[0]);
             close(fclFd[1]);
             (*vm)->DetachCurrentThread(vm);
@@ -101,35 +101,35 @@ static void *logger_thread() {
             //fix "input is not valid Modified UTF-8" caused by NewStringUTF
             correctUtfBytes(buffer);
             str = (*env)->NewStringUTF(env, buffer);
-            (*env)->CallVoidMethod(env, object_FCLBridge, log_method, str);
+            (*env)->CallVoidMethod(env, object_KCUBridge, log_method, str);
             (*env)->DeleteLocalRef(env, str);
         }
     }
 }
 
 JNIEXPORT jint JNICALL
-Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_redirectStdio(JNIEnv *env, jobject jobject,
+Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_redirectStdio(JNIEnv *env, jobject jobject,
                                                             jstring path) {
     setvbuf(stdout, 0, _IOLBF, 0);
     setvbuf(stderr, 0, _IONBF, 0);
-    object_FCLBridge = (*env)->NewGlobalRef(env, jobject);
+    object_KCUBridge = (*env)->NewGlobalRef(env, jobject);
     if (pipe(fclFd) < 0) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "Failed to create log pipe!");
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "Failed to create log pipe!");
         return 1;
     }
     if (dup2(fclFd[1], STDOUT_FILENO) != STDOUT_FILENO ||
         dup2(fclFd[1], STDERR_FILENO) != STDERR_FILENO) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "failed to redirect stdio!");
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "failed to redirect stdio!");
         return 2;
     }
     close(fclFd[1]);
     jclass bridge = (*env)->FindClass(env, "com/kongbai/kculauncher/launcher/bridge/KCUBridge");
     log_method = (*env)->GetMethodID(env, bridge, "receiveLog", "(Ljava/lang/String;)V");
     if (!log_method) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "Failed to find receive method!");
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "Failed to find receive method!");
         return 4;
     }
-    FCL_LOG("Log pipe ready.");
+    KCU_LOG("Log pipe ready.");
     (*env)->GetJavaVM(env, &log_pipe_jvm);
     int result = pthread_create(&logger, 0, logger_thread, 0);
     if (result != 0) {
@@ -140,7 +140,7 @@ Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_redirectStdio(JNIEnv *env
 }
 
 JNIEXPORT void JNICALL
-Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_setenv(JNIEnv *env, jobject jobject, jstring str1,
+Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_setenv(JNIEnv *env, jobject jobject, jstring str1,
                                                      jstring str2) {
     char const *name = (*env)->GetStringUTFChars(env, str1, 0);
     char const *value = (*env)->GetStringUTFChars(env, str2, 0);
@@ -188,7 +188,7 @@ _Noreturn void nominal_exit(int code) {
 }
 
 JNIEXPORT void JNICALL
-Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_setupExitTrap(JNIEnv *env, jobject jobject1,
+Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_setupExitTrap(JNIEnv *env, jobject jobject1,
                                                             jobject bridge) {
     exitTrap_bridge = (*env)->NewGlobalRef(env, bridge);
     (*env)->GetJavaVM(env, &exitTrap_jvm);

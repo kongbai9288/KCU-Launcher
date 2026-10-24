@@ -130,18 +130,18 @@ void gl_swap_surface(gl_render_window_t *bundle) {
     int32_t nativeWindowWidth = ANativeWindow_getWidth(pojav_environ->pojavWindow);
     int32_t nativeWindowHeight = ANativeWindow_getHeight(pojav_environ->pojavWindow);
     if ((nativeWindowWidth > 0) || (nativeWindowHeight > 0)) {
-        FCL_LOG("Native surface dimensions (%d x %d)",
+        KCU_LOG("Native surface dimensions (%d x %d)",
                 nativeWindowWidth, nativeWindowHeight);
         if (bundle->nativeSurface != NULL) {
             ANativeWindow_release(bundle->nativeSurface);
         }
         if (bundle->surface != NULL) eglDestroySurface_p(g_EglDisplay, bundle->surface);
     } else {
-        FCL_LOG("Native surface dimensions (%d x %d) are invalid! Assuming android has already released window.\n",
+        KCU_LOG("Native surface dimensions (%d x %d) are invalid! Assuming android has already released window.\n",
                 nativeWindowWidth, nativeWindowHeight);
     }
     if (bundle->newNativeSurface != NULL) {
-        FCL_LOG("Switching to new native surface");
+        KCU_LOG("Switching to new native surface");
         bundle->nativeSurface = bundle->newNativeSurface;
         bundle->newNativeSurface = NULL;
         ANativeWindow_acquire(bundle->nativeSurface);

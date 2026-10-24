@@ -147,8 +147,8 @@ public class KCUTabLayout extends TabLayout {
     public KCUTabLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUTabLayout);
-        followTheme = typedArray.getBoolean(R.styleable.FCLTabLayout_follow_theme, false);
-        autoTextTint = typedArray.getBoolean(R.styleable.FCLTabLayout_auto_text_tint, false);
+        followTheme = typedArray.getBoolean(R.styleable.KCUTabLayout_follow_theme, false);
+        autoTextTint = typedArray.getBoolean(R.styleable.KCUTabLayout_auto_text_tint, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }
@@ -156,8 +156,8 @@ public class KCUTabLayout extends TabLayout {
     public KCUTabLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUTabLayout);
-        followTheme = typedArray.getBoolean(R.styleable.FCLTabLayout_follow_theme, false);
-        autoTextTint = typedArray.getBoolean(R.styleable.FCLTabLayout_auto_text_tint, false);
+        followTheme = typedArray.getBoolean(R.styleable.KCUTabLayout_follow_theme, false);
+        autoTextTint = typedArray.getBoolean(R.styleable.KCUTabLayout_auto_text_tint, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }

@@ -8,7 +8,7 @@
     <color name="right_menu_color">#5CF1EFE8</color>
     <color name="icon_background_color">#FFFFFF</color>
     <color name="primary_text">#2C2C2A</color>
-    <!-- 原 FCLLibrary 模块颜色（模块已并入 FCL） -->
+    <!-- 原 KCULibrary 模块颜色（模块已并入 KCU） -->
     <color name="dialog_background">#FAF8F2</color>
     <color name="kcu_ink">#2C2C2A</color>
     <color name="kcu_ink_2">#55534C</color>

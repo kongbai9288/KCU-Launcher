@@ -35,8 +35,8 @@
         <item name="android:color">#FFF</item>
     </style>
 
-    <!-- 原 FCLLibrary 模块样式（模块已并入 FCL） -->
-    <style name="FCLCrashButton">
+    <!-- 原 KCULibrary 模块样式（模块已并入 KCU） -->
+    <style name="KCUCrashButton">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginStart">10dp</item>
@@ -45,7 +45,7 @@
         <item name="ripple">true</item>
     </style>
 
-    <style name="FCLCrashTitle">
+    <style name="KCUCrashTitle">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:background">@android:color/white</item>
@@ -54,19 +54,19 @@
         <item name="auto_text_tint">true</item>
     </style>
 
-    <style name="FCLCrashErrorText">
+    <style name="KCUCrashErrorText">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:padding">10dp</item>
     </style>
 
-    <style name="FCLCrashSplitLine">
+    <style name="KCUCrashSplitLine">
         <item name="android:layout_width">1dp</item>
         <item name="android:layout_height">0dp</item>
         <item name="android:background">@android:color/darker_gray</item>
     </style>
 
-    <style name="FCLCrashSidebarTitle">
+    <style name="KCUCrashSidebarTitle">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginStart">10dp</item>
@@ -75,7 +75,7 @@
         <item name="android:singleLine">true</item>
     </style>
 
-    <style name="FCLCrashSidebarHint">
+    <style name="KCUCrashSidebarHint">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
     </style>

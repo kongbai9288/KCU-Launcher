@@ -65,7 +65,7 @@ public class KCUCheckBox extends AppCompatCheckBox {
     public KCUCheckBox(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUCheckBox);
-        autoTint = typedArray.getBoolean(R.styleable.FCLCheckBox_auto_hint_tint, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCUCheckBox_auto_hint_tint, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }
@@ -73,7 +73,7 @@ public class KCUCheckBox extends AppCompatCheckBox {
     public KCUCheckBox(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUCheckBox);
-        autoTint = typedArray.getBoolean(R.styleable.FCLCheckBox_auto_hint_tint, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCUCheckBox_auto_hint_tint, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }

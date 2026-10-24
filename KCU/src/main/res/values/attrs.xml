@@ -10,7 +10,7 @@
         <attr name="save_key" format="string"/>
     </declare-styleable>
 
-    <!-- 原 FCLLibrary 模块属性（模块已并入 FCL） -->
+    <!-- 原 KCULibrary 模块属性（模块已并入 KCU） -->
     <attr name="use_theme_color" format="boolean" />
     <attr name="auto_tint" format="boolean" />
     <attr name="text_use_theme_color" format="boolean" />
@@ -49,7 +49,7 @@
     <declare-styleable name="KCUCheckBox">
         <attr name="auto_hint_tint" format="boolean" />
     </declare-styleable>
-    <declare-styleable name="FCLTitleView">
+    <declare-styleable name="KCUTitleView">
         <attr name="title" format="string" localization="suggested" />
     </declare-styleable>
     <declare-styleable name="KCUTabLayout">

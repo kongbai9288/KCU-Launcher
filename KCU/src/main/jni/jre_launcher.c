@@ -141,10 +141,10 @@ static jint launchJVM(int margc, char **margv) {
     // Boardwalk: silence
     // LOGD("JLI lib = %x", (int)libjli);
     if (NULL == libjli) {
-        FCL_INTERNAL_LOG("JLI lib = NULL: %s", dlerror());
+        KCU_INTERNAL_LOG("JLI lib = NULL: %s", dlerror());
         return -1;
     }
-    FCL_LOG("Found JLI lib");
+    KCU_LOG("Found JLI lib");
 
     JLI_Launch_func *pJLI_Launch =
             (JLI_Launch_func *) dlsym(libjli, "JLI_Launch");
@@ -152,11 +152,11 @@ static jint launchJVM(int margc, char **margv) {
     // LOGD("JLI_Launch = 0x%x", *(int*)&pJLI_Launch);
 
     if (NULL == pJLI_Launch) {
-        FCL_INTERNAL_LOG("JLI_Launch = NULL");
+        KCU_INTERNAL_LOG("JLI_Launch = NULL");
         return -1;
     }
 
-    FCL_LOG("Calling JLI_Launch");
+    KCU_LOG("Calling JLI_Launch");
 
     return pJLI_Launch(margc, margv,
                        0, NULL, // sizeof(const_jargs) / sizeof(char *), const_jargs,
@@ -186,7 +186,7 @@ Java_com_oracle_dalvik_VMLauncher_launchJVM(JNIEnv *env, jclass clazz, jobjectAr
     jint res = 0;
 
     if (argsArray == NULL) {
-        FCL_LOG("Args array null, returning");
+        KCU_LOG("Args array null, returning");
         //handle error
         return 0;
     }
@@ -194,14 +194,14 @@ Java_com_oracle_dalvik_VMLauncher_launchJVM(JNIEnv *env, jclass clazz, jobjectAr
     int argc = (*env)->GetArrayLength(env, argsArray);
     char **argv = convert_to_char_array(env, argsArray);
 
-    FCL_LOG("Done processing args");
+    KCU_LOG("Done processing args");
 
     res = launchJVM(argc, argv);
 
-    FCL_LOG("Going to free args");
+    KCU_LOG("Going to free args");
     free_char_array(env, argsArray, argv);
 
-    FCL_LOG("Free done");
+    KCU_LOG("Free done");
 
     return res;
 }

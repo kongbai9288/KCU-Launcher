@@ -40,7 +40,7 @@ class Gamepad(val context: Context, val fclInput: KCUInput) : GamepadHandler {
         private var fclInput: WeakReference<KCUInput>? = null
 
         @JvmStatic
-        fun getFCLInput(): KCUInput? {
+        fun getKCUInput(): KCUInput? {
             return fclInput?.get()
         }
 

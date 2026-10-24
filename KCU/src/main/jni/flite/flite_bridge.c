@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LOG_TAG "FCL-flite"
+#define LOG_TAG "KCU-flite"
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 
 static const char *BRIDGE_CLASS = "com.kongbai.kculauncher.mio.flite.FliteTts";

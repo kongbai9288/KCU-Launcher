@@ -138,7 +138,7 @@ object CcDirection {
         return events
     }
 
-    /** FCL 方向控件 -> ZL 原生摇杆（JoystickData），editorVersion 12。 */
+    /** KCU 方向控件 -> ZL 原生摇杆（JoystickData），editorVersion 12。 */
     fun directionToZlJoystick(
         ctx: CcContext,
         direction: JsonObject,
@@ -153,10 +153,10 @@ object CcDirection {
         val absolute = CcJson.toStringV(base.opt("sizeType")) == "ABSOLUTE"
         val viewSize = directionViewSize(base, aspect)
 
-        val upKeys = directionEventKeycodes(event, "upKeycode", CcConstants.GLFW_TO_FCL.getValue("GLFW_KEY_W"))
-        val downKeys = directionEventKeycodes(event, "downKeycode", CcConstants.GLFW_TO_FCL.getValue("GLFW_KEY_S"))
-        val leftKeys = directionEventKeycodes(event, "leftKeycode", CcConstants.GLFW_TO_FCL.getValue("GLFW_KEY_A"))
-        val rightKeys = directionEventKeycodes(event, "rightKeycode", CcConstants.GLFW_TO_FCL.getValue("GLFW_KEY_D"))
+        val upKeys = directionEventKeycodes(event, "upKeycode", CcConstants.GLFW_TO_KCU.getValue("GLFW_KEY_W"))
+        val downKeys = directionEventKeycodes(event, "downKeycode", CcConstants.GLFW_TO_KCU.getValue("GLFW_KEY_S"))
+        val leftKeys = directionEventKeycodes(event, "leftKeycode", CcConstants.GLFW_TO_KCU.getValue("GLFW_KEY_A"))
+        val rightKeys = directionEventKeycodes(event, "rightKeycode", CcConstants.GLFW_TO_KCU.getValue("GLFW_KEY_D"))
         val up = zlKeyEventsFromKeycodes(ctx, upKeys, strict)
         val down = zlKeyEventsFromKeycodes(ctx, downKeys, strict)
         val left = zlKeyEventsFromKeycodes(ctx, leftKeys, strict)
@@ -175,7 +175,7 @@ object CcDirection {
             sizeDp = 200.0
         }
 
-        // FCL 的 deadZone/lockThreshold 为百分比 ×100 存储（0–90 / 0–100），ZL 为 0–1 比例
+        // KCU 的 deadZone/lockThreshold 为百分比 ×100 存储（0–90 / 0–100），ZL 为 0–1 比例
         val deadZoneRatio = CcUtils.clampRange(event.opt("deadZone"), 0.0, 90.0, 0.0) / 100.0
         val lockThreshold = CcUtils.clampRange(event.opt("lockThreshold"), 0.0, 100.0, 30.0) / 100.0
 
@@ -220,9 +220,9 @@ object CcDirection {
         return arr
     }
 
-    // --- ZL 摇杆 -> FCL 方向控件（反向） ---
+    // --- ZL 摇杆 -> KCU 方向控件（反向） ---
 
-    /** ZL JoystickData -> FCL ControlDirection 的 baseInfo。 */
+    /** ZL JoystickData -> KCU ControlDirection 的 baseInfo。 */
     fun makeDirectionBaseInfoFromZl(joystick: JsonObject, layerVisibility: String?): JsonObject {
         val sizeTypeRaw = joystick.opt("sizeType")?.let { CcJson.toStringV(it) }
         val sizeType = (sizeTypeRaw ?: "Percentage").lowercase()
@@ -254,7 +254,7 @@ object CcDirection {
         )
     }
 
-    /** ZL JoystickData -> FCL ControlDirection（ROCKER）。 */
+    /** ZL JoystickData -> KCU ControlDirection（ROCKER）。 */
     fun zlJoystickToFclDirection(
         ctx: CcContext,
         joystick: JsonObject,
@@ -294,7 +294,7 @@ object CcDirection {
                 "downKeycode" to arrOfNums(keycodesFor("south")),
                 "leftKeycode" to arrOfNums(keycodesFor("west")),
                 "rightKeycode" to arrOfNums(keycodesFor("east")),
-                // ZL 为 0–1 比例，FCL 为百分比 ×100；缺失时按 ZL 默认值
+                // ZL 为 0–1 比例，KCU 为百分比 ×100；缺失时按 ZL 默认值
                 "deadZone" to CcJson.inum(CcUtils.pyRound(CcUtils.clampRange(joystick.opt("deadZoneRatio"), 0.0, 0.9, 0.5) * 100)),
                 "canLock" to CcJson.bool(CcUtils.pyTruthy(joystick.opt("canLock"))),
                 "lockThreshold" to CcJson.inum(CcUtils.pyRound(CcUtils.clampRange(joystick.opt("lockThreshold"), 0.0, 1.0, 0.3) * 100)),
@@ -313,7 +313,7 @@ object CcDirection {
         return arr
     }
 
-    /** meta 恢复路径：用当前摇杆几何覆写原 FCL direction 的共享字段。 */
+    /** meta 恢复路径：用当前摇杆几何覆写原 KCU direction 的共享字段。 */
     fun overlaySharedFieldsFclDirection(
         ctx: CcContext,
         original: JsonObject,

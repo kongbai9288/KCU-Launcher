@@ -50,7 +50,7 @@ public class KCURadioButton extends AppCompatRadioButton {
     public KCURadioButton(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCURadioButton);
-        textWithThemeColor = typedArray.getBoolean(R.styleable.FCLRadioButton_text_use_theme_color, false);
+        textWithThemeColor = typedArray.getBoolean(R.styleable.KCURadioButton_text_use_theme_color, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }
@@ -58,7 +58,7 @@ public class KCURadioButton extends AppCompatRadioButton {
     public KCURadioButton(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCURadioButton);
-        textWithThemeColor = typedArray.getBoolean(R.styleable.FCLRadioButton_text_use_theme_color, false);
+        textWithThemeColor = typedArray.getBoolean(R.styleable.KCURadioButton_text_use_theme_color, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }

@@ -36,9 +36,9 @@ public class KCUPreciseSeekBar extends RelativeLayout {
     public KCUPreciseSeekBar(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUPreciseSeekBar);
-        boolean autoTint = typedArray.getBoolean(R.styleable.FCLPreciseSeekBar_auto_button_tint, false);
-        int min = typedArray.getInteger(R.styleable.FCLPreciseSeekBar_min_value, 0);
-        int max = typedArray.getInteger(R.styleable.FCLPreciseSeekBar_max_value, 100);
+        boolean autoTint = typedArray.getBoolean(R.styleable.KCUPreciseSeekBar_auto_button_tint, false);
+        int min = typedArray.getInteger(R.styleable.KCUPreciseSeekBar_min_value, 0);
+        int max = typedArray.getInteger(R.styleable.KCUPreciseSeekBar_max_value, 100);
         typedArray.recycle();
         init(autoTint, min, max);
     }
@@ -46,9 +46,9 @@ public class KCUPreciseSeekBar extends RelativeLayout {
     public KCUPreciseSeekBar(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUPreciseSeekBar);
-        boolean autoTint = typedArray.getBoolean(R.styleable.FCLPreciseSeekBar_auto_button_tint, false);
-        int min = typedArray.getInteger(R.styleable.FCLPreciseSeekBar_min_value, 0);
-        int max = typedArray.getInteger(R.styleable.FCLPreciseSeekBar_max_value, 100);
+        boolean autoTint = typedArray.getBoolean(R.styleable.KCUPreciseSeekBar_auto_button_tint, false);
+        int min = typedArray.getInteger(R.styleable.KCUPreciseSeekBar_min_value, 0);
+        int max = typedArray.getInteger(R.styleable.KCUPreciseSeekBar_max_value, 100);
         typedArray.recycle();
         init(autoTint, min, max);
     }

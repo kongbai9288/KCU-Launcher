@@ -35,7 +35,7 @@ public class KCULinearLayout extends LinearLayoutCompat {
     public KCULinearLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCULinearLayout);
-        autoTint = typedArray.getBoolean(R.styleable.FCLLinearLayout_auto_linear_background_tint, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCULinearLayout_auto_linear_background_tint, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }
@@ -43,7 +43,7 @@ public class KCULinearLayout extends LinearLayoutCompat {
     public KCULinearLayout(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCULinearLayout);
-        autoTint = typedArray.getBoolean(R.styleable.FCLLinearLayout_auto_linear_background_tint, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCULinearLayout_auto_linear_background_tint, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }

@@ -108,7 +108,7 @@ object CcGeometry {
     }
 
     /**
-     * FCL「显示/事件分离按钮」配对：返回 Pair(事件按钮下标 -> 显示按钮下标, 被消费的显示按钮下标)。
+     * KCU「显示/事件分离按钮」配对：返回 Pair(事件按钮下标 -> 显示按钮下标, 被消费的显示按钮下标)。
      */
     fun matchFclOverlayButtons(
         buttons: List<JsonObject>,

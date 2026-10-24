@@ -51,8 +51,8 @@ public class KCUImageView extends AppCompatImageView {
     public KCUImageView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUImageView);
-        autoTint = typedArray.getBoolean(R.styleable.FCLImageView_auto_src_tint, false);
-        useThemeColor = typedArray.getBoolean(R.styleable.FCLImageView_use_theme_color, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCUImageView_auto_src_tint, false);
+        useThemeColor = typedArray.getBoolean(R.styleable.KCUImageView_use_theme_color, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }
@@ -60,8 +60,8 @@ public class KCUImageView extends AppCompatImageView {
     public KCUImageView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUImageView);
-        autoTint = typedArray.getBoolean(R.styleable.FCLImageView_auto_src_tint, false);
-        useThemeColor = typedArray.getBoolean(R.styleable.FCLImageView_use_theme_color, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCUImageView_auto_src_tint, false);
+        useThemeColor = typedArray.getBoolean(R.styleable.KCUImageView_use_theme_color, false);
         typedArray.recycle();
         ThemeEngine.getInstance().registerEvent(this, this::refreshTheme);
     }

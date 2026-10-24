@@ -21,7 +21,7 @@ class KCUAppBarLayout @JvmOverloads constructor(
         stateListAnimator = null
         context.withStyledAttributes(attrs, R.styleable.KCUAppBarLayout) {
             autoTint = getBoolean(
-                R.styleable.FCLAppBarLayout_auto_tint,
+                R.styleable.KCUAppBarLayout_auto_tint,
                 false
             )
         }

@@ -4,7 +4,7 @@
         "https://checkstyle.org/dtds/configuration_1_3.dtd">
 
 <!--
-    FCL 的 checkstyle 规则集。
+    KCU 的 checkstyle 规则集。
 
     设计原则：
     1. 以 HMCL 上游规则集（config/checkstyle/checkstyle.xml）为骨架，它不查行长、

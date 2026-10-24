@@ -1,5 +1,5 @@
 //
-// awt_bridge.c — 自 Amethyst-Android 迁移，JNI 类名已调整为 FCL 的 KCUBridge
+// awt_bridge.c — 自 Amethyst-Android 迁移，JNI 类名已调整为 KCU 的 KCUBridge
 //
 #include <jni.h>
 #include <assert.h>
@@ -11,7 +11,7 @@ static JavaVM* runtimeJavaVMPtr;
 static JNIEnv* runtimeJNIEnvPtr_GRAPHICS;
 static JNIEnv* runtimeJNIEnvPtr_INPUT;
 
-jclass class_FCLBridge;
+jclass class_KCUBridge;
 jclass class_CTCScreen;
 jclass class_CTCAndroidInput;
 jclass class_Frame;
@@ -37,12 +37,12 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         dalvikJavaVMPtr = vm;
         JNIEnv *env = NULL;
         (*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_4);
-        class_FCLBridge = (*env)->NewGlobalRef(env,(*env)->FindClass(env, "com/kongbai/kculauncher/launcher/bridge/KCUBridge"));
-        method_OpenLink = (*env)->GetStaticMethodID(env, class_FCLBridge, "openLink",
+        class_KCUBridge = (*env)->NewGlobalRef(env,(*env)->FindClass(env, "com/kongbai/kculauncher/launcher/bridge/KCUBridge"));
+        method_OpenLink = (*env)->GetStaticMethodID(env, class_KCUBridge, "openLink",
                                                     "(Ljava/lang/String;)V");
-        method_QuerySystemClipboard = (*env)->GetStaticMethodID(env, class_FCLBridge,
+        method_QuerySystemClipboard = (*env)->GetStaticMethodID(env, class_KCUBridge,
                                                                 "querySystemClipboard", "()V");
-        method_PutClipboardData = (*env)->GetStaticMethodID(env, class_FCLBridge,
+        method_PutClipboardData = (*env)->GetStaticMethodID(env, class_KCUBridge,
                                                             "putClipboardData",
                                                             "(Ljava/lang/String;Ljava/lang/String;)V");
     } else if (dalvikJavaVMPtr != vm) {
@@ -62,7 +62,7 @@ Java_net_java_openjdk_cacio_ctc_CTCDesktopPeer_openFile(JNIEnv *env, jclass claz
         detachable = 1;
     }
     const char *stringChars = (*env)->GetStringUTFChars(env, filePath, NULL);
-    (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, class_FCLBridge, method_OpenLink,
+    (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, class_KCUBridge, method_OpenLink,
                                        (*dalvikEnv)->NewStringUTF(dalvikEnv, stringChars));
     (*env)->ReleaseStringUTFChars(env, filePath, stringChars);
     if (detachable) (*dalvikJavaVMPtr)->DetachCurrentThread(dalvikJavaVMPtr);
@@ -78,7 +78,7 @@ Java_net_java_openjdk_cacio_ctc_CTCDesktopPeer_openUri(JNIEnv *env, jclass clazz
         detachable = 1;
     }
     const char *stringChars = (*env)->GetStringUTFChars(env, uri, NULL);
-    (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, class_FCLBridge, method_OpenLink,
+    (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, class_KCUBridge, method_OpenLink,
                                        (*dalvikEnv)->NewStringUTF(dalvikEnv, stringChars));
     (*env)->ReleaseStringUTFChars(env, uri, stringChars);
     if (detachable) (*dalvikJavaVMPtr)->DetachCurrentThread(dalvikJavaVMPtr);
@@ -94,7 +94,7 @@ JNIEXPORT void JNICALL Java_net_java_openjdk_cacio_ctc_CTCClipboard_nQuerySystem
         class_CTCClipboard = (*env)->NewGlobalRef(env, clazz);
         method_SystemClipboardDataReceived = (*env)->GetStaticMethodID(env, clazz, "systemClipboardDataReceived", "(Ljava/lang/String;Ljava/lang/String;)V");
     }
-    (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, class_FCLBridge, method_QuerySystemClipboard);
+    (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, class_KCUBridge, method_QuerySystemClipboard);
     if(detachable) (*dalvikJavaVMPtr)->DetachCurrentThread(dalvikJavaVMPtr);
 }
 
@@ -107,7 +107,7 @@ JNIEXPORT void JNICALL Java_net_java_openjdk_cacio_ctc_CTCClipboard_nPutClipboar
 
     const char* dataChars = (*env)->GetStringUTFChars(env, clipboardData, NULL);
     const char* mimeChars = (*env)->GetStringUTFChars(env, clipboardDataMime, NULL);
-    (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, class_FCLBridge, method_PutClipboardData,
+    (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, class_KCUBridge, method_PutClipboardData,
                                        (*dalvikEnv)->NewStringUTF(dalvikEnv, dataChars),
                                        (*dalvikEnv)->NewStringUTF(dalvikEnv, mimeChars));
     (*env)->ReleaseStringUTFChars(env, clipboardData, dataChars);
@@ -123,7 +123,7 @@ JNIEXPORT void JNICALL Java_com_github_caciocavallosilano_cacio_ctc_CTCClipboard
     Java_net_java_openjdk_cacio_ctc_CTCClipboard_nPutClipboardData(env, clazz, clipboardData, clipboardDataMime);
 }
 
-JNIEXPORT jintArray JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_renderAWTScreenFrame(JNIEnv* env, jclass clazz) {
+JNIEXPORT jintArray JNICALL Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_renderAWTScreenFrame(JNIEnv* env, jclass clazz) {
     if (runtimeJNIEnvPtr_GRAPHICS == NULL) {
         if (runtimeJavaVMPtr == NULL) {
             return NULL;
@@ -167,7 +167,7 @@ JNIEXPORT jintArray JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBrid
     return androidRgbArray;
 }
 
-JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_nativeSendData(JNIEnv* env, jclass clazz, jint type, jint i1, jint i2, jint i3, jint i4) {
+JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_nativeSendData(JNIEnv* env, jclass clazz, jint type, jint i1, jint i2, jint i3, jint i4) {
     if (runtimeJNIEnvPtr_INPUT == NULL) {
         if (runtimeJavaVMPtr == NULL) {
             return;
@@ -194,7 +194,7 @@ JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_na
     );
 }
 
-JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_nativeClipboardReceived(JNIEnv *env, jclass clazz, jstring clipboardData, jstring clipboardDataMime) {
+JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_nativeClipboardReceived(JNIEnv *env, jclass clazz, jstring clipboardData, jstring clipboardDataMime) {
     if(method_SystemClipboardDataReceived == NULL || class_CTCClipboard == NULL) return;
     if (runtimeJNIEnvPtr_INPUT == NULL) {
         if (runtimeJavaVMPtr == NULL) {
@@ -212,7 +212,7 @@ JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_na
     if(mimeChars != NULL) (*env)->ReleaseStringUTFChars(env, clipboardDataMime, mimeChars);
 }
 
-JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_nativeMoveWindow(JNIEnv *env, jclass clazz, jint x, jint y) {
+JNIEXPORT void JNICALL Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_nativeMoveWindow(JNIEnv *env, jclass clazz, jint x, jint y) {
     if (runtimeJNIEnvPtr_INPUT == NULL) {
         if (runtimeJavaVMPtr == NULL) {
             return;

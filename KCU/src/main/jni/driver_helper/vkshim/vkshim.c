@@ -213,7 +213,7 @@ static struct driver_mode driver_mode_of(VkPhysicalDevice physicalDevice) {
     // 并发首查由登记前的重查兜底（重复登记无害但避免）
     struct driver_mode mode = compute_driver_mode(physicalDevice);
     mode.fns_emulated = compute_fns_emulated(physicalDevice);
-    FCL_LOG("vkshim: pd %p mode translate=%d add_khr=%d fns_emulated=%d divisor_feat=%d zero_divisor_feat=%d",
+    KCU_LOG("vkshim: pd %p mode translate=%d add_khr=%d fns_emulated=%d divisor_feat=%d zero_divisor_feat=%d",
             physicalDevice, mode.translate, mode.add_khr, mode.fns_emulated, mode.divisor_feature,
             mode.zero_divisor_feature);
     pthread_mutex_lock(&g_lock);
@@ -270,7 +270,7 @@ static void __attribute__((constructor)) vkshim_init(void) {
         g_loader = dlopen("libvulkan.so", RTLD_LAZY | RTLD_LOCAL);
     }
     if (g_loader == NULL) {
-        FCL_LOG("vkshim: failed to load vulkan loader: %s", dlerror());
+        KCU_LOG("vkshim: failed to load vulkan loader: %s", dlerror());
         return;
     }
 
@@ -286,7 +286,7 @@ static void __attribute__((constructor)) vkshim_init(void) {
 
     g_ready = real_create_instance != NULL && real_get_instance_proc_addr != NULL &&
               real_enumerate_instance_extension_properties != NULL;
-    FCL_LOG("vkshim: wrapping %s, ready=%d", path, g_ready);
+    KCU_LOG("vkshim: wrapping %s, ready=%d", path, g_ready);
 }
 
 static VkResult shim_enumerate_device_extension_properties(VkPhysicalDevice physicalDevice, const char* pLayerName,
@@ -531,14 +531,14 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateInstance(const VkInstanceCreateInfo* pCre
     if (result == VK_SUCCESS && real.enumerate_physical_devices != NULL) {
         uint32_t count = 0;
         VkResult probe = real.enumerate_physical_devices(*pInstance, &count, NULL);
-        FCL_LOG("vkshim: self-probe vkEnumeratePhysicalDevices=%d count=%u", probe, count);
+        KCU_LOG("vkshim: self-probe vkEnumeratePhysicalDevices=%d count=%u", probe, count);
         if (probe == VK_SUCCESS && count > 0 && real.get_physical_device_properties != NULL) {
             VkPhysicalDevice pd;
             count = 1;
             if (real.enumerate_physical_devices(*pInstance, &count, &pd) == VK_SUCCESS) {
                 VkPhysicalDeviceProperties properties;
                 real.get_physical_device_properties(pd, &properties);
-                FCL_LOG("vkshim: driver %s (apiVersion=0x%x)", properties.deviceName,
+                KCU_LOG("vkshim: driver %s (apiVersion=0x%x)", properties.deviceName,
                         properties.apiVersion);
             }
         }
@@ -620,11 +620,11 @@ static VkResult shim_enumerate_physical_devices(VkInstance instance, uint32_t* p
                                                 VkPhysicalDevice* pPhysicalDevices) {
     ensure_instance_procs(instance);
     if (real.enumerate_physical_devices == NULL) {
-        FCL_LOG("vkshim: vkEnumeratePhysicalDevices dropped, real proc unresolved");
+        KCU_LOG("vkshim: vkEnumeratePhysicalDevices dropped, real proc unresolved");
         return VK_ERROR_INITIALIZATION_FAILED;
     }
     VkResult result = real.enumerate_physical_devices(instance, pPhysicalDeviceCount, pPhysicalDevices);
-    FCL_LOG("vkshim: vkEnumeratePhysicalDevices -> %d count=%u", result,
+    KCU_LOG("vkshim: vkEnumeratePhysicalDevices -> %d count=%u", result,
             (result == VK_SUCCESS || result == VK_INCOMPLETE) && pPhysicalDeviceCount != NULL
                     ? *pPhysicalDeviceCount : 0);
     if ((result == VK_SUCCESS || result == VK_INCOMPLETE) && pPhysicalDevices != NULL) {

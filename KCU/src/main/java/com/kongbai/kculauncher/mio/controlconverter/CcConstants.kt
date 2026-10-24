@@ -15,7 +15,7 @@ import com.kongbai.kculauncher.mio.controlconverter.CcJson.str
  * 与 cc-rs/src/constants.rs、go/constants.go 逐条对齐。
  */
 object CcConstants {
-    const val FCL_CONTROLLER_VERSION = 21
+    const val KCU_CONTROLLER_VERSION = 21
     const val ZL_EDITOR_VERSION = 12
     const val META_KEY = "_control_byIQge报错别找我"
     const val META_SCHEMA_VERSION = 1
@@ -105,13 +105,13 @@ object CcConstants {
         for (i in 1..25) put("key.keyboard.f$i", "GLFW_KEY_F$i")
     }
 
-    val FCL_MOUSE: Map<String, Long> = mapOf(
+    val KCU_MOUSE: Map<String, Long> = mapOf(
         "GLFW_MOUSE_BUTTON_LEFT" to 1000L,
         "GLFW_MOUSE_BUTTON_MIDDLE" to 1001L,
         "GLFW_MOUSE_BUTTON_RIGHT" to 1002L,
     )
-    val FCL_MOUSE_REVERSE: Map<Long, String> = FCL_MOUSE.entries.associate { (k, v) -> v to k }
-    val FCL_SCROLL_REVERSE: Map<Long, Pair<String, String>> = mapOf(
+    val KCU_MOUSE_REVERSE: Map<Long, String> = KCU_MOUSE.entries.associate { (k, v) -> v to k }
+    val KCU_SCROLL_REVERSE: Map<Long, Pair<String, String>> = mapOf(
         1003L to ("launcher.event.scroll_up.single" to "launcher.event.scroll_up"),
         1004L to ("launcher.event.scroll_down.single" to "launcher.event.scroll_down"),
     )
@@ -125,13 +125,13 @@ object CcConstants {
     )
     val UNSUPPORTED_ZL_KEY_REASONS: Map<String, String> =
         ZL_ONLY_KEYS.associateWith { "FCL controls do not define an exact matching keycode" }
-    val UNSUPPORTED_FCL_KEY_REASONS: Map<Long, String> = mapOf(
+    val UNSUPPORTED_KCU_KEY_REASONS: Map<Long, String> = mapOf(
         0L to "FCL KEY_RESERVED is not a real input key",
         121L to "FCL KEY_KPCOMMA has no exact GLFW/ZL control event equivalent",
     )
 
-    /** GLFW 键名 → FCL Linux 风格整数键码。 */
-    val GLFW_TO_FCL: Map<String, Long> = mapOf(
+    /** GLFW 键名 → KCU Linux 风格整数键码。 */
+    val GLFW_TO_KCU: Map<String, Long> = mapOf(
         "GLFW_KEY_UNKNOWN" to 240L,
         "GLFW_KEY_SPACE" to 57L,
         "GLFW_KEY_APOSTROPHE" to 40L,
@@ -250,29 +250,29 @@ object CcConstants {
         "GLFW_KEY_RIGHT_ALT" to 100L,
         "GLFW_KEY_RIGHT_SUPER" to 126L,
     )
-    val FCL_TO_GLFW: Map<Long, String> = GLFW_TO_FCL.entries.associate { (k, v) -> v to k }
+    val KCU_TO_GLFW: Map<Long, String> = GLFW_TO_KCU.entries.associate { (k, v) -> v to k }
 
-    val ZL_TO_FCL_FALLBACKS: Map<String, Pair<Long, String>> = mapOf(
+    val ZL_TO_KCU_FALLBACKS: Map<String, Pair<Long, String>> = mapOf(
         "GLFW_MOUSE_BUTTON_4" to (1003L to "FCL has no side mouse button 4; substituted with scroll up"),
         "GLFW_MOUSE_BUTTON_5" to (1004L to "FCL has no side mouse button 5; substituted with scroll down"),
         "GLFW_MOUSE_BUTTON_6" to (1003L to "FCL has no side mouse button 6; substituted with scroll up"),
         "GLFW_MOUSE_BUTTON_7" to (1004L to "FCL has no side mouse button 7; substituted with scroll down"),
         "GLFW_MOUSE_BUTTON_8" to (1004L to "FCL has no side mouse button 8; substituted with scroll down"),
-        "GLFW_KEY_F25" to (GLFW_TO_FCL["GLFW_KEY_F24"]!! to "FCL has no F25; substituted with F24"),
-        "GLFW_KEY_WORLD_1" to (GLFW_TO_FCL["GLFW_KEY_UNKNOWN"]!! to "FCL has no WORLD_1; substituted with UNKNOWN"),
-        "GLFW_KEY_WORLD_2" to (GLFW_TO_FCL["GLFW_KEY_UNKNOWN"]!! to "FCL has no WORLD_2; substituted with UNKNOWN"),
-        "GLFW_KEY_MENU" to (GLFW_TO_FCL["GLFW_KEY_UNKNOWN"]!! to "FCL has no menu key; substituted with UNKNOWN"),
-        "GLFW_KEY_LAST" to (GLFW_TO_FCL["GLFW_KEY_UNKNOWN"]!! to "FCL has no LAST sentinel key; substituted with UNKNOWN"),
-        "GLFW_MOD_SHIFT" to (GLFW_TO_FCL["GLFW_KEY_LEFT_SHIFT"]!! to "FCL has no modifier event; substituted with left shift"),
-        "GLFW_MOD_CONTROL" to (GLFW_TO_FCL["GLFW_KEY_LEFT_CONTROL"]!! to "FCL has no modifier event; substituted with left control"),
-        "GLFW_MOD_ALT" to (GLFW_TO_FCL["GLFW_KEY_LEFT_ALT"]!! to "FCL has no modifier event; substituted with left alt"),
-        "GLFW_MOD_SUPER" to (GLFW_TO_FCL["GLFW_KEY_LEFT_SUPER"]!! to "FCL has no modifier event; substituted with left super"),
-        "GLFW_MOD_CAPS_LOCK" to (GLFW_TO_FCL["GLFW_KEY_CAPS_LOCK"]!! to "FCL has no modifier event; substituted with caps lock"),
-        "GLFW_MOD_NUM_LOCK" to (GLFW_TO_FCL["GLFW_KEY_NUM_LOCK"]!! to "FCL has no modifier event; substituted with num lock"),
+        "GLFW_KEY_F25" to (GLFW_TO_KCU["GLFW_KEY_F24"]!! to "FCL has no F25; substituted with F24"),
+        "GLFW_KEY_WORLD_1" to (GLFW_TO_KCU["GLFW_KEY_UNKNOWN"]!! to "FCL has no WORLD_1; substituted with UNKNOWN"),
+        "GLFW_KEY_WORLD_2" to (GLFW_TO_KCU["GLFW_KEY_UNKNOWN"]!! to "FCL has no WORLD_2; substituted with UNKNOWN"),
+        "GLFW_KEY_MENU" to (GLFW_TO_KCU["GLFW_KEY_UNKNOWN"]!! to "FCL has no menu key; substituted with UNKNOWN"),
+        "GLFW_KEY_LAST" to (GLFW_TO_KCU["GLFW_KEY_UNKNOWN"]!! to "FCL has no LAST sentinel key; substituted with UNKNOWN"),
+        "GLFW_MOD_SHIFT" to (GLFW_TO_KCU["GLFW_KEY_LEFT_SHIFT"]!! to "FCL has no modifier event; substituted with left shift"),
+        "GLFW_MOD_CONTROL" to (GLFW_TO_KCU["GLFW_KEY_LEFT_CONTROL"]!! to "FCL has no modifier event; substituted with left control"),
+        "GLFW_MOD_ALT" to (GLFW_TO_KCU["GLFW_KEY_LEFT_ALT"]!! to "FCL has no modifier event; substituted with left alt"),
+        "GLFW_MOD_SUPER" to (GLFW_TO_KCU["GLFW_KEY_LEFT_SUPER"]!! to "FCL has no modifier event; substituted with left super"),
+        "GLFW_MOD_CAPS_LOCK" to (GLFW_TO_KCU["GLFW_KEY_CAPS_LOCK"]!! to "FCL has no modifier event; substituted with caps lock"),
+        "GLFW_MOD_NUM_LOCK" to (GLFW_TO_KCU["GLFW_KEY_NUM_LOCK"]!! to "FCL has no modifier event; substituted with num lock"),
         "GLFW_MOUSE_BUTTON_LAST" to (1004L to "FCL has no LAST mouse sentinel; substituted with scroll down"),
     )
 
-    val FCL_TO_ZL_FALLBACKS: Map<Long, Pair<Pair<String, String>, String>> = mapOf(
+    val KCU_TO_ZL_FALLBACKS: Map<Long, Pair<Pair<String, String>, String>> = mapOf(
         0L to (("key" to "GLFW_KEY_UNKNOWN") to "FCL KEY_RESERVED is not a real input key; substituted with GLFW_KEY_UNKNOWN"),
         121L to (("key" to "GLFW_KEY_KP_DECIMAL") to "FCL KEY_KPCOMMA has no exact GLFW key; substituted with keypad decimal"),
     )

@@ -5,7 +5,7 @@ import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 
 /**
- * FCL 按钮到 ZL 按钮/文本框的转换（对应 cc.py fcl_button_to_zl /
+ * KCU 按钮到 ZL 按钮/文本框的转换（对应 cc.py fcl_button_to_zl /
  * fcl_button_to_zl_textbox / overlay_shared_fields_zl）。
  */
 object CcButtons {
@@ -50,7 +50,7 @@ object CcButtons {
             "visibilityType",
             CcJson.str(CcUtils.visibilityFclToZl(CcJson.toStringV(baseInfo.opt("visibilityType")))),
         )
-        // FCL 侧新开滑动联动时同步到 ZL；关闭不回退，避免影响装饰按钮的原有标记
+        // KCU 侧新开滑动联动时同步到 ZL；关闭不回退，避免影响装饰按钮的原有标记
         if (CcUtils.pyTruthy(current.optObj("event")?.opt("swipable"))) {
             restored.add("isSwipple", CcJson.bool(true))
         }
@@ -91,7 +91,7 @@ object CcButtons {
         )
     }
 
-    /** 无 payload 的 FCL 显示按钮 -> ZL 文本框。 */
+    /** 无 payload 的 KCU 显示按钮 -> ZL 文本框。 */
     fun fclButtonToZlTextbox(
         ctx: CcContext,
         button: JsonObject,
@@ -139,7 +139,7 @@ object CcButtons {
         return setMeta(result, makeMeta("fcl", "button", originId, button, mapping))
     }
 
-    /** FCL 按钮 -> ZL 按钮。 */
+    /** KCU 按钮 -> ZL 按钮。 */
     fun fclButtonToZl(
         ctx: CcContext,
         button: JsonObject,
@@ -198,7 +198,7 @@ object CcButtons {
             )
         }
         if (CcUtils.pyTruthy(eventRoot.opt("pointerFollow")) &&
-            !pressKeycodes.any { CcConstants.FCL_MOUSE_REVERSE.containsKey(it) }
+            !pressKeycodes.any { CcConstants.KCU_MOUSE_REVERSE.containsKey(it) }
         ) {
             val reason = "FCL pointerFollow cannot be represented exactly in ZL; preserved in metadata"
             ctx.warn("$reason on button \"$text\"", strict, once = true)

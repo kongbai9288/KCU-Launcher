@@ -244,7 +244,7 @@ public class DefaultGameRepository implements GameRepository {
             versions.remove(id);
             modManagers.remove(id);
 
-            // remove json files first to ensure FCL will not recognize this folder as a valid version.
+            // remove json files first to ensure KCU will not recognize this folder as a valid version.
             List<File> jsons = FileUtils.listFilesByExtension(removedFile, "json");
             jsons.forEach(f -> {
                 if (!f.delete())

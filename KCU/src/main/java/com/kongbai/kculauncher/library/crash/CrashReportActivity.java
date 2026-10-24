@@ -38,7 +38,7 @@ public class CrashReportActivity extends KCUActivity implements View.OnClickList
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crash);
-        // 崩溃页背景跟随 FCL 亮暗设置：windowBackground 只在创建时按进程初始模式解析，
+        // 崩溃页背景跟随 KCU 亮暗设置：windowBackground 只在创建时按进程初始模式解析，
         // 亮暗切换（configChanges=uiMode）时不会自动更新，需显式设置并随主题刷新
         root = findViewById(R.id.root);
         ThemeEngine.getInstance().registerEvent(root, this::applyWindowBackground);

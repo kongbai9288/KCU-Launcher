@@ -68,7 +68,7 @@ __attribute__((visibility("default"), used)) uint64_t atrace_get_enabled_tags() 
         dlerror(); // no stale pls
         void* cutilsHandle = private_dlopen("libcutils.so", RTLD_LOCAL | RTLD_LAZY, &dlopen);
         if (!cutilsHandle) {
-            FCL_LOG("Unable to load libcutils in liblinkerhook, are we in an escape namespace? Assuming atrace tags to be ATRACE_TAG_NEVER. dlopen error: %s", dlerror());
+            KCU_LOG("Unable to load libcutils in liblinkerhook, are we in an escape namespace? Assuming atrace tags to be ATRACE_TAG_NEVER. dlopen error: %s", dlerror());
             return 0; // ATRACE_TAG_NEVER
         }
         atrace_get_enabled_tags_p = private_dlsym(
@@ -77,7 +77,7 @@ __attribute__((visibility("default"), used)) uint64_t atrace_get_enabled_tags() 
                 &dlopen
         );
         if (!atrace_get_enabled_tags_p) {
-            FCL_LOG("Unable to get atrace_get_enabled_tags from libcutils, dlsym error: %s", dlerror());
+            KCU_LOG("Unable to get atrace_get_enabled_tags from libcutils, dlsym error: %s", dlerror());
             return 0; // ATRACE_TAG_NEVER
         }
     }

@@ -48,7 +48,7 @@ class JVMCrashActivity : KCUActivity(), View.OnClickListener {
         binding.upload.setOnClickListener(this)
         binding.share.setOnClickListener(this)
 
-        // 崩溃页背景跟随 FCL 亮暗设置：windowBackground 只在创建时按进程初始模式解析，
+        // 崩溃页背景跟随 KCU 亮暗设置：windowBackground 只在创建时按进程初始模式解析，
         // :crash 进程冷启动后 applySavedNightMode 才生效，背景不会自动切换，需显式设置并随主题刷新
         ThemeEngine.registerEvent(binding.root) {
             binding.root.setBackgroundColor(resolveWindowBackgroundColor())

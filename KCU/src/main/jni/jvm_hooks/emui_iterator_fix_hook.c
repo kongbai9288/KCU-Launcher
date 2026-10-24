@@ -26,10 +26,10 @@ jint getLibraryPath_fix(__attribute__((unused)) JNIEnv *env,
  */
 void installEMUIIteratorMititgation(JNIEnv *env) {
     if(getenv("POJAV_EMUI_ITERATOR_MITIGATE") == NULL) return;
-    FCL_LOG("EMUIIteratorFix: Installing...");
+    KCU_LOG("EMUIIteratorFix: Installing...");
     jclass sharedLibraryUtil = (*env)->FindClass(env, "org/lwjgl/system/SharedLibraryUtil");
     if(sharedLibraryUtil == NULL) {
-        FCL_LOG("EMUIIteratorFix: Failed to find target class");
+        KCU_LOG("EMUIIteratorFix: Failed to find target class");
         (*env)->ExceptionClear(env);
         return;
     }
@@ -37,7 +37,7 @@ void installEMUIIteratorMititgation(JNIEnv *env) {
             {"getLibraryPath", "(JJI)I", &getLibraryPath_fix}
     };
     if((*env)->RegisterNatives(env, sharedLibraryUtil, getLibraryPathMethod, 1) != 0) {
-        FCL_LOG("EMUIIteratorFix: Failed to register the mitigation method");
+        KCU_LOG("EMUIIteratorFix: Failed to register the mitigation method");
         (*env)->ExceptionClear(env);
     }
 }

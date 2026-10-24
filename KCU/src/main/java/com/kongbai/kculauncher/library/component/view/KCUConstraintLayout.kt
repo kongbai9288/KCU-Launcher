@@ -17,7 +17,7 @@ class KCUConstraintLayout @JvmOverloads constructor(
 
     init {
         context.withStyledAttributes(attrs, R.styleable.KCUConstraintLayout) {
-            autoTint = getBoolean(R.styleable.FCLConstraintLayout_auto_tint, false)
+            autoTint = getBoolean(R.styleable.KCUConstraintLayout_auto_tint, false)
         }
         ThemeEngine.getInstance().registerEvent(this) {
             if (autoTint) {

@@ -165,7 +165,7 @@ final class SdlImeController {
         } else if (x >= 0 && w > 0) {
             // 仅显式提供区域时更新位置，避免启动器请求覆盖游戏设置的输入框。
             // setLayoutParams 不做类型转换：复用 addView 时已转换的父容器 params
-            // （FCL 游戏布局根为 RelativeLayout，硬编码 FrameLayout.LayoutParams 会强转崩溃）
+            // （KCU 游戏布局根为 RelativeLayout，硬编码 FrameLayout.LayoutParams 会强转崩溃）
             ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) mEdit.getLayoutParams();
             params.width = w;
             params.height = h + HEIGHT_PADDING;

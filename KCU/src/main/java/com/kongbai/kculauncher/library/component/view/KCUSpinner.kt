@@ -53,7 +53,7 @@ class KCUSpinner<T> @JvmOverloads constructor(
     init {
         attrs?.let {
             val typedArray = context.obtainStyledAttributes(it, R.styleable.KCUSpinner)
-            autoTextTint = typedArray.getBoolean(R.styleable.FCLSpinner_auto_text_tint, true)
+            autoTextTint = typedArray.getBoolean(R.styleable.KCUSpinner_auto_text_tint, true)
             typedArray.recycle()
         }
         gravity = Gravity.CENTER_VERTICAL
@@ -101,7 +101,7 @@ class KCUSpinner<T> @JvmOverloads constructor(
         popup.setBackgroundDrawable(ColorDrawable(ThemeEngine.getTheme().color))
         popup.isModal = true
         // 弹窗过渡：自 anchor 下落淡入，收回上滑淡出（点击外部关闭同样生效）
-        popup.setAnimationStyle(R.style.FCLSpinnerPopupAnimation)
+        popup.setAnimationStyle(R.style.KCUSpinnerPopupAnimation)
         popup.setOnDismissListener { animateArrow(false) }
         popup.setOnItemClickListener { _, _, position, _ ->
             popup.dismiss()

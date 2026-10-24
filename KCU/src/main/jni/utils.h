@@ -22,7 +22,7 @@
         void *_p = dlsym((handle), #fn);             \
         const char *_e = dlerror();                  \
         if (_e || !_p) {                             \
-            __android_log_print(ANDROID_LOG_ERROR, "FCL", "dlsym(" #fn ") failed: %s", \
+            __android_log_print(ANDROID_LOG_ERROR, "KCU", "dlsym(" #fn ") failed: %s", \
                                 _e ? _e : "unknown error"); \
         }                                            \
         fn##_p = (fn##_t)_p;                         \

@@ -5,7 +5,7 @@ import com.kongbai.kculauncher.mio.data.Renderer
 import java.io.Serializable
 
 /**
- * FCL 启动配置，由启动器构建后传给 KCULauncher
+ * KCU 启动配置，由启动器构建后传给 KCULauncher
  */
 class KCUConfig(
     val context: Context,

@@ -21,7 +21,7 @@ open class GamepadEmulatedButton {
     open fun resetButtonState() {
         if(isDown) {
             keycodes.forEach {
-                Gamepad.getFCLInput()?.sendKeyEvent(it, false)
+                Gamepad.getKCUInput()?.sendKeyEvent(it, false)
             }
         }
         isDown = false
@@ -29,7 +29,7 @@ open class GamepadEmulatedButton {
 
     open fun onDownStateChanged(isDown: Boolean) {
         keycodes.forEach {
-            Gamepad.getFCLInput()?.sendKeyEvent(it, isDown)
+            Gamepad.getKCUInput()?.sendKeyEvent(it, isDown)
         }
     }
 }

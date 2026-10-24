@@ -219,7 +219,7 @@ object CcUtils {
         return Math.max(0, Math.min(500, radius))
     }
 
-    // --- 颜色（ZL 有符号 Long 高 32 位 ARGB 与 FCL 有符号 int 互转） ---
+    // --- 颜色（ZL 有符号 Long 高 32 位 ARGB 与 KCU 有符号 int 互转） ---
 
     fun signedInt32(value: Long): Long {
         val v = value and 0xFFFFFFFFL
@@ -265,7 +265,7 @@ object CcUtils {
     fun fclRatioToZl(value: JsonElement?, default: Long = 500): Double =
         Math.max(0.0, Math.min(1.0, clampInt(value, default) / 1000.0))
 
-    /** FCL 千分比尺寸转 ZL 百分比（100..10000）。 */
+    /** KCU 千分比尺寸转 ZL 百分比（100..10000）。 */
     fun fclSizeToZl(value: JsonElement?): Long {
         val inner = clampInt(value, 50)
         return Math.max(100, Math.min(10000, clampInt(CcJson.inum(inner * 10))))
@@ -332,9 +332,9 @@ object CcUtils {
         substitutions: MutableList<JsonObject>? = null,
     ): Long {
         val key = normalizeZlKey(eventKey)
-        CcConstants.FCL_MOUSE[key]?.let { return it }
-        CcConstants.GLFW_TO_FCL[key]?.let { return it }
-        CcConstants.ZL_TO_FCL_FALLBACKS[key]?.let { pair ->
+        CcConstants.KCU_MOUSE[key]?.let { return it }
+        CcConstants.GLFW_TO_KCU[key]?.let { return it }
+        CcConstants.ZL_TO_KCU_FALLBACKS[key]?.let { pair ->
             val keycode = pair.first
             val reason = pair.second
             ctx.warn("ZL key event '$key' has no exact FCL equivalent; $reason", strict)
@@ -355,7 +355,7 @@ object CcUtils {
         } else {
             ctx.warn("unsupported ZL key event '$key'; substituted with UNKNOWN", strict)
         }
-        val fallback = CcConstants.GLFW_TO_FCL.getValue("GLFW_KEY_UNKNOWN")
+        val fallback = CcConstants.GLFW_TO_KCU.getValue("GLFW_KEY_UNKNOWN")
         substitutions?.add(
             substitution(
                 ctx,
@@ -381,14 +381,14 @@ object CcUtils {
         if (keycode == -1L && label.trim() == "*") {
             return ZlEvent("key", "GLFW_KEY_KP_MULTIPLY")
         }
-        CcConstants.FCL_MOUSE_REVERSE[keycode]?.let { return ZlEvent("key", it) }
-        CcConstants.FCL_SCROLL_REVERSE[keycode]?.let { pair ->
+        CcConstants.KCU_MOUSE_REVERSE[keycode]?.let { return ZlEvent("key", it) }
+        CcConstants.KCU_SCROLL_REVERSE[keycode]?.let { pair ->
             val single = pair.first
             val long = pair.second
             return ZlEvent("launcher_event", if (autoClick) long else single)
         }
-        CcConstants.FCL_TO_GLFW[keycode]?.let { return ZlEvent("key", it) }
-        CcConstants.FCL_TO_ZL_FALLBACKS[keycode]?.let { outer ->
+        CcConstants.KCU_TO_GLFW[keycode]?.let { return ZlEvent("key", it) }
+        CcConstants.KCU_TO_ZL_FALLBACKS[keycode]?.let { outer ->
             val etype = outer.first.first
             val key = outer.first.second
             val reason = outer.second
@@ -404,7 +404,7 @@ object CcUtils {
             )
             return ZlEvent(etype, key)
         }
-        val knownReason = CcConstants.UNSUPPORTED_FCL_KEY_REASONS[keycode]
+        val knownReason = CcConstants.UNSUPPORTED_KCU_KEY_REASONS[keycode]
         if (knownReason != null) {
             ctx.warn("FCL keycode $keycode has no ZL control event equivalent: $knownReason; substituted with GLFW_KEY_UNKNOWN", strict)
         } else {

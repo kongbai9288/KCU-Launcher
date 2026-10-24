@@ -120,7 +120,7 @@ class KCUNumberSeekBar @JvmOverloads constructor(
         setPadding(maxOf(paddingLeft, minPadding), paddingTop, maxOf(paddingRight, minPadding), paddingBottom)
         if (attrs != null) {
             context.withStyledAttributes(attrs, R.styleable.KCUNumberSeekBar) {
-                suffix = getString(R.styleable.FCLNumberSeekBar_suffix) ?: ""
+                suffix = getString(R.styleable.KCUNumberSeekBar_suffix) ?: ""
             }
         }
         ThemeEngine.registerEvent(this) { refreshTheme() }

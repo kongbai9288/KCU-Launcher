@@ -78,9 +78,9 @@ public class KCUImageButton extends AppCompatImageButton {
     public KCUImageButton(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUImageButton);
-        autoTint = typedArray.getBoolean(R.styleable.FCLImageButton_auto_tint, false);
-        noPadding = typedArray.getBoolean(R.styleable.FCLImageButton_no_padding, false);
-        useThemeColor = typedArray.getBoolean(R.styleable.FCLImageButton_use_theme_color, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCUImageButton_auto_tint, false);
+        noPadding = typedArray.getBoolean(R.styleable.KCUImageButton_no_padding, false);
+        useThemeColor = typedArray.getBoolean(R.styleable.KCUImageButton_use_theme_color, false);
         typedArray.recycle();
         init();
     }
@@ -88,9 +88,9 @@ public class KCUImageButton extends AppCompatImageButton {
     public KCUImageButton(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUImageButton);
-        autoTint = typedArray.getBoolean(R.styleable.FCLImageButton_auto_tint, false);
-        noPadding = typedArray.getBoolean(R.styleable.FCLImageButton_no_padding, false);
-        useThemeColor = typedArray.getBoolean(R.styleable.FCLImageButton_use_theme_color, false);
+        autoTint = typedArray.getBoolean(R.styleable.KCUImageButton_auto_tint, false);
+        noPadding = typedArray.getBoolean(R.styleable.KCUImageButton_no_padding, false);
+        useThemeColor = typedArray.getBoolean(R.styleable.KCUImageButton_use_theme_color, false);
         typedArray.recycle();
         init();
     }

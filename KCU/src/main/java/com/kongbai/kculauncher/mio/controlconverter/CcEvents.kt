@@ -57,7 +57,7 @@ object CcEvents {
     }
 
     /**
-     * FCL 事件对象 -> ZL clickEvents 列表（cc.py fcl_event_to_zl_events）。
+     * KCU 事件对象 -> ZL clickEvents 列表（cc.py fcl_event_to_zl_events）。
      */
     fun fclEventToZlEvents(
         ctx: CcContext,
@@ -96,7 +96,7 @@ object CcEvents {
                 )
             )
         }
-        if (autoClick && keycodes.any { !CcConstants.FCL_SCROLL_REVERSE.containsKey(it) }) {
+        if (autoClick && keycodes.any { !CcConstants.KCU_SCROLL_REVERSE.containsKey(it) }) {
             val reason = "FCL autoClick only has a ZL equivalent for scroll events; non-scroll keys are converted as normal press events"
             ctx.warn(reason, strict, once = true)
             substitutions.add(
@@ -198,9 +198,9 @@ object CcEvents {
         return otherEvents
     }
 
-    // --- ZL -> FCL 方向 ---
+    // --- ZL -> KCU 方向 ---
 
-    /** 单个 ZL click event 应用到 FCL 事件对象（图层类事件由 layer 版本处理）。 */
+    /** 单个 ZL click event 应用到 KCU 事件对象（图层类事件由 layer 版本处理）。 */
     fun applyZlEventToFcl(
         ctx: CcContext,
         event: JsonObject,
@@ -220,7 +220,7 @@ object CcEvents {
                 pressEvent.optArr("outputKeycodes")?.add(CcJson.inum(keycode))
             }
             "launcher_event" -> {
-                val mouse = CcConstants.FCL_MOUSE[key]
+                val mouse = CcConstants.KCU_MOUSE[key]
                 when {
                     mouse != null -> pressEvent.optArr("outputKeycodes")?.add(CcJson.inum(mouse))
                     key == "launcher.event.switch_ime" -> clickEvent.addProperty("input", true)
@@ -260,7 +260,7 @@ object CcEvents {
     }
 
     /**
-     * ZL 图层事件 -> FCL bindViewGroup（模拟初始可见状态，仅输出奇数次 toggle）。
+     * ZL 图层事件 -> KCU bindViewGroup（模拟初始可见状态，仅输出奇数次 toggle）。
      */
     fun applyZlLayerEventsToFcl(
         ctx: CcContext,
@@ -313,7 +313,7 @@ object CcEvents {
             }
         }
 
-        // FCL 的 bindViewGroup 每项都是 toggle；同一图层偶数次会抵消，只输出奇数次
+        // KCU 的 bindViewGroup 每项都是 toggle；同一图层偶数次会抵消，只输出奇数次
         val counts = LinkedHashMap<String, Int>()
         for (t in toggles) counts[t] = (counts[t] ?: 0) + 1
         val orderedUnique = mutableListOf<String>()

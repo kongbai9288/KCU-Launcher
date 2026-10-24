@@ -13,8 +13,8 @@ import java.util.List;
  * <p>
  * 过滤目的：
  * <ul>
- *   <li>移除 LWJGL 库——游戏运行时改用 FCL 自带的 LWJGL（app_runtime/lwjgl/3.3.3、3.4.1）</li>
- *   <li>移除 LWJGL2 时代的输入/直播辅助库（jinput-platform、twitch-platform），Android 上由 FCL 输入桥取代</li>
+ *   <li>移除 LWJGL 库——游戏运行时改用 KCU 自带的 LWJGL（app_runtime/lwjgl/3.3.3、3.4.1）</li>
+ *   <li>移除 LWJGL2 时代的输入/直播辅助库（jinput-platform、twitch-platform），Android 上由 KCU 输入桥取代</li>
  *   <li>替换与 Java 17+ / 新版 Android 不兼容的旧版库（asm、jna、oshi）为已适配的版本</li>
  * </ul>
  */
@@ -79,7 +79,7 @@ public class LibFilter {
             // 过滤 LWJGL 官方库（org.lwjgl:* / org.lwjgl.lwjgl:*）
             if (skipLwjgl && library.getName().contains("org.lwjgl"))
                 continue;
-            // jinput-platform / twitch-platform 是 LWJGL2 的输入与直播依赖，Android 上由 FCL 输入桥取代
+            // jinput-platform / twitch-platform 是 LWJGL2 的输入与直播依赖，Android 上由 KCU 输入桥取代
             if (!library.getName().contains("jinput-platform") && !library.getName().contains("twitch-platform")) {
                 String[] version = library.getName().split(":")[2].split("\\.");
                 if (library.getArtifactId().equals("asm-all") && Integer.parseInt(version[0]) < 5) {

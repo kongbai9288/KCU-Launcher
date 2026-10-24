@@ -21,7 +21,7 @@
 #include "SoundDefs.h"
 #include "DirectAudio.h"
 
-#define JSOUND_TAG "FCL-jsound"
+#define JSOUND_TAG "KCU-jsound"
 #define JSOUND_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, JSOUND_TAG, __VA_ARGS__)
 #define JSOUND_LOGW(...) __android_log_print(ANDROID_LOG_WARN, JSOUND_TAG, __VA_ARGS__)
 #define JSOUND_LOGI(...) __android_log_print(ANDROID_LOG_INFO, JSOUND_TAG, __VA_ARGS__)

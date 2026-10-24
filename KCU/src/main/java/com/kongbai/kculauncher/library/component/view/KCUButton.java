@@ -94,9 +94,9 @@ public class KCUButton extends AppCompatButton {
     public KCUButton(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUButton);
-        boolean ripple = typedArray.getBoolean(R.styleable.FCLButton_ripple, false);
-        int shape = typedArray.getInteger(R.styleable.FCLButton_shape, GradientDrawable.RECTANGLE);
-        boolean autoPadding = typedArray.getBoolean(R.styleable.FCLButton_auto_padding, true);
+        boolean ripple = typedArray.getBoolean(R.styleable.KCUButton_ripple, false);
+        int shape = typedArray.getInteger(R.styleable.KCUButton_shape, GradientDrawable.RECTANGLE);
+        boolean autoPadding = typedArray.getBoolean(R.styleable.KCUButton_auto_padding, true);
         this.ripple = ripple;
         init(shape, autoPadding);
         typedArray.recycle();
@@ -106,9 +106,9 @@ public class KCUButton extends AppCompatButton {
     public KCUButton(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUButton);
-        boolean ripple = typedArray.getBoolean(R.styleable.FCLButton_ripple, false);
-        int shape = typedArray.getInteger(R.styleable.FCLButton_shape, GradientDrawable.RECTANGLE);
-        boolean autoPadding = typedArray.getBoolean(R.styleable.FCLButton_auto_padding, true);
+        boolean ripple = typedArray.getBoolean(R.styleable.KCUButton_ripple, false);
+        int shape = typedArray.getInteger(R.styleable.KCUButton_shape, GradientDrawable.RECTANGLE);
+        boolean autoPadding = typedArray.getBoolean(R.styleable.KCUButton_auto_padding, true);
         this.ripple = ripple;
         init(shape, autoPadding);
         typedArray.recycle();

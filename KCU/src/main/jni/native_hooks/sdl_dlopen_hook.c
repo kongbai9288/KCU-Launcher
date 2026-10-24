@@ -41,7 +41,7 @@ static void *customDlsym(void *handle, const char *symbol) {
     if (result != NULL && symbol != NULL) {
         void *proxy = sdlDlsymProxy(symbol, result);
         if (proxy != NULL) {
-            FCL_LOG("SDL dlsym proxy for %s", symbol);
+            KCU_LOG("SDL dlsym proxy for %s", symbol);
             result = proxy;
         }
     }

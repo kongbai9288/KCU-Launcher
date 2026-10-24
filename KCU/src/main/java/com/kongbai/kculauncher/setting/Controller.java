@@ -419,7 +419,7 @@ public class Controller implements Cloneable, Observable {
         }
     }
 
-    /** 流式定位：仅解析目标布局的 viewData（依赖序列化顺序 id 先于 viewData，FCL 自身格式） */
+    /** 流式定位：仅解析目标布局的 viewData（依赖序列化顺序 id 先于 viewData，KCU 自身格式） */
     private static JsonElement findViewData(JsonReader reader, String groupId) throws IOException {
         reader.beginArray();
         while (reader.hasNext()) {

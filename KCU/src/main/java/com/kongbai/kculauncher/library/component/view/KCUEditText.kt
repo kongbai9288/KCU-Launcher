@@ -46,7 +46,7 @@ class KCUEditText @JvmOverloads constructor(
     init {
         if (attrs != null) {
             context.withStyledAttributes(attrs, R.styleable.KCUEditText) {
-                autoTint = getBoolean(R.styleable.FCLEditText_auto_edit_tint, false)
+                autoTint = getBoolean(R.styleable.KCUEditText_auto_edit_tint, false)
             }
         }
         addTextWatcher()

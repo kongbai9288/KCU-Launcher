@@ -22,7 +22,7 @@ checkstyle {
 // AGP 不提供 Java 插件的 SourceSetContainer，checkstyle 插件不会自动创建任务，
 // 因此手动注册 checkstyle 任务，检查范围为主源码目录的 Java 文件
 tasks.register<Checkstyle>("checkstyle") {
-    description = "Run checkstyle on the FCL Java sources."
+    description = "Run checkstyle on the KCU Java sources."
     group = "verification"
     source(layout.projectDirectory.dir("src/main/java"))
     include("**/*.java")
@@ -42,9 +42,9 @@ android {
     }
     // KCU：密钥一律来自环境变量或 local.properties，读不到就是空，绝不让构建失败
     val pwd = System.getenv("KCU_KEYSTORE_PASSWORD")
-        ?: System.getenv("FCL_KEYSTORE_PASSWORD")
+        ?: System.getenv("KCU_KEYSTORE_PASSWORD")
         ?: localProperty?.getProperty("pwd")
-    val kcuKeyAlias = System.getenv("KCU_KEY_ALIAS") ?: localProperty?.getProperty("key.alias") ?: "FCL-Key"
+    val kcuKeyAlias = System.getenv("KCU_KEY_ALIAS") ?: localProperty?.getProperty("key.alias") ?: "KCU-Key"
     val keyPwd = System.getenv("KCU_KEY_PASSWORD") ?: pwd
     val curseApiKey = System.getenv("CURSE_API_KEY") ?: localProperty?.getProperty("curse.api.key")
     val oauthApiKey = System.getenv("OAUTH_API_KEY") ?: localProperty?.getProperty("oauth.api.key")
@@ -59,7 +59,7 @@ android {
 
     signingConfigs {
         // KCU：正式签名库缺失时留空，交由 buildTypes 回退到 AGP 默认 debug 签名
-        create("FCLKey") {
+        create("KCUKey") {
             if (useReleaseSign) {
                 storeFile = file("../key-store.jks")
                 storePassword = pwd
@@ -70,13 +70,13 @@ android {
                 storeType = System.getenv("KCU_STORE_TYPE") ?: "pkcs12"
             }
         }
-        create("FCLDebugKey") {
+        create("KCUDebugKey") {
             val dbg = file("../debug-key.jks")
             if (dbg.exists()) {
                 storeFile = dbg
-                storePassword = "FCL-Debug"
-                keyAlias = "FCL-Debug"
-                keyPassword = "FCL-Debug"
+                storePassword = "KCU-Debug"
+                keyAlias = "KCU-Debug"
+                keyPassword = "KCU-Debug"
             }
         }
         // minSdk 26 ≥ 24，v1 已无必要，统一启用 v2 + v3 签名方案
@@ -107,19 +107,19 @@ android {
         // KCU：签名为空时回退 AGP 默认 debug 签名，产物为未签名/调试签名，构建不失败
         getByName("release") {
             isMinifyEnabled = false
-            signingConfig = if (useReleaseSign) signingConfigs.getByName("FCLKey")
+            signingConfig = if (useReleaseSign) signingConfigs.getByName("KCUKey")
                             else signingConfigs.getByName("debug")
         }
         getByName("debug") {
             isMinifyEnabled = false
-            signingConfig = if (useReleaseSign) signingConfigs.getByName("FCLKey")
+            signingConfig = if (useReleaseSign) signingConfigs.getByName("KCUKey")
                             else signingConfigs.getByName("debug")
         }
         create("fordebug") {
             initWith(getByName("debug"))
             applicationIdSuffix = ".debug"
-            signingConfig = signingConfigs.getByName("FCLDebugKey")
-            // 与 FileProvider authority（${applicationId}.provider）保持一致（原 FCLLibrary 模块的 resValue）
+            signingConfig = signingConfigs.getByName("KCUDebugKey")
+            // 与 FileProvider authority（${applicationId}.provider）保持一致（原 KCULibrary 模块的 resValue）
             resValue("string", "file_browser_provider", "com.kcu.launcher.debug.provider")
         }
         configureEach {

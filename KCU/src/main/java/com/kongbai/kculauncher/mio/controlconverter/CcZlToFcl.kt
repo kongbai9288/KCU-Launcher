@@ -3,7 +3,7 @@ package com.kongbai.kculauncher.mio.controlconverter
 import com.google.gson.JsonObject
 
 /**
- * ZL2 -> FCL 主流程（对应 cc.py zl_to_fcl 及其辅助函数）。
+ * ZL2 -> KCU 主流程（对应 cc.py zl_to_fcl 及其辅助函数）。
  */
 object CcZlToFcl {
 
@@ -164,7 +164,7 @@ object CcZlToFcl {
         if (CcUtils.pyTruthy(button.opt("isToggleable"))) {
             event.optObj("pressEvent")?.addProperty("autoKeep", true)
         }
-        // ZL 滑动联动按钮 -> FCL swipable；无事件的 isSwipple=true 是装饰按钮标记，不映射
+        // ZL 滑动联动按钮 -> KCU swipable；无事件的 isSwipple=true 是装饰按钮标记，不映射
         if (clickEvents.any() && CcUtils.pyTruthy(button.opt("isSwipple"))) {
             event.addProperty("swipable", true)
         }
@@ -216,7 +216,7 @@ object CcZlToFcl {
         return setMeta(result, makeMeta("zl", "textbox", originId, textbox))
     }
 
-    /** 装饰性按钮垫底（FCL 后加的 view 在上层）。 */
+    /** 装饰性按钮垫底（KCU 后加的 view 在上层）。 */
     fun orderFclButtonsForLayer(buttons: List<JsonObject>): List<JsonObject> {
         val decorated = buttons.mapIndexed { index, button -> Triple(index, CcEvents.fclButtonIsDecorative(button), button) }
         return decorated.sortedWith(compareBy({ if (it.second) 0 else 1 }, { it.first })).map { it.third }
@@ -434,7 +434,7 @@ object CcZlToFcl {
         val newAuthor = CcUtils.textDefault(info.opt("author")).ifEmpty { truthyStr(result.opt("author")) ?: "" }
         val newDescription = CcUtils.textDefault(info.opt("description")).ifEmpty { truthyStr(result.opt("description")) ?: "" }
         val newControllerVersion = CcUtils.clampInt(
-            result.opt("controllerVersion"), CcConstants.FCL_CONTROLLER_VERSION.toLong(),
+            result.opt("controllerVersion"), CcConstants.KCU_CONTROLLER_VERSION.toLong(),
         )
 
         result.add("id", CcJson.str(newId))

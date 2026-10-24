@@ -217,7 +217,7 @@ public final class MultiMCInstancePatch {
     }
 
     /**
-     * FCL 可识别的 Java 版本。官方版本 json 只支持单个预定义的 Java 版本,
+     * KCU 可识别的 Java 版本。官方版本 json 只支持单个预定义的 Java 版本,
      * 不支持数组,所以只取一个最合适的 major。
      */
     private static GameJavaVersion getGameJavaVersion(int major) {

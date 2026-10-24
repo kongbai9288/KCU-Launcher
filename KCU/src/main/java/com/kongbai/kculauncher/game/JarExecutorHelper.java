@@ -57,7 +57,7 @@ public class JarExecutorHelper {
             fclBridge.setGameDir(null);
             fclBridge.setRenderer(RendererManager.RENDERER_GL4ES.getName());
             fclBridge.setJava(javaVersion + "");
-            JVMActivity.setFCLBridge(fclBridge, MenuType.JAR_EXECUTOR);
+            JVMActivity.setKCUBridge(fclBridge, MenuType.JAR_EXECUTOR);
             LOG.log(Level.INFO, "Start JVMActivity!");
             context.startActivity(intent);
         } catch (IOException | InterruptedException e) {

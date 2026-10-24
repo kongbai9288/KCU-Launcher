@@ -12,7 +12,7 @@ object CcStyles {
         return "ZL $baseName $suffix"
     }
 
-    /** ZL 按钮样式 -> FCL buttonStyles；返回 (结果列表, zl uuid -> fcl 名称)。 */
+    /** ZL 按钮样式 -> KCU buttonStyles；返回 (结果列表, zl uuid -> fcl 名称)。 */
     fun zlStylesToFcl(ctx: CcContext, styles: List<JsonObject>): Pair<List<JsonObject>, MutableMap<String, String>> {
         val result = mutableListOf<JsonObject>()
         val mapping = linkedMapOf<String, String>()
@@ -67,7 +67,7 @@ object CcStyles {
         return Pair(result, mapping)
     }
 
-    /** FCL buttonStyles -> ZL styles；返回 (结果列表, fcl 名称 -> zl uuid)。 */
+    /** KCU buttonStyles -> ZL styles；返回 (结果列表, fcl 名称 -> zl uuid)。 */
     fun fclStylesToZl(ctx: CcContext, styles: List<JsonObject>): Pair<List<JsonObject>, MutableMap<String, String>> {
         val result = mutableListOf<JsonObject>()
         val mapping = linkedMapOf<String, String>()
@@ -120,7 +120,7 @@ object CcStyles {
         "bottomStart" to CcJson.pyNum(radius),
     )
 
-    /** FCL directionStyles 名称表（cc.py str(name) 语义：缺名 -> "None" 键）。 */
+    /** KCU directionStyles 名称表（cc.py str(name) 语义：缺名 -> "None" 键）。 */
     fun directionStyleMap(styles: List<JsonObject>): LinkedHashMap<String, JsonObject> {
         val result = linkedMapOf<String, JsonObject>()
         for (item in styles) {
@@ -179,7 +179,7 @@ object CcStyles {
         return if (CcUtils.pyTruthy(n)) CcJson.toStringV(n) else "Default"
     }
 
-    /** FCL ROCKER 方向样式 -> ZL 摇杆样式。 */
+    /** KCU ROCKER 方向样式 -> ZL 摇杆样式。 */
     fun fclRockerStyleToZlJoystick(ctx: CcContext, style: JsonObject?): JsonObject {
         val rocker = style?.optObj("rockerStyle")?.takeIf { it.entrySet().isNotEmpty() } ?: JsonObject()
         val config = CcConstants.defaultZlJoystickStyleConfig()
@@ -202,7 +202,7 @@ object CcStyles {
         )
     }
 
-    /** FCL BUTTON（十字键）方向样式 -> ZL 摇杆样式。 */
+    /** KCU BUTTON（十字键）方向样式 -> ZL 摇杆样式。 */
     fun fclButtonStyleToZlJoystick(ctx: CcContext, style: JsonObject?): JsonObject {
         val btn = style?.optObj("buttonStyle")?.takeIf { it.entrySet().isNotEmpty() } ?: JsonObject()
         val config = CcConstants.defaultZlJoystickStyleConfig()
@@ -225,7 +225,7 @@ object CcStyles {
         )
     }
 
-    /** ZL 摇杆样式 -> FCL rockerStyle（fcl_rocker_style_to_zl_joystick 的逆）。 */
+    /** ZL 摇杆样式 -> KCU rockerStyle（fcl_rocker_style_to_zl_joystick 的逆）。 */
     fun zlJoystickStyleToFclRocker(style: JsonObject): JsonObject {
         val light = style.optObj("lightStyle") ?: JsonObject()
         val joystickSize = CcUtils.clampRange(light.opt("joystickSize"), 0.0, 1.0, 0.5)
@@ -242,7 +242,7 @@ object CcStyles {
         )
     }
 
-    /** 两个 FCL rockerStyle 语义相等比较（忽略 rockerStrokeColor/Width）。 */
+    /** 两个 KCU rockerStyle 语义相等比较（忽略 rockerStrokeColor/Width）。 */
     fun fclRockerStyleMatches(a: JsonObject?, b: JsonObject?): Boolean {
         val comparable = arrayOf(
             "rockerSize", "bgCornerRadius", "bgStrokeWidth", "bgStrokeColor",
@@ -257,8 +257,8 @@ object CcStyles {
     }
 
     /**
-     * ZL 摇杆样式 -> FCL ROCKER 方向样式。
-     * 返回 Pair(要追加的样式列表, 摇杆样式 uuid -> FCL 样式名)。
+     * ZL 摇杆样式 -> KCU ROCKER 方向样式。
+     * 返回 Pair(要追加的样式列表, 摇杆样式 uuid -> KCU 样式名)。
      */
     fun zlJoystickStylesToFclDirectionStyles(
         ctx: CcContext,

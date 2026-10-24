@@ -5,7 +5,7 @@ import com.kongbai.kculauncher.mio.controlconverter.CcJson
 import java.io.File
 
 /**
- * FCL 控制布局与 ZalithLauncher2 (ZL2) 控制布局之间的纯 Kotlin 转换门面。
+ * KCU 控制布局与 ZalithLauncher2 (ZL2) 控制布局之间的纯 Kotlin 转换门面。
  *
  * 语义基准为 control-converter 项目的 cc.py（Python 参考实现），
  * 替代旧的 libcc.so (Go/cgo) JNI 方案：不再依赖特定 ABI，全部平台可用。
@@ -19,7 +19,7 @@ object LayoutConverter {
     fun isSupported(): Boolean = true
 
     /**
-     * 将 FCL 控制布局 JSON 转换为 ZL2 格式。
+     * 将 KCU 控制布局 JSON 转换为 ZL2 格式。
      *
      * @return 转换成功返回 null；失败返回错误信息
      */
@@ -32,7 +32,7 @@ object LayoutConverter {
     }.getOrElse { t -> "${t.javaClass.simpleName}: ${t.message}" }
 
     /**
-     * 将 ZL2 控制布局 JSON 转换为 FCL 格式。
+     * 将 ZL2 控制布局 JSON 转换为 KCU 格式。
      *
      * @return 转换成功返回 null；失败返回错误信息
      */

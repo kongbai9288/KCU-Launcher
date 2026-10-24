@@ -15,7 +15,7 @@ class KCUView @JvmOverloads constructor(
 
     init {
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.KCUView)
-        useThemeColor = typedArray.getBoolean(R.styleable.FCLView_use_theme_color, false)
+        useThemeColor = typedArray.getBoolean(R.styleable.KCUView_use_theme_color, false)
         typedArray.recycle()
         ThemeEngine.getInstance().registerEvent(this) {
             if (useThemeColor) {

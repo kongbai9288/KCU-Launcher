@@ -172,7 +172,7 @@ public class DefaultLauncher {
         // res.addDefault("-Dorg.lwjgl.util.DebugLoader=", "true");
         // res.addDefault("-Dorg.lwjgl.util.DebugFunctions=", "true");
 
-        // FCL specific args
+        // KCU specific args
         JavaVersion javaVersion = options.getJava().isAuto() ? JavaManager.getSuitableJavaVersion(version) : options.getJava();
         res.addDefault("-Dext.net.resolvPath=", KCUPath.JAVA_PATH + "/resolv.conf");
         res.addDefault("-Djava.io.tmpdir=", KCUPath.CACHE_DIR);

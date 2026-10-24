@@ -44,7 +44,7 @@ import java.lang.reflect.Type
 class VersionSetting : Cloneable {
 
     /**
-     * FCL Version Settings have been divided into 2 parts.
+     * KCU Version Settings have been divided into 2 parts.
      * 1. Global settings.
      * 2. Version settings.
      * If a version claims that it uses global settings, its version setting will be disabled.
@@ -113,7 +113,7 @@ class VersionSetting : Cloneable {
         }
 
     /**
-     * True if FCL does not check JVM validity.
+     * True if KCU does not check JVM validity.
      */
     var isNotCheckJVM: Boolean = false
         set(value) {
@@ -123,7 +123,7 @@ class VersionSetting : Cloneable {
         }
 
     /**
-     * True if FCL does not check game's completeness.
+     * True if KCU does not check game's completeness.
      */
     var isNotCheckGame: Boolean = false
         set(value) {

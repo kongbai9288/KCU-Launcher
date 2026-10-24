@@ -5,7 +5,7 @@ import com.google.gson.JsonObject
 /**
  * control-converter Kotlin 版入口（语义基准 cc.py）。
  *
- * FCL -> ZL2 默认参数与原 Go JNI 一致：
+ * KCU -> ZL2 默认参数与原 Go JNI 一致：
  * includeDirections=false, strict=false, aspect=16/9, lossless=true, absoluteAsPercentage=false。
  */
 object CcConverter {
@@ -19,7 +19,7 @@ object CcConverter {
         else -> throw IllegalArgumentException("cannot detect input format; use zl2fcl or fcl2zl explicitly")
     }
 
-    /** FCL 控制布局 -> ZL2 控制布局。返回结果根对象（内嵌 lossless 元数据）。 */
+    /** KCU 控制布局 -> ZL2 控制布局。返回结果根对象（内嵌 lossless 元数据）。 */
     fun convertFclToZl(
         data: JsonObject,
         strict: Boolean = false,
@@ -38,7 +38,7 @@ object CcConverter {
         return if (stripMeta) stripConverterMeta(result).asJsonObject else result
     }
 
-    /** ZL2 控制布局 -> FCL 控制布局。 */
+    /** ZL2 控制布局 -> KCU 控制布局。 */
     fun convertZlToFcl(
         data: JsonObject,
         strict: Boolean = false,
@@ -66,7 +66,7 @@ object CcConverter {
         detectFormat(CcJson.loadJson(jsonText)) == "zl"
     }.getOrDefault(false)
 
-    /** 输入文本是否为 FCL 控件布局。 */
+    /** 输入文本是否为 KCU 控件布局。 */
     fun isFclLayout(jsonText: String): Boolean = runCatching {
         detectFormat(CcJson.loadJson(jsonText)) == "fcl"
     }.getOrDefault(false)

@@ -50,7 +50,7 @@ static void vulkan_log(JNIEnv *env, const char *level, const char *fmt, ...) {
 #define LOG_E(...) vulkan_log(env, "ERROR", __VA_ARGS__)
 
 /* apiVersion 的 patch 字段宽 12 位；较新 Vulkan 头文件中名为 VK_MAX_PATCH_VERSION */
-#define FCL_MAX_PATCH_VERSION 4095
+#define KCU_MAX_PATCH_VERSION 4095
 
 #if defined(__aarch64__) || defined(__x86_64__)
 #define VULKAN_LOADER_PATH "/system/lib64/libvulkan.so"
@@ -240,7 +240,7 @@ static jobject do_check_vulkan(JNIEnv *env, jboolean jUseTurnip, const char *dri
             .apiVersion = VK_MAKE_VERSION(
                     VK_API_VERSION_MAJOR(instanceApiVersion),
                     VK_API_VERSION_MINOR(instanceApiVersion),
-                    FCL_MAX_PATCH_VERSION)
+                    KCU_MAX_PATCH_VERSION)
     };
     VkInstanceCreateInfo createInfo = {
             .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,

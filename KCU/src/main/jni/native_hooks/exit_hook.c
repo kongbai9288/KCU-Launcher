@@ -79,7 +79,7 @@ static bool init_hooks() {
 }
 
 JNIEXPORT void JNICALL
-Java_com_kongbai_kculauncher_launcher_bridge_FCLBridge_initializeHooks(JNIEnv *env, jclass clazz) {
+Java_com_kongbai_kculauncher_launcher_bridge_KCUBridge_initializeHooks(JNIEnv *env, jclass clazz) {
     bool hooks_ready = init_hooks();
     if(!hooks_ready) {
         printf("Failed to initialize native hooks!");

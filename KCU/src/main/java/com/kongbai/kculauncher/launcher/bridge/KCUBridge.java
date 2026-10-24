@@ -50,7 +50,7 @@ public class KCUBridge {
     public static final int MotionNotify = 6;
     public static final int KeyChar = 7;
     public static final int ConfigureNotify = 22;
-    public static final int FCLMessage = 37;
+    public static final int KCUMessage = 37;
 
     public static final int Button1 = LwjglGlfwKeycode.GLFW_MOUSE_BUTTON_1;
     public static final int Button2 = LwjglGlfwKeycode.GLFW_MOUSE_BUTTON_2;
@@ -149,7 +149,7 @@ public class KCUBridge {
         this.handler = new Handler(Looper.getMainLooper());
         this.callback = callback;
         this.surface = surface;
-        CallbackBridge.setFCLBridge(this);
+        CallbackBridge.setKCUBridge(this);
         CallbackBridge.setCleanroomActive(cleanroomActive);
         receiveLog("==================== Before Start ====================\n");
         receiveLog("invoke redirectStdio\n");

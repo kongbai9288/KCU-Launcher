@@ -326,7 +326,7 @@ JNIEXPORT jstring JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeClipboard(JNI
                                                                              jint action,
                                                                              jbyteArray copySrc) {
 #ifdef DEBUG
-    FCL_INTERNAL_LOG("Debug: Clipboard access is going on\n", pojav_environ->isUseStackQueueCall);
+    KCU_INTERNAL_LOG("Debug: Clipboard access is going on\n", pojav_environ->isUseStackQueueCall);
 #endif
 
     JNIEnv *dalvikEnv = NULL;
@@ -364,7 +364,7 @@ JNIEXPORT jstring JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeClipboard(JNI
 JNIEXPORT jboolean JNICALL
 JavaCritical_org_lwjgl_glfw_CallbackBridge_nativeSetInputReady(jboolean inputReady) {
 #ifdef DEBUG
-    FCL_INTERNAL_LOG("Debug: Changing input state, isReady=%d, pojav_environ->isUseStackQueueCall=%d\n", inputReady, pojav_environ->isUseStackQueueCall);
+    KCU_INTERNAL_LOG("Debug: Changing input state, isReady=%d, pojav_environ->isUseStackQueueCall=%d\n", inputReady, pojav_environ->isUseStackQueueCall);
 #endif
     __android_log_print(ANDROID_LOG_INFO, "NativeInput", "Input ready: %i", inputReady);
     pojav_environ->isInputReady = inputReady;
@@ -419,17 +419,17 @@ Java_com_kongbai_kculauncher_game_sdl_SdlBridge_initializeControllerSubsystems(_
     typedef int (*SDL_Init_Func)(unsigned int flags);
     void* handle = dlopen("libSDL3.so", RTLD_NOW);
     if (handle == NULL) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "initializeControllerSubsystems: libSDL3.so dlopen failed");
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "initializeControllerSubsystems: libSDL3.so dlopen failed");
         return;
     }
     SDL_Init_Func SDL_Init = (SDL_Init_Func) dlsym(handle, "SDL_Init");
     if (SDL_Init == NULL) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "initializeControllerSubsystems: SDL_Init not found");
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "initializeControllerSubsystems: SDL_Init not found");
         return;
     }
     // SDL3: SDL_INIT_GAMEPAD=0x2000 | SDL_INIT_JOYSTICK=0x200 | SDL_INIT_EVENTS=0x4000
     SDL_Init(0x2000u | 0x200u | 0x4000u);
-    __android_log_print(ANDROID_LOG_INFO, "FCL", "initializeControllerSubsystems: SDL controller subsystems initialized");
+    __android_log_print(ANDROID_LOG_INFO, "KCU", "initializeControllerSubsystems: SDL controller subsystems initialized");
 }
 
 // --- SDL 文本输入通道（启动器代管，供启动器侧显式唤起输入法） ---
@@ -449,11 +449,11 @@ static void sdlTextInputMainThreadCallback(void *userdata) {
     if (userdata != NULL) {
         sdlStartTextInput_t start = (sdlStartTextInput_t) dlsym(handle, "SDL_StartTextInput");
         if (start != NULL) start(window, 0);
-        else __android_log_print(ANDROID_LOG_ERROR, "FCL", "sdlTextInputMainThreadCallback: SDL_StartTextInput not found");
+        else __android_log_print(ANDROID_LOG_ERROR, "KCU", "sdlTextInputMainThreadCallback: SDL_StartTextInput not found");
     } else {
         sdlStopTextInput_t stop = (sdlStopTextInput_t) dlsym(handle, "SDL_StopTextInput");
         if (stop != NULL) stop(window);
-        else __android_log_print(ANDROID_LOG_ERROR, "FCL", "sdlTextInputMainThreadCallback: SDL_StopTextInput not found");
+        else __android_log_print(ANDROID_LOG_ERROR, "KCU", "sdlTextInputMainThreadCallback: SDL_StopTextInput not found");
     }
 }
 
@@ -466,24 +466,24 @@ Java_com_kongbai_kculauncher_game_sdl_SdlBridge_isSdlRenderActive(__attribute__(
 JNIEXPORT jboolean JNICALL
 Java_com_kongbai_kculauncher_game_sdl_SdlBridge_setNativeTextInputActive(__attribute__((unused)) JNIEnv* env, __attribute__((unused)) jclass clazz, jboolean active) {
     if (sdlHookGetPrimaryWindow() == NULL) {
-        __android_log_print(ANDROID_LOG_WARN, "FCL", "setNativeTextInputActive: no SDL window (SDL render path inactive)");
+        __android_log_print(ANDROID_LOG_WARN, "KCU", "setNativeTextInputActive: no SDL window (SDL render path inactive)");
         return JNI_FALSE;
     }
     void *handle = dlopen("libSDL3.so", RTLD_NOW);
     if (handle == NULL) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "setNativeTextInputActive: libSDL3.so dlopen failed");
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "setNativeTextInputActive: libSDL3.so dlopen failed");
         return JNI_FALSE;
     }
     sdlRunOnMainThread_t runOnMain = (sdlRunOnMainThread_t) dlsym(handle, "SDL_RunOnMainThread");
     if (runOnMain == NULL) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "setNativeTextInputActive: SDL_RunOnMainThread not found");
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "setNativeTextInputActive: SDL_RunOnMainThread not found");
         return JNI_FALSE;
     }
     // SDL3 文本输入 API 要求主线程，经 SDL_RunOnMainThread 投递；不等待完成，激活结果由
     // SDL 回调 showTextInput 异步镜像回 Java 层
     bool result = runOnMain(sdlTextInputMainThreadCallback, (void *) (intptr_t) (active ? 1 : 0), JNI_FALSE);
     if (!result) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "setNativeTextInputActive: SDL_RunOnMainThread dispatch failed");
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "setNativeTextInputActive: SDL_RunOnMainThread dispatch failed");
     }
     return result ? JNI_TRUE : JNI_FALSE;
 }
@@ -499,7 +499,7 @@ Java_com_kongbai_kculauncher_game_sdl_SdlBridge_isNativeTextInputActive(__attrib
     typedef bool (*sdlIsTextInputActive_t)(SDL_Window *);
     sdlIsTextInputActive_t isActive = (sdlIsTextInputActive_t) dlsym(handle, "SDL_TextInputActive");
     if (isActive == NULL) {
-        __android_log_print(ANDROID_LOG_ERROR, "FCL", "isNativeTextInputActive: SDL_TextInputActive not found");
+        __android_log_print(ANDROID_LOG_ERROR, "KCU", "isNativeTextInputActive: SDL_TextInputActive not found");
         return JNI_FALSE;
     }
     return isActive(window) ? JNI_TRUE : JNI_FALSE;
@@ -563,11 +563,11 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCursorEnter(
 
 void critical_send_cursor_pos(jfloat x, jfloat y) {
 #ifdef DEBUG
-    FCL_INTERNAL_LOG("Sending cursor position \n");
+    KCU_INTERNAL_LOG("Sending cursor position \n");
 #endif
     if (pojav_environ->GLFW_invoke_CursorPos && pojav_environ->isInputReady) {
 #ifdef DEBUG
-        FCL_INTERNAL_LOG("pojav_environ->GLFW_invoke_CursorPos && pojav_environ->isInputReady \n");
+        KCU_INTERNAL_LOG("pojav_environ->GLFW_invoke_CursorPos && pojav_environ->isInputReady \n");
 #endif
         if (!pojav_environ->isCursorEntered) {
             if (pojav_environ->GLFW_invoke_CursorEnter) {

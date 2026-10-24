@@ -7,11 +7,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * 真实 FCL 布局（仿原神键位 4bf3d919.json，2.2MB / 100 控件组 / 964 控件，
+ * 真实 KCU 布局（仿原神键位 4bf3d919.json，2.2MB / 100 控件组 / 964 控件，
  * control-converter 项目 AGENTS.md 记录的最大最复杂回归实例）压测：
  *
- * 1. FCL -> ZL2：按 ZalithLauncher2 kotlinx 数据模型逐字段结构校验
- * 2. ZL2 -> FCL 无损往返：控件 id/事件/几何逐一还原（样式改名除外，cc.py 语义）
+ * 1. KCU -> ZL2：按 ZalithLauncher2 kotlinx 数据模型逐字段结构校验
+ * 2. ZL2 -> KCU 无损往返：控件 id/事件/几何逐一还原（样式改名除外，cc.py 语义）
  * 3. 格式检测与默认参数行为
  */
 class RealLayoutStressTest {
@@ -139,7 +139,7 @@ class RealLayoutStressTest {
 
     // --- 测试 ---
 
-    /** FCL -> ZL2：整体转换 + ZL2 结构校验。 */
+    /** KCU -> ZL2：整体转换 + ZL2 结构校验。 */
     @Test
     fun realFclToZl2Structure() {
         val input = CcJson.loadJson(loadRes("real_4bf3d919_fcl.json"))
@@ -154,7 +154,7 @@ class RealLayoutStressTest {
         validateZlLayout(zl)
     }
 
-    /** ZL2 -> FCL 无损往返：id 集合、事件、几何逐一还原。 */
+    /** ZL2 -> KCU 无损往返：id 集合、事件、几何逐一还原。 */
     @Test
     fun realLayoutLosslessRoundtrip() {
         val input = CcJson.loadJson(loadRes("real_4bf3d919_fcl.json"))
@@ -163,7 +163,7 @@ class RealLayoutStressTest {
         java.io.File("build/real_roundtrip.json").writeText(CcJson.encodePretty(restored))
 
         // 合并按钮集合：zl1 中 meta.mapping.generatedFrom == overlay-merge 的按钮，
-        // 其文字取自配对的显示按钮，回写 FCL 时会覆盖原事件按钮的 text（cc.py 语义）
+        // 其文字取自配对的显示按钮，回写 KCU 时会覆盖原事件按钮的 text（cc.py 语义）
         val mergedIds = HashSet<String>()
         for (layer in zl.optArr("layers") ?: JsonArray()) {
             val obj = layer.asObjOrNull() ?: continue
