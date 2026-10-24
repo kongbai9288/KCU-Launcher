@@ -30,6 +30,7 @@ import com.kongbai.kculauncher.setting.ConfigHolder
 import com.kongbai.kculauncher.util.KcuAgeGate
 import com.kongbai.kculauncher.util.KcuDevMode
 import com.kongbai.kculauncher.util.KcuManifest
+import com.kongbai.kculauncher.util.KcuAccountTransfer
 import com.kongbai.kculauncher.setting.Controllers
 import com.kongbai.kculauncher.util.RuntimeUtils
 import com.kongbai.kculauncher.launcher.utils.KCUPath
@@ -153,6 +154,14 @@ class SplashActivity : KCUActivity() {
                 // 路径与实例均就绪后写公共目录清单，供外部迁移工具读取实际布局
                 runCatching { KcuManifest.write(this@SplashActivity) }.exceptionOrNull()?.let {
                     Logging.LOG.log(Level.WARNING, "KcuManifest: " + it.message)
+                }
+                // 先导入外部工具放置的待导入离线账号，再导出当前快照，
+                // 顺序不可颠倒，否则导出内容不含刚导入的账号
+                runCatching { KcuAccountTransfer.importPending() }.exceptionOrNull()?.let {
+                    Logging.LOG.log(Level.WARNING, "KcuAccountTransfer: " + it.message)
+                }
+                runCatching { KcuAccountTransfer.export() }.exceptionOrNull()?.let {
+                    Logging.LOG.log(Level.WARNING, "KcuAccountTransfer: " + it.message)
                 }
                 if (System.currentTimeMillis() - sharedPreferences.getLong(
                         "clear_cache", 0L
