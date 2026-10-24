@@ -10,7 +10,15 @@ import os, re, sys
 ROOT = sys.argv[1] if len(sys.argv) > 1 else "."
 SKIP = {'.git', 'build', '.gradle', 'gradle', 'node_modules', '.github'}
 EXT = {'.java', '.kt', '.xml'}
-PAIRS = [('settings_fcl_', 'settings_kcu_')]
+# 注意：资源 ID 改名必须同步**所有** values-*/strings.xml。
+# 上一版只改了 values / values-zh / values-vi，漏了 de / uk / ru / zh-rHK，
+# 导致这些语言里残留旧 ID 而默认 locale 已无对应项，
+# Lint 报 ExtraTranslation 使 lintVitalRelease 失败（release 构建中断）。
+PAIRS = [
+    ('settings_fcl_', 'settings_kcu_'),
+    ('name="folder_fcl_log"', 'name="folder_kcu_log"'),
+    ('name="upload_fcl_log"', 'name="upload_kcu_log"'),
+]
 n = 0
 hits = 0
 for dirpath, dirnames, filenames in os.walk(ROOT):
