@@ -42,7 +42,7 @@
     <string name="plugin_env_config">配置</string>
     <string name="about_sponsor">赞助</string>
     <string name="about_source">开源</string>
-    <string name="about_desc">你说得对，但是「KCU」是由FCL-Team基于HMCL的核心功能，使用PojavLauncher后端开发的Minecraft Java版启动器。启动器运行在一个被称作「安卓」的系统，在这里，被系统选中的人将被授予「JVM」，导引Java之力。你将扮演一位名为「小白」的神秘用户，在自由的使用中安装不同版本、各有千秋独特的模组，和它们一起运行，找出崩溃闪退的原因，同时逐步发掘「xxException:」的真相。\n\n该应用借鉴和引用了一些 PojavLauncher 和 Boat 的源码，所以如果你要传播分发该软件，请遵循 GPL-v3 协议。</string>
+    <string name="about_desc">KCU Launcher 是一个由架构师 kongbai9288 以 FCL（即 Fold Craft Launcher）为主体、其他项目为辅的开源软件，源码可修改，遵循 GPL-v3 许可发布。\n\n页面下方的条目携带图标，点击「开源许可」可查看所使用开源项目的许可（全部内置于本地，不联网获取）。</string>
     <string name="account_add_server">添加认证服务器</string>
     <string name="account_add_server_url">服务器地址</string>
     <string name="account_add_server_name">服务器名称</string>
