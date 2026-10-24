@@ -33,6 +33,9 @@ jobs:
           echo "--- 2a2. 补丁2：Kotlin 字符串模板内的标识符 ---"
           python3 .github/scripts/patch_kotlin_tpl.py .
           echo "PATCH2_EXIT=$?"
+          echo "--- 2a3. 补丁3：settings_fcl_* 资源标识符 -> settings_kcu_* ---"
+          python3 .github/scripts/patch_settings.py .
+          echo "PATCH3_EXIT=$?"
           echo "--- 2b. 类文件重命名 FCL* -> KCU* ---"
           python3 .github/scripts/rename_classes.py .
           echo "RENAME_EXIT=$?"
