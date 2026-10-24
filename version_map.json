@@ -11,7 +11,7 @@
         "text": [
           "用户要求：除法律等不可动的外，全部去 FCL 描述。拼写确认补齐 n 为 com.kongbai.kculauncher。范围确认为最深层即包名加类名前缀加模块名与项目名。applicationId 保持不变以保证可升级。",
           "追溯发现不能只改 Java 源码：JNI 的 FindClass 字符串必须与 Java 类全限定名逐字一致，只改 Java 不改 C 能编译通过但一启动就崩。布局 XML 另有二百八十六处全限定名控件引用不改会在运行期抛 InflateException。",
-          "映射关系：fclcore 到 core 子包、fcllibrary 到 library、fclauncher 到 launcher、fcl 到根、com.kongbai.kculauncher.mio 到 mio 子包。四十六个 FCL 前缀类改 KCU 前缀，KCULauncher 是特例映射为 KCULauncher。模块与目录 FCL 改 KCU，项目名由 Fold Craft Launcher 改为 KCU Launcher。",
+          "映射关系：fclcore 到 core 子包、fcllibrary 到 library、fclauncher 到 launcher、fcl 到根、com.mio 到 mio 子包。四十六个 FCL 前缀类改 KCU 前缀，FCLauncher 是特例映射为 KCULauncher。模块与目录 FCL 改 KCU，项目名由 Fold Craft Launcher 改为 KCU Launcher。",
           "法律与契约保护清单一个字未动：FCL_VERSION_CODE、FoldCraftLauncher、FCL-Team、Fold Craft Launcher。FCL_VERSION_CODE 必须保留因为它是 MobileGlues 的启动器白名单环境变量名，改了渲染器会判定 unsupported 从而忽略玩家全部配置。",
           "执行方式：做成三个脚本加一个 workflow 在 CI 里跑，分别是 migrate_package.py、patch_fcl.py、patch_kotlin_tpl.py、rename_classes.py。",
           "踩坑一：首版脚本按固定前缀拼路径导致 MOVED_DIRS 为零，实际包目录在模块目录之下且有 androidTest 等变体，改为遍历查找后得到十一。",
@@ -20,7 +20,7 @@
           "踩坑四：类文件没改名导致编译失败，内容改了文件名没改使 public 类名与文件名不一致，补脚本后重命名四十六个文件。",
           "踩坑五：词边界漏掉 R 字段导致编译失败，下划线是单词字符使词边界正则匹配不到 FCLTextView_auto_tint 这类引用，而 attrs.xml 已改名两边对不上出现七处 Unresolved reference，补脚本全局替换后修补九十九个文件。",
           "踩坑六：Kotlin 字符串模板被整串保护导致编译失败，模板内的代码标识符没被替换出现 import 已改而模板内未改的不一致，补脚本先挖出花括号表达式单独处理后修补八个文件。",
-          "验证结果：迁移后全仓扫描 com.tungsten 残留零、com.kongbai.kculauncher.mio 残留零、FCL 目录残留零、com.kongbai 文件一千零四、KCU 模块文件一千六百二十七，FCL_VERSION_CODE 在 KCULauncher 中保留。",
+          "验证结果：迁移后全仓扫描 com.tungsten 残留零、com.mio 残留零、FCL 目录残留零、com.kongbai 文件一千零四、KCU 模块文件一千六百二十七，FCL_VERSION_CODE 在 KCULauncher 中保留。",
           "审核 pass。哈希回执：KCULauncher.java 第 207 行 envMap.put(\"FCL_VERSION_CODE\", FCL_VERSION_CODE + \"\")，五个字母 e n v M a 拼成 envMa，SHA-1 90b0dcd925f9568f93f22f18f03235290e7b1938。取材行即法律与契约不可动的核心保护点，变量名保留而类名已是 KCULauncher。",
           "冒烟测试：Actions run 40085364053 由 push 触发全矩阵并成功，五个产物分别为 all 326271109、x86_64 174896301、arm64 169201232、arm 161942887、x86 155590409 字节。",
           "未验证：实机安装仍为零验证。"
@@ -76,7 +76,7 @@
           "新增 KcuLicenseActivity，数据来自 assets/licenses/licenses.json，读取与展示全程零网络请求。",
           "SPDX 逐项取自 GitHub API 官方 license.spdx_id 字段而非凭印象填写：Fold Craft Launcher 为 GPL-3.0、PojavLauncher 为 LGPL-3.0 注意不是 GPL、HMCL 为 GPL-3.0、SDL3 为 Zlib、LWJGL 为 BSD-3-Clause、MobileGlues 为 LGPL-2.1 且与 v0.36.0 的二进制证据一致。",
           "两个查不到的如实标注而非猜测：Android-OpenJDK-Build 官方仓库 license 字段为 None，标注官方仓库未声明 SPDX；Terracotta 搜索确认不到对应仓库，直接不列入清单。",
-          "审核截获的必错项：其一是 Kotlin 顶层函数不能用 import com.kongbai.kculauncher.mio.util.openLink，它编译为 AndroidUtilKt 静态方法，已改为 AndroidUtilKt.openLink；其二是新建 Activity 未在 Manifest 注册会导致 startActivity 崩溃，已注册并设 exported 为 false。此外 optJSONObject 返回 null 会 NPE 故加判空，行容器改用无背景 LinearLayout 避免嵌套 card 内边距过挤，assets 读取异常走占位文案。",
+          "审核截获的必错项：其一是 Kotlin 顶层函数不能用 import com.mio.util.openLink，它编译为 AndroidUtilKt 静态方法，已改为 AndroidUtilKt.openLink；其二是新建 Activity 未在 Manifest 注册会导致 startActivity 崩溃，已注册并设 exported 为 false。此外 optJSONObject 返回 null 会 NPE 故加判空，行容器改用无背景 LinearLayout 避免嵌套 card 内边距过挤，assets 读取异常走占位文案。",
           "对用户使用逻辑的影响：打开关于页每行左侧有图标徽章；点开源许可打开本地页完全不联网；点许可条目跳项目主页这是唯一联网动作且由用户主动触发。说明行仍用 about_desc，该文案描述的是上游属遗留未改。",
           "对未来的影响：新增上游组件时须同步 licenses.json 否则清单不全；SPDX 若上游改许可需同步；about_desc 仍是上游文案属遗留。",
           "对代码逻辑的影响：KcuUi 新增一个方法，其余为新增文件与资源，未改已有 API 签名。",
@@ -99,14 +99,14 @@
         "text": [
           "承接 v0.44.0 遗留：GameMenu 行 797 至 801 把 getScreenWidth 与 getScreenHeight 传给 TouchController 构造与 TouchControllerInputView.setSize，窗口变化后不会更新。当时未修是因为不确定 TouchController 是否有 resize 接口，本轮读完实现后确认它没有 resize 接口但也不需要，因为尺寸只用于归一化。",
           "追溯结果：TouchController 中 addPointer 传参 event.getX(index) 除以 width 与 event.getY(index) 除以 height，以及 client.moveView(true, deltaY 除以 height, deltaX 除以 width)，都是把像素坐标归一化到零到一，width 与 height 只作分母，声明为构造参数 val 后即冻结。TouchControllerInputView 的 width 与 height 由 setSize 写入，用于把 cursorRect 与 inputAreaRect 这两个归一化矩形换算回像素，共八处使用点。",
-          "修法：两处都改为动态 getter，构造或传入的值仅作兜底，写法为 getScreenWidth().takeIf { it > 0 } ?: initialWidth。不需要任何外部 hook，因为窗口变化后 DisplayUtil 会由 KCUActivity.onConfigurationChanged 刷新，getter 下次调用自动拿到新值。",
+          "修法：两处都改为动态 getter，构造或传入的值仅作兜底，写法为 getScreenWidth().takeIf { it > 0 } ?: initialWidth。不需要任何外部 hook，因为窗口变化后 DisplayUtil 会由 FCLActivity.onConfigurationChanged 刷新，getter 下次调用自动拿到新值。",
           "真实编译失败一次：run 40067197166 五个架构全部失败，报 TouchControllerInputView.kt 第 71 行第 28 列 Accidental override，提示 The following declarations have the same JVM signature (getWidth()I)。",
           "失败原因：该类继承 View，Android 的 View 已有 getWidth 与 getHeight 方法，我自定义的 private val width get() 编译后同样生成 getWidth 方法，造成 JVM 签名冲突。",
           "修法：属性改名为 screenW 与 screenH，并把八处使用点精确替换。必须避开 cursorRect.width 这类 RectF 自身字段，所以用完整表达式逐条断言 count 等于一后再替换，而不是正则批量替换。TouchController 是普通类不继承 View 所以没有冲突。",
           "日志能够定位到这次错误，靠的是 v0.40.0 修的取证改进即上报步骤直接读 /tmp/build.log 文件，否则只能盲猜。",
           "会导致的错误逐条处置：自定义 width 与 height 与 View.getWidth 冲突导致五架构全编译失败（改名 screenW 与 screenH）；正则替换误伤 cursorRect.width 这类 RectF 自身字段（用完整表达式精确替换八处并逐条断言）；TouchController 是否也冲突（它是普通类不继承 View 无冲突）；构造参数改为 private val initialWidth 是否破坏调用方（位置参数调用签名不变）；getScreenWidth 返回零时（兜底用构造初值与原负一语义一致）；getter 在 onDraw 中每次调用的开销（只读静态 int 可忽略）。",
           "对用户使用逻辑的影响：小窗切全屏时触控归一化按新尺寸，指针与视角不再失控；光标与输入区矩形按新尺寸换算；未装 TouchController mod 的场景完全不受影响。",
-          "对未来的影响：尺寸快照类问题至此全量修完，覆盖 TouchPad、MenuView、ControlButton、ControlDirection、KCUInput、TouchController、TouchControllerInputView 七个类；新增代码若再在 View 子类声明 val width 会再次冲突，已写入规则 240。",
+          "对未来的影响：尺寸快照类问题至此全量修完，覆盖 TouchPad、MenuView、ControlButton、ControlDirection、FCLInput、TouchController、TouchControllerInputView 七个类；新增代码若再在 View 子类声明 val width 会再次冲突，已写入规则 240。",
           "对代码逻辑的影响：TouchController 构造参数名变更但位置不变故调用方兼容；两处属性改为 getter 开销极小。",
           "审核 pass。哈希回执出现第四次碰撞：首次取 TouchControllerInputView 行 73 得五个字母 priva，与 v0.19.0 的 KcuDevMode 行 28 完全一致且 SHA-1 同为 28399ad1e9d4bd701852ebb005259fe30f57e756，原因是两行都以 private 开头。按规则 193 即取字行要选含特征标识符的，改取 TouchController.kt 行 33 含 val width，五个字母为 v a l w i 拼成 valwi，SHA-1 0c816a93d5c6512f3a1a67a42d2421ba687d45b9。",
           "冒烟测试：Actions run 40067932184 由 push 触发全矩阵并成功，五个产物分别为 all 326243965、x86_64 174872036、arm64 169175968、arm 161916555、x86 155564861 字节。",
@@ -126,12 +126,12 @@
         "lang": "zh_CN",
         "text": [
           "承接 v0.43.0 遗留：其他类若也快照屏幕尺寸则小窗问题仍在，本轮做全仓排查并修完。",
-          "排查方式为 code search，getScreenWidth 命中源码文件共十七个，逐个区分三类：构造时快照为 final 或 val 的有 TouchPad、MenuView 已于 v0.43.0 修，以及 ControlButton、ControlDirection、KCUInput 本轮修；方法内局部读取即每次调用重算的有 GameMenu、RightMenuAdapter、JVMActivity、KCUGameRepository、两个皮肤 Dialog 与各 Dialog，无需改；AWTInput 用时直接调用，无需改。",
+          "排查方式为 code search，getScreenWidth 命中源码文件共十七个，逐个区分三类：构造时快照为 final 或 val 的有 TouchPad、MenuView 已于 v0.43.0 修，以及 ControlButton、ControlDirection、FCLInput 本轮修；方法内局部读取即每次调用重算的有 GameMenu、RightMenuAdapter、JVMActivity、FCLGameRepository、两个皮肤 Dialog 与各 Dialog，无需改；AWTInput 用时直接调用，无需改。",
           "ControlButton 的字段在原六十五与六十六行、构造赋值在一百五十二与一百五十三行、读取共十处，含宽高计算二百一十六至二百二十、定位二百三十一至二百三十二、拖动 clamp 五百六十九至五百七十、存回百分比四百四十五至四百四十六与五百八十一至五百八十二、基准五百八十八、指针六百一十四至六百一十五与六百三十七至六百三十八。这正是用户所说扩大后按钮都是小的很的直接原因，因为宽高按快照的小窗尺寸乘百分比；也是整个操作页面全部偏移的原因，因为定位按旧尺寸算。",
           "ControlDirection 字段在六十与六十一行，两个构造函数各有一处赋值即一百六十二至一百六十三与二百二十一至二百二十二，只删一处会留下对已删 final 字段的赋值导致编译失败，所以用全量替换删了两处；读取七处。",
-          "KCUInput 字段在四十五与四十六行、赋值一百一十七至一百一十八、读取两处即三百七十八至三百七十九与四百三十八至四百三十九的指针 clamp。这是 MC 没办法正常操控的另一半，TouchPad 之外 KCUInput 也把指针 clamp 在旧范围。",
+          "FCLInput 字段在四十五与四十六行、赋值一百一十七至一百一十八、读取两处即三百七十八至三百七十九与四百三十八至四百三十九的指针 clamp。这是 MC 没办法正常操控的另一半，TouchPad 之外 FCLInput 也把指针 clamp 在旧范围。",
           "会导致的错误逐条处置：ControlDirection 有两处赋值只删一处会编译失败所以用 count 大于等于一的全量替换并确认删了两处；正则误伤 mScreenWidth 与 getScreenWidth 的问题用 \\b 边界解决因前导为字母不匹配；删字段后残留裸引用经 grep 排除 getScreenXxx 调用为零命中；括号失衡经检查三个文件花括号差均为零；每次调用读静态字段的开销可忽略因只读一个 int 且多在触摸与布局路径；百分比定位在尺寸变化后仍合理因为存的是百分比重算后落在同比例位置。",
-          "对用户使用逻辑的影响：小窗切全屏或全屏切小窗时按钮按新尺寸等比放大且位置按百分比重算；拖动控件后存回仍按当前尺寸换算百分比；陀螺仪与指针范围由 KCUInput 与 TouchPad 都按当前尺寸 clamp。",
+          "对用户使用逻辑的影响：小窗切全屏或全屏切小窗时按钮按新尺寸等比放大且位置按百分比重算；拖动控件后存回仍按当前尺寸换算百分比；陀螺仪与指针范围由 FCLInput 与 TouchPad 都按当前尺寸 clamp。",
           "对未来的影响：GameMenu 七百九十七至八百零一行把 getScreenWidth 与 getScreenHeight 传给 TouchController 构造与 setSize，窗口变化后不会更新，属遗留；其余 Dialog 里的都是局部读取无需处理。",
           "对代码逻辑的影响：三个类各少两个字段，其余逻辑未变。",
           "审核 pass。哈希回执出现第三次碰撞：第一次取材 ControlButton 第五百六十五行得到的五个字母又是 float，与 v0.43.0 的 TouchPad 第二百八十七行完全相同，SHA-1 同为 685e80366130387cb75c055248326976d16fdf8d，原因是两行都以 float x 等于 Math.max 开头。按规则一百九十三条即取字行要选含特征标识符的，改取第五百七十七行含 baseInfo.setXPosition，五个字母为 b a s e I 拼成 baseI，SHA-1 c38dc33cef5c7ee694dd13e443c2f91760f64fa4。",
@@ -153,14 +153,14 @@
         "lang": "zh_CN",
         "text": [
           "用户反馈三点：弹窗与填写栏非常离谱没有审美，应当大且有图标示意；小窗要么禁用要么能正常横屏小窗且倾向后者；从小窗回到正常页面会出毛病，包括布局位置不对、扩大后按钮很小、操作页面偏移、MC 无法操控。",
-          "小窗根因追溯：尺寸来源链为 AndroidUtilKt.getScreenWidth 到 DisplayUtil.currentDisplayMetrics.widthPixels，而 getDisplayMetrics 在多窗口下取 activity.resources.displayMetrics 即窗口尺寸、否则取 getRealMetrics 即屏幕真实尺寸。JVMActivity 继承 KCUActivity，其 onConfigurationChanged 会调 refreshDisplayMetrics，所以刷新机制本身是存在的。",
+          "小窗根因追溯：尺寸来源链为 AndroidUtilKt.getScreenWidth 到 DisplayUtil.currentDisplayMetrics.widthPixels，而 getDisplayMetrics 在多窗口下取 activity.resources.displayMetrics 即窗口尺寸、否则取 getRealMetrics 即屏幕真实尺寸。JVMActivity 继承 FCLActivity，其 onConfigurationChanged 会调 refreshDisplayMetrics，所以刷新机制本身是存在的。",
           "但两处把尺寸快照成了不可变值：TouchPad.java 原 final 字段在构造时赋值；MenuView.kt 原 private val 等于 getScreenWidth 在构造时求值。使用点分别是 TouchPad 的指针 clamp 行 286 与 287、左半屏判定行 318，以及 MenuView 的菜单定位行 97 与 98、拖拽 clamp 行 173 至 179。",
           "症状对应关系：构造后切全屏数值不更新，指针被 clamp 在旧小窗尺寸内导致 MC 只能操控左上角一小块；菜单定位与拖拽范围按旧尺寸算导致布局位置不对与按钮偏小。三条症状与用户描述一一对应，属上游固有缺陷而非本项目引入。",
           "修法：TouchPad 删除 final 字段与构造赋值改为使用时直接调用 AndroidUtilKt.getScreenWidth；MenuView 的 val 改为 get 使每次访问重新计算。JVMActivity 已有的两层 OnGlobalLayoutListener 负责强制分辨率 letterbox，本轮未动。",
           "弹窗观感改造：KcuUi 新增 iconBadge 圆形强调色底加白色符号四十六 dp、header 图标加大标题横排、fieldRow 前置图标加输入区横排、editOf 从输入行取出 EditText。图标用基础字符而非图片资源，选用 down 井号 菱形 恒等 感叹号 等基础符号，保证风格统一、不新增 drawable、避免设备字体 emoji 化。",
           "加大项：卡片内边距十六 dp 改二十二 dp；标题字号十九 sp 改二十一 sp；输入框内边距十二 dp 改十四 dp；输入框最小高度新增四十六 dp。",
           "顺带修掉两个真实 UI bug：其一是年龄页标题与说明重复渲染两遍，原因是 KcuAgeActivity 加了一次而 KcuAgeGate.buildInto 又加了一次，删除 Activity 里的重复；其二是 RadioButton 未设 id 导致 group.check 传负一选不中任何项，默认十八岁在界面上没有选中态，补 rb.setId(i+1)。",
-          "会导致的错误逐条处置：TouchPad 删字段后残留引用（grep 确认零处）；MenuView 改 getter 后语义变化（val 改 get 对外用法不变）；每次触摸调 getScreenWidth 的开销（只读一个 int 字段可忽略）；currentDisplayMetrics 未初始化（lateinit 且 KCUActivity.onCreate 已 init）；fieldRow 取 child 越界（容器固定两个子元素）；图标字符设备不支持显示豆腐块（选用基础符号但需实机确认）；删重复标题后页面变空（buildInto 内仍构建标题与说明）。",
+          "会导致的错误逐条处置：TouchPad 删字段后残留引用（grep 确认零处）；MenuView 改 getter 后语义变化（val 改 get 对外用法不变）；每次触摸调 getScreenWidth 的开销（只读一个 int 字段可忽略）；currentDisplayMetrics 未初始化（lateinit 且 FCLActivity.onCreate 已 init）；fieldRow 取 child 越界（容器固定两个子元素）；图标字符设备不支持显示豆腐块（选用基础符号但需实机确认）；删重复标题后页面变空（buildInto 内仍构建标题与说明）。",
           "对用户使用逻辑的影响：小窗切全屏或全屏切小窗时指针范围与菜单定位按新尺寸重算；年龄页标题只出现一次且默认十八岁有选中态；导入页改为图标标题加两个带图标输入框。",
           "对未来的影响：其他类若也快照尺寸问题仍在且本轮未做全仓排查；图标字符方案依赖设备字体若要更稳妥可换矢量 drawable；禁用小窗开关未做因为用户倾向修复方案。",
           "对代码逻辑的影响：TouchPad 少两个字段开销极小；MenuView 属性改 getter 开销极小；KcuUi 新增四个方法未改已有签名保持向后兼容。",
@@ -244,7 +244,7 @@
           "追溯发现之前导入的版本根本不显示：DefaultGameRepository 枚举版本时若无 id.json 就打印 No available json file found 并 return Stream.empty 整份忽略。这是 v0.35.0 遗留项只写 jar 不写 json 的直接后果，也是显示未知的前提必须先让它进列表。",
           "最小 json 是否合法：Version.validate 全文唯一硬性要求是 id 非空，其余字段全可空，所以 id 加 jar 两个字段的 json 可被解析。",
           "默认 JDK 为什么错：JavaManager.findExactOrNextGreater 在 version 为 null 时直接 return getJavaFromVersionName(jre8)。导入版本没有 javaVersion 所以恒选 jre8，而且根本没让用户选，这正是用户不满之处。",
-          "接入点：Versions.launch 在 checkVersionForLaunching 之后插入 KcuLaunchGate.prepare；候选来自 JavaManager.getJavaList 即 init 扫描 KCUPath.JAVA_PATH 下含 release 文件的目录且 name 为目录名；保存走 getVersionSetting(id).setJava(name) 加 saveVersionSetting(id)；版本目录用 getVersionRoot(id) 且该方法返回 File。",
+          "接入点：Versions.launch 在 checkVersionForLaunching 之后插入 KcuLaunchGate.prepare；候选来自 JavaManager.getJavaList 即 init 扫描 FCLPath.JAVA_PATH 下含 release 文件的目录且 name 为目录名；保存走 getVersionSetting(id).setJava(name) 加 saveVersionSetting(id)；版本目录用 getVersionRoot(id) 且该方法返回 File。",
           "改动：新增 KcuVersionMeta 与 KcuLaunchGate 两个类；改 KcuImportActivity 使导入收尾写最小 id.json 与 meta；改 Versions 插入 gate；values/strings.xml 新增 kcu_pick_java_title 与 kcu_pick_java_hint；build.yml 修日志取证。",
           "契约文件为版本目录下的 kcu_meta.json，字段含 known 表示是否已探测、display 展示文本未探测时为未知、java 用户选定运行时名且空表示未选下次仍会询问。",
           "只对导入版本生效：prepare 第一判断是 meta 文件是否存在，不存在直接放行。正常下载的版本没有该文件，原有启动路径一行未改。",
@@ -273,8 +273,8 @@
         "lang": "zh_CN",
         "text": [
           "用户要求两条：加载顺序配置每个实例独立；默认生成的配置里要有原有的 so 方便直接排序。",
-          "追溯：KCULauncher.launch 线程内 KcuNativeSync.sync 在行 559、setEnv 在行 565、KcuNativeOrder.loadInOrder 在行 567。实例目录取 config.getWorkingDir，同方法内 bridge.chdir(config.getWorkingDir()) 已在使用来源可靠。KCUPath.MOD_RUNTIME_DIR 里原有库与玩家自带库同在该目录。",
-          "改动：KcuNativeOrder.java 配置路径改为实例目录加 natives 加 load_order.json 并新增模板生成；KCULauncher 调用改为 loadInOrder(bridge, config.getWorkingDir)。",
+          "追溯：FCLauncher.launch 线程内 KcuNativeSync.sync 在行 559、setEnv 在行 565、KcuNativeOrder.loadInOrder 在行 567。实例目录取 config.getWorkingDir，同方法内 bridge.chdir(config.getWorkingDir()) 已在使用来源可靠。FCLPath.MOD_RUNTIME_DIR 里原有库与玩家自带库同在该目录。",
+          "改动：KcuNativeOrder.java 配置路径改为实例目录加 natives 加 load_order.json 并新增模板生成；FCLauncher 调用改为 loadInOrder(bridge, config.getWorkingDir)。",
           "模板格式为 enabled 等于 false、abi 为当前架构、onFailure 等于 skip、order 为 MOD_RUNTIME_DIR 当前已有的全部 so 按名排序，含原有库与玩家自带库。",
           "关键决策 enabled 字段。用户未要求该字段，是我加的，理由必须说明：若模板生成后即生效，那么什么都不设置的玩家会在第一次启动后被按序 dlopen 一遍所有库，默认行为被改变，违背一直坚持的零污染原则，也违背 v0.38.0 已确立的不放 json 就等同上游。因此模板 enabled 为 false 不生效，用户显式启用才加载；生成时本次也直接 return 避免刚生成就被用上的时序意外。这是本轮唯一偏离用户字面要求的改动，可推翻。",
           "会导致的错误逐条处置：实例目录为空则在根目录建 natives（已判空直接 return）；每次启动都重写模板覆盖用户编辑（只在文件不存在时生成）；模板生成失败导致启动崩（整体 catch Throwable）；JsonWriter 未关闭（finally 关闭）；路径穿越与误加载配置文件（isSafeName 沿用）；跨架构（abi 不符整份失效）；列模板时把非 so 列进去（listRuntimeLibs 复用 isSafeName）。",
@@ -306,14 +306,14 @@
           "第二部分实现自带 so 的加载顺序控制。用户要求 so 同级放 json 控序且该文件不能进入加载流程。",
           "不放到加载当中有两层含义。复制层指 json 不能被复制进 MOD_RUNTIME_DIR，KcuNativeSync.sync 已按 so 后缀加 ELF magic 双重过滤天然排除；dlopen 层指新增代码只处理 order 里声明的、以 so 结尾、且确实存在于运行时目录的文件。",
           "为什么必须显式 dlopen：LD_LIBRARY_PATH 只影响依赖库搜索路径，不控制 dlopen 顺序。顺序敏感场景如符号解析与初始化次序必须显式按序加载，否则不同 so 组合会随机崩。",
-          "接入点时序关键：loadInOrder 必须在 setEnv 之后，因为 setEnv 之前 native 侧还没拿到含 MOD_RUNTIME_DIR 的 LD_LIBRARY_PATH，此时 dlopen 解析不到依赖库。插入点 KCULauncher.java 第 567 行位于 setEnv 与 setUpJavaRuntime 之间。",
+          "接入点时序关键：loadInOrder 必须在 setEnv 之后，因为 setEnv 之前 native 侧还没拿到含 MOD_RUNTIME_DIR 的 LD_LIBRARY_PATH，此时 dlopen 解析不到依赖库。插入点 FCLauncher.java 第 567 行位于 setEnv 与 setUpJavaRuntime 之间。",
           "契约文件路径 sdcard/KCU/natives/abi/load_order.json，字段含 abi 可选且不符则整份不生效、order 文件名数组、onFailure 取值 abort 或其他。",
           "审核要点：isSafeName 拒绝含斜杠反斜杠、以点开头、非 so 结尾的名字以防御路径穿越与误加载配置文件；abi 不匹配返回 null；json 损坏等同未配置不阻断启动；JsonReader 在 finally 关闭；只加载 so.isFile 为真的即已过 ELF 校验的文件。",
           "导致的错误逐条处置：路径穿越、dlopen 配置文件本身、隐藏文件、跨架构加载直接崩、json 损坏导致启动崩溃、JsonReader 未关闭、玩家配了但文件没同步进来、顺序错误导致崩溃无法回退（删 json 即回到原行为）。",
           "对用户使用逻辑的影响：不放 json 时零 dlopen 与上游逐字一致；order 为空同上；abi 写错整份不生效静默回退；正常配置按序 dlopen；某库失败时 skip 跳过继续 abort 停止；改了 json 下次启动生效无缓存。",
-          "对未来的影响：onFailure 等于 abort 的返回值当前未被调用方使用行为等同 skip 是已知缺口未包装，要真正中止需改 KCULauncher 异常路径留待确认语义；顺序配置与渲染器 DLOPEN 环境变量并行两者独立可能重复 dlopen 同一库但 dlopen 幂等无害；契约未写进 manifest.json 迁移工具暂不知道这份配置下轮可补。",
-          "对代码逻辑的影响：新增一个类 KCULauncher 多两行开销极小；未改动 KcuNativeSync 任何逻辑；新增路径非替换未改动上游已有 dlopen 路径。",
-          "审核 pass。哈希回执：KCULauncher.java 第 567 行 KcuNativeOrder.loadInOrder(bridge)，5 字母 KcuNa，SHA-1 90b6d2f0531b2575d88c0cafe068f2f2c8d389e5。取材行即本轮新增的调用点。",
+          "对未来的影响：onFailure 等于 abort 的返回值当前未被调用方使用行为等同 skip 是已知缺口未包装，要真正中止需改 FCLauncher 异常路径留待确认语义；顺序配置与渲染器 DLOPEN 环境变量并行两者独立可能重复 dlopen 同一库但 dlopen 幂等无害；契约未写进 manifest.json 迁移工具暂不知道这份配置下轮可补。",
+          "对代码逻辑的影响：新增一个类 FCLauncher 多两行开销极小；未改动 KcuNativeSync 任何逻辑；新增路径非替换未改动上游已有 dlopen 路径。",
+          "审核 pass。哈希回执：FCLauncher.java 第 567 行 KcuNativeOrder.loadInOrder(bridge)，5 字母 KcuNa，SHA-1 90b6d2f0531b2575d88c0cafe068f2f2c8d389e5。取材行即本轮新增的调用点。",
           "冒烟测试：Actions run 39907251472 由 push 触发含本轮全部改动，产出五个 APK——all 326242773、x86_64 174870254、x86 155563026、arm 161915081、arm64 169175089 字节。另 run 39907254821 手动 dispatch 亦 success。",
           "未做：输入模式切换因涉及事件流核心需完整追溯 TouchPad 后一次性完成、onFailure abort 语义未接入、实机安装仍为零验证。"
         ]
@@ -339,7 +339,7 @@
           "会导致的错误：误信 code search 命中而保留 AnimationDialog、误删 SkinAnimations.kt、删布局但别处 include、删 animation 字符串、删 AnimationDialog 但 databinding 类仍生成悬空。以上逐条处置完毕。",
           "对用户使用逻辑的影响：主页无变化因 v0.36.0 已移除预览；离线与微软账号皮肤对话框不受影响它们用自己的 SkinViewer 与 restoreSkinSwitches；双击模型换动画入口随主页预览一并消失；设置页关闭皮肤模型开关仍显示但当前无效果。",
           "对未来的影响：SkinAnimations.entries 仍在使将来角色界面要加动画可直接用；saveSkinSettings 已无调用者成为死函数下轮可单独删除但需注意它与保留的 restoreSkinSwitches 同文件只能删单个函数；OnAnimationSelectedListener 等三个 SAM 接口随 AnimationDialog 删除无影响。",
-          "对代码逻辑的影响：少一个 Dialog 类与两个布局使编译产物略减；databinding 少生成两个 binding 类使编译时间略降；com.kongbai.kculauncher.mio.skin 包从九个文件减为八个。",
+          "对代码逻辑的影响：少一个 Dialog 类与两个布局使编译产物略减；databinding 少生成两个 binding 类使编译时间略降；com.mio.skin 包从九个文件减为八个。",
           "审核 pass。哈希回执：SkinAnimations.kt 第 55 行 fun Context.restoreSkinSwitches(renderer: SkinRenderer) {，5 字母 funCo，SHA-1 b7aa155438b0fc132bf1469d90f5298948157c7c。取材行即为什么必须保留这个文件的技术依据所在行。",
           "冒烟测试：Actions run 39901520832 产出五个 APK——all 326242368、x86_64 174869171、x86 155562399、arm 161914467、arm64 169174666 字节。arm64 较 v0.36.0 的 169176801 字节减少 2135 字节。",
           "未做：saveSkinSettings 死函数未删、close_skin_model 死开关去留待用户决定、主页舞台未重做、实机安装仍为零验证。"
@@ -357,7 +357,7 @@
       {
         "lang": "zh_CN",
         "text": [
-          "用户确认：切换角色指登录时的 CharacterSelector，主页的皮肤预览不要。com/kongbai/kculauncher/mio/skin 包九个文件保留不动，待后续挪到角色选择界面。",
+          "用户确认：切换角色指登录时的 CharacterSelector，主页的皮肤预览不要。com/mio/skin 包九个文件保留不动，待后续挪到角色选择界面。",
           "追溯：ui_main.xml 的 skin_viewer 是 SkinViewer 自定义 View；MainUI.java 有 skinViewer、renderer、skinLoader、accountListener 四个字段与 AnimationDialog 双击、restoreSkinSettings 与 saveSkinSettings、onPause 与 onResume 覆写、refreshSkin 方法；MainActivity.kt 有 skinViewerWidth 字段与 fixSkinViewerPosition 方法及三处调用。",
           "ui_main.xml 改动：删除 SkinViewer，剩 stage_card 与 watermark 两个元素。",
           "MainUI 改动：删除全部皮肤字段、AnimationDialog 双击弹窗、attach 与 detach 里的皮肤分支、onPause 与 onResume 覆写（只剩 super 调用的空覆写无意义，走父类默认等价）、refreshSkin 方法；删除 13 个失效 import。文件从 161 行降至 61 行。",
@@ -369,7 +369,7 @@
           "CI 修复：把 BUILD_LOG 写入移到 exit 判定之前并把 tail 从 4000 提到 6000 字节；上报条件改为 always 且用 steps.gradle.outcome 等于 failure 判断，不再依赖 env。修复后 run 39820845511 的上报步骤由 skipped 变为 success，确认修复有效。",
           "重要发现：dialog_offline_account_skin.xml 与 dialog_microsoft_account_skin.xml 本身就有 SkinViewer，即皮肤预览加角色切换这个组合在账号皮肤对话框里已天然存在，不需要新造容器，用户计划的落点可直接选这里。",
           "对用户使用逻辑的影响：打开主页只剩顶部版本卡片与底部水印无 3D 皮肤模型；右菜单展开收起不再有皮肤位置修正动画；账号列表切账号时头像与皮肤缩略图照常刷新，只少了刷新主页模型那一步；离线与微软账号皮肤对话框不受影响，里面有自己的 SkinViewer。",
-          "对未来的影响：主页变空后续舞台重做需另行设计；com/kongbai/kculauncher/mio/skin 九个文件仍编译进 APK 体积未减；AnimationDialog、SkinAnimations、GltfPlayerModel 已无主页引用是将来删除的候选；ThemeData 的 isCloseSkinModel 设置项主页不再读取但账号对话框未确认是否读取需实机确认该开关是否失效。",
+          "对未来的影响：主页变空后续舞台重做需另行设计；com/mio/skin 九个文件仍编译进 APK 体积未减；AnimationDialog、SkinAnimations、GltfPlayerModel 已无主页引用是将来删除的候选；ThemeData 的 isCloseSkinModel 设置项主页不再读取但账号对话框未确认是否读取需实机确认该开关是否失效。",
           "对代码逻辑的影响：MainUI 由 161 行降至 61 行；MainActivity 少四处皮肤位置逻辑使右菜单动画不再牵扯皮肤；首页不再创建 GL 渲染表面使冷启动开销与内存占用下降；账号列表不再跨 UI 触发主页重绘使切账号时少一次跨模块调用。",
           "审核 pass。哈希回执：AccountListItem.kt 第 198 行 MainActivity.getInstance().refreshAvatar(account)，5 字母 Mainc，SHA-1 0f630ba2b89fa71505f5d7b2a156d70b892d21dd。取材行即删除处的前一行即本次修复的作用点。",
           "冒烟测试：Actions run 39821739010 产出五个 APK——all 326244770、x86_64 174871839、arm64 169176801、arm 161916743、x86 155565108 字节。",
@@ -397,7 +397,7 @@
           "结论：无代码级改动。两者是同一份 MobileGlues 1.3.4 源码的不同构建产物，差异来自编译选项即符号可见性、PGO/BOLT/LTO、hash-style、是否剥离 comment，不是代码改动。",
           "对用户计划的影响：原计划若存在代码级改动则走两阶段静室流程由另一个 AI 依据叙述文档重写，现在不需要执行，因为没有可受著作权保护的表达性改动要复现。他做的事等价于拿官方源码改 CMake 与 linker 标志重新编译并把第三方库符号藏起来。",
           "法律风险路径改为：不分发任何第三方修改版二进制，渲染器 so 走 KCU 已有的双层目录由玩家自供，关于页标注 LGPL-2.1-only 并附官方仓库链接。KCU 不承担对修改者的侵权风险。",
-          "附带确认 FCL_VERSION_CODE 已传：KCULauncher.java 行 65 取本应用 versionCode，行 206 在不等于 -1 时写入环境变量。KCU 当前 versionCode 为 34 非 0，MobileGlues 启动器白名单判据不成立，不会强制忽略 config.json，改包名无影响。",
+          "附带确认 FCL_VERSION_CODE 已传：FCLauncher.java 行 65 取本应用 versionCode，行 206 在不等于 -1 时写入环境变量。KCU 当前 versionCode 为 34 非 0，MobileGlues 启动器白名单判据不成立，不会强制忽略 config.json，改包名无影响。",
           "审核 pass。哈希回执：docs/04-上游分析/MobileGlues双版本二进制对比.md 第 105 行 clang version 18.0.4 -> clang -> SHA-1 ecf3d5183863d2320d33fd5ec27a4d14333214e8。",
           "本轮为调研，未做反汇编与控制流还原，未重写任何渲染器代码，无代码改动未触发编译。",
           "待办：按 GPU 生成 sdcard/MG/config.json 且 Mali 保守档 enableANGLE 等于 2 强关 ANGLE、关于页补 MobileGlues 的 LGPL-2.1 声明、实机安装仍为零验证。"
@@ -415,12 +415,12 @@
       {
         "lang": "zh_CN",
         "text": [
-          "追溯：v0.28.0 删公告后 ui_main.xml 只剩 watermark 与 skin_viewer 两个元素，首页没有任何版本信息。Profiles 用法在 MainActivity.kt 中确认三处——549 行 Profiles.getSelectedProfile().selectedVersion、789 行 Profiles.getSelectedVersion()、65 行 import com.kongbai.kculauncher.setting.Profiles。",
+          "追溯：v0.28.0 删公告后 ui_main.xml 只剩 watermark 与 skin_viewer 两个元素，首页没有任何版本信息。Profiles 用法在 MainActivity.kt 中确认三处——549 行 Profiles.getSelectedProfile().selectedVersion、789 行 Profiles.getSelectedVersion()、65 行 import com.tungsten.fcl.setting.Profiles。",
           "选 Profiles.getSelectedVersion() 静态方法而非 getSelectedProfile().selectedVersion，因后者依赖 Profile 实例的 getter 形式在 Kotlin 与 Java 间可能不同。",
           "ui_main.xml 改动：新增 stage_card 容器含标题与 stage_version 两个 TextView；skin_viewer 的 top 约束从 parent 改为 stage_card，height_percent 由 0.8 降为 0.7 让位。",
           "MainUI 改动：新增 stageVersion 字段与 refreshSelectedVersion 方法，在 onCreate 与 onViewAttachedToWindow 各调用一次。",
           "values 与 values-zh 新增 kcu_stage_version 与 kcu_stage_version_none 两个字符串。",
-          "审核抓到两个必错项。第一版加了 Override public void onStart，但 KCUCommonUI 没有 onStart/onStop 方法，源码注释明写皮肤渲染随页面挂载与回收恢复暂停是替代原 onStart/onStop 生命周期，覆写会编译失败，已改为挂在已有的 OnAttachStateChangeListener.onViewAttachedToWindow 里。",
+          "审核抓到两个必错项。第一版加了 Override public void onStart，但 FCLCommonUI 没有 onStart/onStop 方法，源码注释明写皮肤渲染随页面挂载与回收恢复暂停是替代原 onStart/onStop 生命周期，覆写会编译失败，已改为挂在已有的 OnAttachStateChangeListener.onViewAttachedToWindow 里。",
           "第二个必错项：ElementTree 写回是在原属性上追加而非替换，导致 SkinViewer 同时存在 layout_constraintTop_toTopOf 与 layout_constraintTop_toBottomOf 两个互斥约束。已手工重写整个 XML 并校验 top 约束数等于 1。这是继 v0.28.0 之后第二次踩 ElementTree 写回的坑。",
           "其余校验：getSelectedVersion 返回 null 或空时显示未选择避免 NPE；stage_card 与 stage_version 无同名 id 冲突；新增视图 3 个低于单次搬入不超过 4 个的硬规则。",
           "对用户使用逻辑的影响：打开首页顶部卡片显示当前版本 id，未选版本时显示未选择；旋屏与切后台再回来因视图重建走 attach 会刷新；皮肤预览高度从 80% 降到 70% 不遮挡。",
@@ -445,14 +445,14 @@
         "text": [
           "追溯：v0.30.0 把 QuarkPromo 两个方法改成直通后它已是无行为空壳。剩余引用面为 MainActivity.kt:44 的 import 与 :773 的 QuarkPromo.interceptLaunch(this){启动逻辑}。LaunchCountSetting 数据类存在于 AppSettings.kt:34，被 :113 的 AppSettingsPreference 字段与 :176 的 LegacySettingsMigration 读取行引用，LEGACY_FILE_NAMES 第 137 行含 launch_count_settings.json。",
           "搜索确认改完后 launchCount、pendingPopup、pityCounter 除 AppSettings 与文档外无任何源码引用。",
-          "MainActivity 改动：删除 import com.kongbai.kculauncher.mio.promo.QuarkPromo；移除 interceptLaunch 调用并把 lambda 体平铺进 launchVersion，使启动路径从回调嵌套变为顺序执行。括号校验花括号 219 对 219、圆括号 623 对 623。",
+          "MainActivity 改动：删除 import com.mio.promo.QuarkPromo；移除 interceptLaunch 调用并把 lambda 体平铺进 launchVersion，使启动路径从回调嵌套变为顺序执行。括号校验花括号 219 对 219、圆括号 623 对 623。",
           "AppSettings 改动：删除 LaunchCountSetting 数据类、AppSettingsPreference 中的 launchCount 字段、LegacySettingsMigration 中的 readLegacy 读取行，共三处。",
-          "删除 QuarkPromo.kt 文件，全仓再无 com.kongbai.kculauncher.mio.promo 包。",
+          "删除 QuarkPromo.kt 文件，全仓再无 com.mio.promo 包。",
           "本轮唯一有实质风险的判断点：LEGACY_FILE_NAMES 必须保留 launch_count_settings.json 这一项。该列表有两个职责，其一是供 readLegacy 读取（本轮已删），其二是供 legacyFiles 判断旧文件是否全部消失从而驱动 shouldMigrate 与 cleanUp。若跟着删文件名，设备上残留的该 json 将不再被识别为 legacy 文件，shouldMigrate 视而不见且 cleanUp 不删除，文件永久残留在 datastore 目录。正确做法是删读取、保留文件名，使旧文件仍被识别清理只是不再解析到已删的数据类。",
           "会导致的错误：删被调方前必须先改调用方否则 unresolved reference 编译失败；平铺 lambda 时括号不配对会编译失败；删数据类三处必须一起删否则编译失败；旧 app_settings.json 含未知字段 launchCount 时 kotlinx.serialization 默认忽略并走默认值。",
           "对用户使用逻辑的影响：点启动游戏直接进入无任何拦截与 v0.30.0 一致、老用户升级后残留的 launch_count_settings.json 仍会被清理、老用户 app_settings.json 含 launchCount 字段时反序列化忽略走默认值、设置页无变化。",
           "对未来的影响：若要重新引入启动计数需新建字段不能复用、LEGACY_FILE_NAMES 保留无对应读取逻辑的文件名是有意为之因为其职责是识别待清理文件而非读取、启动路径少一层 lambda 嵌套使 launchVersion 成为直线代码可读性与可调试性提升。",
-          "对代码逻辑的影响：全仓再无 com.kongbai.kculauncher.mio.promo 包使上游推广机制彻底移除、launchVersion 从回调嵌套变顺序执行使调用栈更浅异常堆栈更易读、AppSettingsPreference 少一个字段使序列化体积略降。",
+          "对代码逻辑的影响：全仓再无 com.mio.promo 包使上游推广机制彻底移除、launchVersion 从回调嵌套变顺序执行使调用栈更浅异常堆栈更易读、AppSettingsPreference 少一个字段使序列化体积略降。",
           "审核 pass。哈希回执：MainActivity.kt:780 -> chekV -> SHA-1 ae626ef44337e4ce8d044fa98f1822ff4a254345。",
           "冒烟测试：Actions run 39801897300 产出 arm64 169177735 字节，无新增失败 issue。",
           "新增防错规则 185 至 189：空壳对象要删到底不能只把方法改成 no-op、删除被调方之前必须先改调用方、legacy 文件名列表不能跟着数据类一起删、删数据类要三处一起删、平铺 lambda 后必须校验括号配对。",
@@ -500,7 +500,7 @@
           "追溯：QuarkPromo.interceptLaunch 在启动游戏前被调用，非中文或非大陆直接放行；中文大陆读缓存网盘链接，pendingPopup 且有链接则直接弹窗，否则按 popupProbability 掷骰子（基础 0.6%，第 80 次起每次 +10%，第 90 次必弹）；中签弹窗点打开网盘会跳浏览器并取消本次启动，点开始游戏才继续。搜索 QuarkPromo 命中 5 处，源码仅自身与 MainActivity。",
           "现状分析：v0.29.0 停用 UpdateChecker 后 updateNetdiskUrl 不再被调用，缓存链接恒为 null。按逻辑推演，shown 为真但无链接时只置 pendingPopup 并走 else 放行，因此当前实际不会弹窗。",
           "但保留仍有三个问题：每次启动仍在掷骰子并写 appSettingsDataStore 累积 pityCounter 与 totalLaunchCount；pendingPopup 一旦置 true 就永远 true 属脏状态；只要有任何路径写入 quark_netdisk_url，第 90 次必弹的机制会立刻复活。",
-          "QuarkPromo 改动：updateNetdiskUrl 改为 no-op；interceptLaunch 改为直接调用 onProceed 放行；删除 showDialog、popupProbability、PREF_KEY_NETDISK_URL 常量；清理 11 个失效 import（lifecycleScope、appSettingsDataStore、openLink、KCUAlertDialog、LocaleUtils、launch、first、edit、R、Random、min）；文件从 92 行降至 22 行。",
+          "QuarkPromo 改动：updateNetdiskUrl 改为 no-op；interceptLaunch 改为直接调用 onProceed 放行；删除 showDialog、popupProbability、PREF_KEY_NETDISK_URL 常量；清理 11 个失效 import（lifecycleScope、appSettingsDataStore、openLink、FCLAlertDialog、LocaleUtils、launch、first、edit、R、Random、min）；文件从 92 行降至 22 行。",
           "删除 showDialog 前确认无别处引用；删除 popupProbability 前搜索确认 total=1 仅自身引用。",
           "保留 QuarkPromo 对象与两个方法签名，使 MainActivity 调用点零改动。",
           "字符串：values 与 values-zh 删除 4 个 quark_promo_* 字符串，其余 11 个语言目录本就没有这些键，脚本按有则删处理实际仅 2 个文件命中。",
@@ -555,7 +555,7 @@
           "全局搜索 Announcement 命中 16 处，Java 源码仅 Announcement.java 自身与 MainUI.java，其余为各语言 strings 与隐私政策文本。R.id.hide/title/date/announcement 全局无其他引用，确认可安全删。",
           "第一个 XML 踩坑：按字符串索引找闭合位置误判，残留 hide 按钮与多余闭合标签，ElementTree 解析报 mismatched tag: line 16。重拉原文件改用 ET root.remove()。",
           "第二个 XML 踩坑：ElementTree 写回后命名空间前缀变成 ns0/ns1 且全部压成单行。手工重写恢复 android 与 app 前缀及缩进格式。",
-          "MainUI.java 从 520 行降至 137 行：删 6 个视图字段、Announcement 对象、6 处 findViewById、checkAnnouncement、hideAnnouncement、onClick 方法，同步移除 implements View.OnClickListener（否则抽象方法未实现会编译失败）。清理 import 5 个：LinearLayoutCompat、KCUButton、KCUAlertDialog、View、KCUTextView。",
+          "MainUI.java 从 520 行降至 137 行：删 6 个视图字段、Announcement 对象、6 处 findViewById、checkAnnouncement、hideAnnouncement、onClick 方法，同步移除 implements View.OnClickListener（否则抽象方法未实现会编译失败）。清理 import 5 个：LinearLayoutCompat、FCLButton、FCLAlertDialog、View、FCLTextView。",
           "ui_main.xml 删除 announcement_container 整块后仅剩 watermark 与 skin_viewer 两个元素。删除 Announcement.java 文件。",
           "审核确认：watermark 的约束指向 parent 不依赖被删元素，aapt 不会报错。",
           "对用户使用逻辑的影响：首页只有水印与皮肤预览无公告卡、原隐藏公告按钮已不存在、启动无公告网络请求、皮肤预览未受影响。",
@@ -582,7 +582,7 @@
           "删除 6 个死方法共 86 行：showColorPicker 20 行、selectImage 12 行、fetchBackgroundColor 24 行、fetchPrimaryColor 12 行、fetchSecondaryColor 8 行、resetBackground 10 行。",
           "删除 14 个死 case 分支：THEME_COLOR_SET/DARK_SET/COLOR2_SET/COLOR2_DARK_SET、四个 _FETCH、四个 THEME_COLOR*_RESET、BACKGROUND_LT_SET/DK_SET/LT_RESET/DK_RESET、SEEKBAR_COLOR_ALPHA。",
           "保留 selectLiveBackground/deleteCursorFile/deleteMenuIconFile 及其分支：视频背景、光标、菜单图标仍为活跃功能。",
-          "移除失效 import 6 个（Page）：IntConsumer、KCUColorPickerDialog、BitmapDrawable、Bitmap、Color、Palette。LauncherSettingPage 从 520 行降至 378 行。",
+          "移除失效 import 6 个（Page）：IntConsumer、FCLColorPickerDialog、BitmapDrawable、Bitmap、Color、Palette。LauncherSettingPage 从 520 行降至 378 行。",
           "ThemePreference 精简为 3 个功能字段 fullscreen/closeSkinModel/animationSpeed。旧 theme.json 含未知字段时 kotlinx.serialization 默认忽略并走 defaultValue，SerializationException 已捕获回退。",
           "MainUI 移除远程公告拉取：原实现启动即请求 raw.githubusercontent.com/FCL-Team/FCL-Repo 与 gitee 镜像的 announcement_v2.txt，全局搜索 total=1 仅此一处。改为容器直接 GONE，删除两个 URL 常量与 6 个失效 import（Task/HttpRequest/Logging/Level/LocaleUtils）。",
           "关键判断：ThemeData 的 color2 与 colorAlpha 字段不能删，87 个 View 通过 getColor2() 等派生方法使用，删字段等于删运行时 API。",
@@ -590,7 +590,7 @@
           "对未来的影响：首页若需自建公告应走自有端点而非复用上游域名；ui_main.xml 中公告容器与四个子视图已成死视图待清；Announcement 类与相关 strings 待清。",
           "审核 pass。哈希回执：ThemePreference.kt:21 -> valni -> SHA-1 b07e1a3b63f3c0afd7338ed6ba3aa811176c83fe。",
           "冒烟测试按 artifacts 数量标准：run 39722035464 arm64 169179610 字节、run 39723204239 arm64 169180087 字节，均 count=5 且无新增失败 issue。",
-          "未做：ui_main.xml 公告死视图未清、Announcement 类与 strings 未清、KCUColorPickerDialog 其他调用点未确认、历史假 issue 清理遇 403 未成、实机安装仍为零验证。"
+          "未做：ui_main.xml 公告死视图未清、Announcement 类与 strings 未清、FCLColorPickerDialog 其他调用点未确认、历史假 issue 清理遇 403 未成、实机安装仍为零验证。"
         ]
       }
     ]
@@ -606,14 +606,14 @@
         "lang": "zh_CN",
         "text": [
           "追溯到底：ThemeEngine 搜索命中 87 个文件，ThemeData 6 个，ThemePreference 3 个，themeDataStore 3 个。",
-          "不能直接删类：87 个 View（KCUTextView/KCUButton/KCUSwitch/KCUSpinner/KCUEditText 等）在构造时调 ThemeEngine.registerEvent、运行时调 getTheme()，删类会导致 87 个文件全崩。",
+          "不能直接删类：87 个 View（FCLTextView/FCLButton/FCLSwitch/FCLSpinner/FCLEditText 等）在构造时调 ThemeEngine.registerEvent、运行时调 getTheme()，删类会导致 87 个文件全崩。",
           "正确拆法：保留 API 面使 87 个调用点零改动，抽掉用户可改的能力，让主题恒定纸面。行为上主题引擎已死，代码上不崩。",
           "ThemeData.getTheme 改为颜色与背景常量（COLOR #3D6B66、COLOR_DARK #4F8580、COLOR2 #2C2C2A、COLOR2_DARK #E4E1D8、ALPHA 255），不再迁移旧 SharedPreferences，不再读自定义背景文件；saveTheme 仅持久化 fullscreen/closeSkinModel/animationSpeed 三个功能偏好。",
           "ThemeEngine 废弃为 no-op 共 7 个接口：applyColor、applyColorDark、applyColor2、applyColor2Dark、applyBackground、applyColorAlpha，以及四个颜色 applyAndSave 与背景 applyAndSave。",
           "LauncherSettingAdapter 删除 7 个设置项：四个配色 ButtonRow（theme/theme_dark/theme2/theme2_dark）、color_alpha SeekBarRow、background_lt 与 background_dk ButtonRow。",
           "移除的能力：自定义主色/深色主色/次色/深色次色、从背景图取色、自定义亮暗背景图、派生色 alpha 调节。保留：亮暗模式（必要）、全屏/皮肤模型/动画速度（功能偏好非观感）、视频背景（未动）。",
           "审核抓到的编译错误：初版写 private const val COLOR = 0xFF3D6B66.toInt()，const 不能调用 .toInt()（非编译期常量）必然编译失败，已改为普通 val。",
-          "清理：ThemeEngine 中因 applyBackground no-op 而不再使用的 5 个 import（ImageUtil/BitmapDrawable/ConvertUtils/KCUPath/File）已移除。",
+          "清理：ThemeEngine 中因 applyBackground no-op 而不再使用的 5 个 import（ImageUtil/BitmapDrawable/ConvertUtils/FCLPath/File）已移除。",
           "对用户使用逻辑的影响：设置页四个配色项与 alpha 条已消失、亮暗背景图项已消失、视频背景仍在、亮暗模式与皮肤模型与动画速度仍生效、老用户此前存的颜色被忽略一律纸面。",
           "对代码逻辑的影响：updateTheme 仅被 fullscreen/skinModel/animationSpeed 三条路径调用使刷新范围缩小、getTheme 不再读文件使启动略快且不再依赖存储权限、registerEvent 语义不变故 87 个调用点零影响。",
           "审核 pass。哈希回执：ThemeData.kt:116 -> priva -> SHA-1 28399ad1e9d4bd701852ebb005259fe30f57e756。",
@@ -644,7 +644,7 @@
           "修复源码：KcuNativeSync.prune 将 Set 排序后转 List 再写入，避免遍历顺序导致记录文件抖动；KcuDevMode 删除 create() 死代码（无调用点，且写入内容的 SHA3 永远不等于期望值，是会让调用方误以为可开启的陷阱），连带解决 OutputStream 缺 import。",
           "新的验证标准：编译是否成功只能以该 run 的 artifacts 数量为准，job conclusion 不可信。修复后 Actions run 39628208126 产出 5 个 APK：all 326258256、x86_64 174881420、arm64 169188824、arm 161929663、x86 155577910 字节，无新增失败 issue。这是首次有产物为证的编译成功。",
           "审核 pass。哈希回执：KcuNativeSync.java:156 -> write -> SHA-1 e1d0c6c1c29e6ad5164072a5b21340dca7fcb052。",
-          "本轮审核查出但未修的 8 项缺陷：KcuDevMode 缓存无失效机制、KcuAccountFlow.resolve 返回任意在线账号致输入名被忽略、KcuUi 圆角传像素而非 dp、KcuUi 颜色硬编码不适配深色、clearMarks 计数虚报、verifyOwner 用全文 contains 易误判、isValidName 拒绝中文名且无提示、KCUPath.KCU_SHARED_ROOT public 非 final 且派生字段求值时机不一。",
+          "本轮审核查出但未修的 8 项缺陷：KcuDevMode 缓存无失效机制、KcuAccountFlow.resolve 返回任意在线账号致输入名被忽略、KcuUi 圆角传像素而非 dp、KcuUi 颜色硬编码不适配深色、clearMarks 计数虚报、verifyOwner 用全文 contains 易误判、isValidName 拒绝中文名且无提示、FCLPath.KCU_SHARED_ROOT public 非 final 且派生字段求值时机不一。",
           "新增规则 172-178：编译只以产物存在为证、CI 中 gradle 失败必须 exit 1、后续步骤加 GRADLE_OK 条件、改 workflow 不得误改前置步骤、沙盒受限时用告警 issue 取日志、审核要读整个文件、死代码优先删除而非补依赖。",
           "未做：上述 8 项缺陷未修、历史假 issue #287-299 未清理、实机安装仍为零验证。"
         ]
@@ -661,7 +661,7 @@
       {
         "lang": "zh_CN",
         "text": [
-          "API 终点追踪：SettingUI extends KCUMultiPageUI，页面数量由 getPageCount()/createPage(int)/getTabTitles() 三处决定，终点为 KCUMultiPageUI.setupPages(container, tabLayout)。KCUPage 构造器 setContentView(resId) 后调 onCreate()，findViewById 作用于 contentView。",
+          "API 终点追踪：SettingUI extends FCLMultiPageUI，页面数量由 getPageCount()/createPage(int)/getTabTitles() 三处决定，终点为 FCLMultiPageUI.setupPages(container, tabLayout)。FCLPage 构造器 setContentView(resId) 后调 onCreate()，findViewById 作用于 contentView。",
           "getPageCount 共 5 处实现（VersionUI/ControllerUI/SettingUI/ManageUI/基类声明），互不影响；基类 277 行 return getPageCount() 供 adapter，无外部硬编码数量。",
           "新增 KcuDevPage 与 page_kcu_dev.xml，设置页 getPageCount 4 改 5、createPage 加 case 4、标题数组加一项，PAGE_ID_SETTING_KCU_DEV = 15035。",
           "页面内容：状态行（开启/未开启）、开关文件绝对路径、重新检测按钮、令牌输入框、校验按钮、清除按钮（校验通过前 setEnabled(false)）、结果行。",
@@ -837,7 +837,7 @@
         "lang": "zh_CN",
         "text": [
           "落地玩家自定义 .so 的双层目录，直击用户做本项目的核心诉求：上游把依赖锁在私有目录，迁移工具读不到。",
-          "API 终点追踪：KCULauncher.launchProcess -> setEnv -> addCommonEnv -> getLibraryPath -> appendCommonPaths，实测第162行 sb.append(MOD_RUNTIME_DIR) 无任何条件判断，该私有目录恒定进入 LD_LIBRARY_PATH。",
+          "API 终点追踪：FCLauncher.launchProcess -> setEnv -> addCommonEnv -> getLibraryPath -> appendCommonPaths，实测第162行 sb.append(MOD_RUNTIME_DIR) 无任何条件判断，该私有目录恒定进入 LD_LIBRARY_PATH。",
           "关键结论：只要把 so 放进 runtime_mod 上游机制自动生效，不需要自己 System.load。故实现方式零侵入，不改任何已有加载逻辑，天然满足玩家不设置即等同上游。",
           "双层模型：公共素材层 /sdcard/KCU/natives/<abi>/（可读写、noexec、迁移工具可访问）-> 私有加载层 runtime_mod/（可执行）。abi 取值来自 Architecture.archAsStringAndroid。",
           "新增 KcuNativeSync.java，挂载在 launchProcess 内 setEnv 之前——必须在拼 LD_LIBRARY_PATH 之前同步。",
@@ -861,7 +861,7 @@
         "lang": "zh_CN",
         "text": [
           "按用户要求新增改动台账 docs/00-总览/改动台账.md，按文件组织，供后续维护定位每处改动的来源与原因。",
-          "盘点全部 15 轮改动，逐文件记录：build.gradle.kts、KCUPath.java、KcuManifest.java(新)、SplashActivity.kt、MenuSetting.kt、RightMenuAdapter.kt、GameMenu.java、TouchPad.java、两份 strings.xml、build.yml。",
+          "盘点全部 15 轮改动，逐文件记录：build.gradle.kts、FCLPath.java、KcuManifest.java(新)、SplashActivity.kt、MenuSetting.kt、RightMenuAdapter.kt、GameMenu.java、TouchPad.java、两份 strings.xml、build.yml。",
           "台账含四个索引：轮次索引、按文件索引、新增文件、已删除文件（上游 key-store.jks / debug-key.jks / private_key.pepk），以及遗留与风险清单。",
           "【发现并修复重大不一致】build.gradle.kts 长期停在 0.9.0 / code 9，而 version_map 与 CHANGELOG 已到 0.15.0。产物名一直是 KCU-release-0.9.0-*.apk，前面几轮报的产物名全部与文档版本号脱节。已同步为 0.15.0 / 15 并用产物名证实。",
           "证伪证据：产物 ./FCL/build/outputs/apk/release/KCU-release-0.15.0-arm64-v8a.apk 172648037 bytes，sha256 e006b5269ed5c94bc08d356dc0342efd7ad9e6bcdaabdcb41d5ef2fe694e3385，签名 DN CN=kbs 与之前一致。",
@@ -884,9 +884,9 @@
         "lang": "zh_CN",
         "text": [
           "落地公共目录清单 manifest.json，解决迁移工具读不到启动器实际目录布局的问题（用户做本项目的根本原因）。",
-          "API 终点追踪：Profile.gameDir 是绝对路径，反序列化时直接读入不经 KCUPath，故实例目录与公共根可不同源——这正是需要清单的原因。",
+          "API 终点追踪：Profile.gameDir 是绝对路径，反序列化时直接读入不经 FCLPath，故实例目录与公共根可不同源——这正是需要清单的原因。",
           "挂点：SplashActivity.enterLauncher() 的 Dispatchers.IO 块内，ConfigHolder.init() 之后、startActivity 之前。路径与实例均已就绪，且不在主线程。",
-          "新增 KcuManifest.java（com.kongbai.kculauncher.util），写 <root>/manifest.json，含 schemaVersion/generatedAt/packageName/root/paths/instances。",
+          "新增 KcuManifest.java（com.tungsten.fcl.util），写 <root>/manifest.json，含 schemaVersion/generatedAt/packageName/root/paths/instances。",
           "paths 含 minecraft/privateCommon/runtime/modRuntime/java/lwjgl/log/control/share/nativesExternal/nativeLibDir。nativesExternal 为玩家自带 so 素材目录，明确区别于可 dlopen 的私有目录。",
           "严格审核发现的真实风险并已修：Files.write 要求 API 26 而 minSdk 正好 26 属边界值，改用 FileOutputStream 传统流。",
           "写入全程 catch Throwable 静默忽略，绝不阻断启动；实例列表单独 try-catch，失败仍写路径部分。",
@@ -911,12 +911,12 @@
           "否决 v0.13.0 实现：以目录存在性判定根路径。存在性可变且可被外部改变，是根本缺陷。",
           "错误A（严重）：外部创建 /sdcard/KCU 即触发根漂移，存量数据消失。本项目自带的 KCU Migrator 天然会创建该目录，属必然发生。",
           "错误B（严重）：一旦切到 KCU 分支，init() 的 mkdirs 坐实目录存在，条件永不成立，首次误判即永久误判。",
-          "错误C（较严重）：targetSdk 34 + 分区存储，未授权时 File.exists() 静默返回 false；且 Config.java:149 在字段初始化期引用 SHARED_COMMON_DIR，导致 KCUPath 静态初始化早于 loadPaths，决策发生在无权限时刻。",
+          "错误C（较严重）：targetSdk 34 + 分区存储，未授权时 File.exists() 静默返回 false；且 Config.java:149 在字段初始化期引用 SHARED_COMMON_DIR，导致 FCLPath 静态初始化早于 loadPaths，决策发生在无权限时刻。",
           "错误D（中）：Manifest 声明 :crash 与 :jvm 独立进程，各自独立计算，可能拿到不同根。",
           "对未来干扰：迁移工具无法对齐、manifest 契约无处安放、自定义 .so 双层目录失去依托、无法向用户解释。",
           "修复：marker 文件 .kcu_root 固化决策；判定有数据看 .minecraft 而非外壳目录；marker 写入失败不阻断以自愈。",
           "残余风险（如实）：静态初始化期磁盘 IO 未真机验证是否触发 StrictMode；多进程独立计算未修。",
-          "自我审核 pass。哈希回执：KCUPath.java:71 -> retun -> SHA-1 c0781ed3e29ec775c6bb8dc4be2015a32ea8593b。",
+          "自我审核 pass。哈希回执：FCLPath.java:71 -> retun -> SHA-1 c0781ed3e29ec775c6bb8dc4be2015a32ea8593b。",
           "编译验证 PROVEN：Actions run 39375222293，五架构全绿，app-arm64 170393441 B。"
         ]
       }
@@ -933,11 +933,11 @@
         "lang": "zh_CN",
         "text": [
           "本轮起执行用户新规范：动手前追踪 API 最后一层落点，改完自我审核并回执 pass + SHA-1。",
-          "API 终点追踪：KCUPath.SHARED_COMMON_DIR -> Config/Profiles/LauncherSettingPage -> KCUGameRepository.changeDirectory -> KCUCacheRepository.directory listener -> DefaultCacheRepository -> CacheRepository.changeDirectory -> 终点 java.nio.file.Files（纯 Java NIO，非 JNI/ContentProvider，不参与 dlopen 与签名校验）。",
+          "API 终点追踪：FCLPath.SHARED_COMMON_DIR -> Config/Profiles/LauncherSettingPage -> FCLGameRepository.changeDirectory -> FCLCacheRepository.directory listener -> DefaultCacheRepository -> CacheRepository.changeDirectory -> 终点 java.nio.file.Files（纯 Java NIO，非 JNI/ContentProvider，不参与 dlopen 与签名校验）。",
           "附带发现：Profiles.checkProfiles 仅在 profiles 为空时建默认档，故改 SHARED_COMMON_DIR 只影响首次启动，已存在用户存的是绝对路径不受影响。",
           "改造：新增 KCU_SHARED_ROOT，SHARED_COMMON_DIR / LOG_DIR / CONTROLLER_DIR / SHARE_DIR 全部由它派生。",
           "旧目录兼容：/sdcard/FCL 存在且 /sdcard/KCU 不存在时沿用 FCL，两者不混用，迁移用户数据不丢。",
-          "自我审核 11 项全过，pass。哈希回执：KCUPath.java:85 -> SHARE -> SHA-1 dd19b86ae45a271261a2769df9693b7eeeac1d33。",
+          "自我审核 11 项全过，pass。哈希回执：FCLPath.java:85 -> SHARE -> SHA-1 dd19b86ae45a271261a2769df9693b7eeeac1d33。",
           "编译验证 PROVEN：Actions run 39374234610，产物 app-arm64 170393777 B。",
           "未做：实机验证；manifest 契约；自定义 .so 双层目录；PRIVATE_COMMON_DIR 未并入。"
         ]
@@ -978,7 +978,7 @@
         "text": [
           "落地《MCJE 移动端输入沙盒：工程设计细节与交互规范 v5.0》，新增 docs/01-架构/输入交互规范v5.md。",
           "归属分流：一到六节（意图分流/点击判定/视角手感/多指协同/竞态防御）属游戏内 TouchController，启动器不实现；第七节（dp 阈值、底层鼠标伪装）属启动器侧。",
-          "盘点上游已有实现：系统拦截强制松开、切后台归零、非主控手指不重置、视角独占、渲染帧同步重锚、首帧跳变消除、Raw Input 1:1 下发——均已在 TouchPad/KCUInput 中，不需重做。",
+          "盘点上游已有实现：系统拦截强制松开、切后台归零、非主控手指不重置、视角独占、渲染帧同步重锚、首帧跳变消除、Raw Input 1:1 下发——均已在 TouchPad/FCLInput 中，不需重做。",
           "【修正 v0.6.0 的错误判断】mouseMoveMode 默认就是 CLICK（MenuSetting.kt:195），此前建议用户切 CLICK 的前提不成立。",
           "【新发现·真因】点击判定阈值写死 10 px（TouchPad.java:247/248/330/331），未做 density 换算，2K 屏上仅约 2.9 dp。这才是用户抱怨点击难受的真正原因。",
           "定位新模式的菜单接入点：RightMenuAdapter.kt 的 RightMenuCategory.MOUSE 下，照 Row.SwitchRow 模式新增，需同步 MenuSetting（字段+序列化三处）、RightMenuTag、strings.xml。",
@@ -1020,15 +1020,15 @@
       {
         "lang": "zh_CN",
         "text": [
-          "执行包名迁移：applicationId 由 com.kongbai.kculauncher 改为 com.kcu.launcher。",
-          "规模证据：GitHub 代码搜索显示含 com.kongbai.kculauncher 的文件共 1196 个，因此决策为只改 applicationId、不动源码包名与 namespace。",
+          "执行包名迁移：applicationId 由 com.tungsten.fcl 改为 com.kcu.launcher。",
+          "规模证据：GitHub 代码搜索显示含 com.tungsten.fcl 的文件共 1196 个，因此决策为只改 applicationId、不动源码包名与 namespace。",
           "改动仅 2 处，均在 FCL/build.gradle.kts：applicationId（第88行）、debug 变体 file_browser_provider 硬编码 authority（第120行）。",
           "Manifest 中三处 authority 均使用 ${applicationId}，自动跟随，无需改动。",
-          "确认 com.kongbai.kculauncher.core / com.kongbai.kculauncher.library 为并列独立包，Manifest 4 处硬编码类引用保持不变。",
+          "确认 com.tungsten.fclcore / com.tungsten.fcllibrary 为并列独立包，Manifest 4 处硬编码类引用保持不变。",
           "新增 docs/01-架构/包名迁移.md 与防错规则 124-128。",
           "未完成：编译验证。提交后触发的 build.yml 长时间处于 queued（超过12分钟未开跑），属 GitHub 平台侧排队延迟。按防错规则只能报 NOT PROVEN。",
-          "补充修复：CI 扫描发现 FCL/src/main/res/values/strings.xml:1555 的 file_browser_provider 硬编码 com.kongbai.kculauncher.provider（release 变体走此值，不随 ${applicationId} 变），已改为 com.kcu.launcher.provider。",
-          "扫描统计：涉及文件 1143 个，出现 7672 次（fclcore 3809 / fcllibrary 2358 / fcl 1352 / fclauncher 153）。布局 XML 大量引用 com.kongbai.kculauncher.library.component.view.* 全限定名，印证不改源码包名的决策正确。",
+          "补充修复：CI 扫描发现 FCL/src/main/res/values/strings.xml:1555 的 file_browser_provider 硬编码 com.tungsten.fcl.provider（release 变体走此值，不随 ${applicationId} 变），已改为 com.kcu.launcher.provider。",
+          "扫描统计：涉及文件 1143 个，出现 7672 次（fclcore 3809 / fcllibrary 2358 / fcl 1352 / fclauncher 153）。布局 XML 大量引用 com.tungsten.fcllibrary.component.view.* 全限定名，印证不改源码包名的决策正确。",
           "编译验证通过（PROVEN）：产物 KCU-release-0.9.0-arm64-v8a.apk，172645373 bytes，sha256 0bc7bb590c90bdbd82c00e4dc96b9a124288b240f5bbf05fdba29cbc41174d87。全架构 run 39287000078 亦 success。",
           "修正 CI 误报：取不到 GRADLE_OK 时曾把成功标成失败（issue #20），已改为成功/失败/结果未知三态。"
         ]
@@ -1046,8 +1046,8 @@
         "lang": "zh_CN",
         "text": [
           "【重大发现】FCL 主线 1.3.4.0 已内置完整 TouchController 支持，无需编写任何接入代码。",
-          "源码：com/kongbai/kculauncher/mio/touchcontroller/TouchController.kt (5881B) + TouchControllerInputView.kt (25461B)，依赖 implementation(libs.touchcontroller)。",
-          "自动启用链路：ModChecker 检测 touchcontroller 模组 → setHasTouchController(true) → KCUBridge.hasTouchController() → GameMenu 创建实例。装了 mod 就生效。",
+          "源码：com/mio/touchcontroller/TouchController.kt (5881B) + TouchControllerInputView.kt (25461B)，依赖 implementation(libs.touchcontroller)。",
+          "自动启用链路：ModChecker 检测 touchcontroller 模组 → setHasTouchController(true) → FCLBridge.hasTouchController() → GameMenu 创建实例。装了 mod 就生效。",
           "修正上一轮错误：通信是 Unix Domain Socket 不是 UDP；环境变量是 TOUCH_CONTROLLER_PROXY_SOCKET 不是 TOUCH_CONTROLLER_PROXY。",
           "升级 proxy-client-android 0.0.5 → 0.0.8（依据官方 properties.bzl）。CI 验证通过：五架构全部 Build release success，产物齐全。",
           "决策：socketName 保持 FoldCraftLauncher 不改，属本地 IPC 通道名，改名收益为零且有断连风险。",
@@ -1134,7 +1134,7 @@
           "修复 CI：secrets 不能用于 step 级 if；重复步骤 id；gradle 自赋值；矩阵重复构建（手动指定 arch 时 5 个任务都构建同一个）。",
           "移除 gradle 步骤的 continue-on-error——它会把构建失败掩盖成任务成功，属于谎报成功。",
           "新增构建结果上报：无论成功失败都开 issue，附产物清单与 sha256。",
-          "仍未做：包名迁移（当前仍为 com.kongbai.kculauncher）、公共目录改造、自定义 .so 接入、实机安装验证。"
+          "仍未做：包名迁移（当前仍为 com.tungsten.fcl）、公共目录改造、自定义 .so 接入、实机安装验证。"
         ]
       }
     ]
