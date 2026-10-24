@@ -135,21 +135,27 @@ for dirpath, dirnames, filenames in os.walk(ROOT):
 
 print("MODIFIED_FILES=%d" % len(changed))
 # ---------- 目录移动 ----------
+# 注意：包目录在模块目录之下（如 KCU/src/main/java/com/tungsten/fcl），
+# 必须遍历查找，不能假定固定的 base 前缀（上一版因此 MOVED_DIRS=0）。
 MOVES = []
-for base in ['src/main/java', 'src/test/java', 'src/androidTest/java',
-             'src/main/kotlin', 'src/debug/java', 'src/release/java']:
-    for old_dir, new_dir in [
-        ('com/tungsten/fclcore',    'com/kongbai/kculauncher/core'),
-        ('com/tungsten/fcllibrary', 'com/kongbai/kculauncher/library'),
-        ('com/tungsten/fclauncher', 'com/kongbai/kculauncher/launcher'),
-        ('com/tungsten/fcl',        'com/kongbai/kculauncher'),
-        ('com/mio',                 'com/kongbai/kculauncher/mio'),
-    ]:
-        src = os.path.join(ROOT, base, old_dir)
-        dst = os.path.join(ROOT, base, new_dir)
+PREFIX_MAP = [
+    ('com/tungsten/fclcore',    'com/kongbai/kculauncher/core'),
+    ('com/tungsten/fcllibrary', 'com/kongbai/kculauncher/library'),
+    ('com/tungsten/fclauncher', 'com/kongbai/kculauncher/launcher'),
+    ('com/tungsten/fcl',        'com/kongbai/kculauncher'),
+    ('com/mio',                 'com/kongbai/kculauncher/mio'),
+]
+for dirpath, dirnames, filenames in os.walk(ROOT):
+    dirnames[:] = [d for d in dirnames if d not in skipped_dirs]
+    # 只在源码根（java / kotlin）下识别包目录
+    if not (dirpath.endswith('/java') or dirpath.endswith('/kotlin') or dirpath == os.path.join(ROOT,'java')):
+        continue
+    for old_rel, new_rel in PREFIX_MAP:
+        src = os.path.join(dirpath, old_rel)
+        dst = os.path.join(dirpath, new_rel)
         if os.path.isdir(src):
             MOVES.append((src, dst))
-# 先深后浅，避免父目录先移走
+
 MOVES.sort(key=lambda x: len(x[0]), reverse=True)
 moved = 0
 for src, dst in MOVES:
@@ -162,15 +168,10 @@ for src, dst in MOVES:
         os.makedirs(target, exist_ok=True)
         for fn in filenames:
             os.replace(os.path.join(dp, fn), os.path.join(target, fn))
-    # 清理空目录
     for dp, dn, filenames in os.walk(src, topdown=False):
-        try:
-            os.rmdir(dp)
-        except OSError:
-            pass
-    try:
-        os.rmdir(src)
-    except OSError:
-        pass
+        try: os.rmdir(dp)
+        except OSError: pass
+    try: os.rmdir(src)
+    except OSError: pass
     moved += 1
 print("MOVED_DIRS=%d" % moved)
