@@ -1,6 +1,34 @@
 [
   {
     "type": "release",
+    "versionCode": 45,
+    "versionName": "0.45.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "承接 v0.44.0 遗留：GameMenu 行 797 至 801 把 getScreenWidth 与 getScreenHeight 传给 TouchController 构造与 TouchControllerInputView.setSize，窗口变化后不会更新。当时未修是因为不确定 TouchController 是否有 resize 接口，本轮读完实现后确认它没有 resize 接口但也不需要，因为尺寸只用于归一化。",
+          "追溯结果：TouchController 中 addPointer 传参 event.getX(index) 除以 width 与 event.getY(index) 除以 height，以及 client.moveView(true, deltaY 除以 height, deltaX 除以 width)，都是把像素坐标归一化到零到一，width 与 height 只作分母，声明为构造参数 val 后即冻结。TouchControllerInputView 的 width 与 height 由 setSize 写入，用于把 cursorRect 与 inputAreaRect 这两个归一化矩形换算回像素，共八处使用点。",
+          "修法：两处都改为动态 getter，构造或传入的值仅作兜底，写法为 getScreenWidth().takeIf { it > 0 } ?: initialWidth。不需要任何外部 hook，因为窗口变化后 DisplayUtil 会由 FCLActivity.onConfigurationChanged 刷新，getter 下次调用自动拿到新值。",
+          "真实编译失败一次：run 40067197166 五个架构全部失败，报 TouchControllerInputView.kt 第 71 行第 28 列 Accidental override，提示 The following declarations have the same JVM signature (getWidth()I)。",
+          "失败原因：该类继承 View，Android 的 View 已有 getWidth 与 getHeight 方法，我自定义的 private val width get() 编译后同样生成 getWidth 方法，造成 JVM 签名冲突。",
+          "修法：属性改名为 screenW 与 screenH，并把八处使用点精确替换。必须避开 cursorRect.width 这类 RectF 自身字段，所以用完整表达式逐条断言 count 等于一后再替换，而不是正则批量替换。TouchController 是普通类不继承 View 所以没有冲突。",
+          "日志能够定位到这次错误，靠的是 v0.40.0 修的取证改进即上报步骤直接读 /tmp/build.log 文件，否则只能盲猜。",
+          "会导致的错误逐条处置：自定义 width 与 height 与 View.getWidth 冲突导致五架构全编译失败（改名 screenW 与 screenH）；正则替换误伤 cursorRect.width 这类 RectF 自身字段（用完整表达式精确替换八处并逐条断言）；TouchController 是否也冲突（它是普通类不继承 View 无冲突）；构造参数改为 private val initialWidth 是否破坏调用方（位置参数调用签名不变）；getScreenWidth 返回零时（兜底用构造初值与原负一语义一致）；getter 在 onDraw 中每次调用的开销（只读静态 int 可忽略）。",
+          "对用户使用逻辑的影响：小窗切全屏时触控归一化按新尺寸，指针与视角不再失控；光标与输入区矩形按新尺寸换算；未装 TouchController mod 的场景完全不受影响。",
+          "对未来的影响：尺寸快照类问题至此全量修完，覆盖 TouchPad、MenuView、ControlButton、ControlDirection、FCLInput、TouchController、TouchControllerInputView 七个类；新增代码若再在 View 子类声明 val width 会再次冲突，已写入规则 240。",
+          "对代码逻辑的影响：TouchController 构造参数名变更但位置不变故调用方兼容；两处属性改为 getter 开销极小。",
+          "审核 pass。哈希回执出现第四次碰撞：首次取 TouchControllerInputView 行 73 得五个字母 priva，与 v0.19.0 的 KcuDevMode 行 28 完全一致且 SHA-1 同为 28399ad1e9d4bd701852ebb005259fe30f57e756，原因是两行都以 private 开头。按规则 193 即取字行要选含特征标识符的，改取 TouchController.kt 行 33 含 val width，五个字母为 v a l w i 拼成 valwi，SHA-1 0c816a93d5c6512f3a1a67a42d2421ba687d45b9。",
+          "冒烟测试：Actions run 40067932184 由 push 触发全矩阵并成功，五个产物分别为 all 326243965、x86_64 174872036、arm64 169175968、arm 161916555、x86 155564861 字节。",
+          "未验证：小窗切换行为需实机。实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 44,
     "versionName": "0.44.0",
     "date": "2026.10.24",
