@@ -491,3 +491,12 @@
 237. **用正则批量改标识符时必须加 `\b` 边界**：`\bscreenWidth\b` 不会误伤 `mScreenWidth` 或 `getScreenWidth`（前导为字母，不构成词边界）。
 238. **哈希取字碰撞已出现三次**（`publi` ×2、`float` ×2）：取材行若以 `public` / `float` 等常见前缀开头必然碰撞。取字行应选含特征标识符（如 `baseInfo.setXPosition`）的行。
 239. **push 触发的构建会被后续 push 取消**（cancel-in-progress），批量上传后只有最后一次能跑完。这正是"一次提交验证全矩阵"的正确方式，但也意味着前几次上传不会各自得到构建结果。
+
+---
+
+## 38. 追加硬规则（v45，2026-10-24 13:5x）
+
+240. **不要在 View 子类声明名为 `width` / `height` 的属性**：Android 的 View 已有 `getWidth()`/`getHeight()`，Kotlin 自定义属性编译后同名，报 `Accidental override: same JVM signature (getWidth()I)`，且会让所有架构编译失败。用 `screenW`/`screenH` 之类名称。
+241. **替换标识符时不要用裸正则**：`\bwidth\b` 会匹配 `cursorRect.width`（RectF 自身字段）。必须用完整表达式（如 `cursorRect.left * width,`）逐条替换并 assert 命中数为 1。
+242. **"有没有 resize 接口"不是修复的前提**：先读实现确认尺寸用来干什么。本例 TouchController 的尺寸只做归一化分母，直接改动态 getter 即可，不需要外部 hook。
+243. **哈希取字碰撞已出现四次**（`publi`×2、`float`×2、`priva`×2）：取材行若以 `private`/`public`/`float` 开头必然碰撞。取字行必须含特征标识符（如 `val width`、`baseInfo.setXPosition`）。
