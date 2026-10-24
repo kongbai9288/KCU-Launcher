@@ -1,25 +1,24 @@
 <div align="center">
-    <img width="75" src="/FCL/src/main/res/drawable/img_app.png"></img>
+    <img width="75" src="/KCU/src/main/res/drawable/img_app.png"></img>
 </div>
 
-<h1 align="center">Fold Craft Launcher</h1>
+<h1 align="center">KCU Launcher</h1>
 
 <div align="center">
 
-[![Android CI](https://github.com/FCL-Team/FoldCraftLauncher/actions/workflows/build.yml/badge.svg)](https://github.com/FCL-Team/FoldCraftLauncher/actions/workflows/build.yml)
-![Загрузки](https://img.shields.io/github/downloads/FCL-Team/FoldCraftLauncher/total?style=flat-square&color=f18cb9)
-![Релиз](https://img.shields.io/github/v/release/FCL-Team/FoldCraftLauncher?style=flat-square&color=f18cb9)
+[![Android CI](https://github.com/kongbai9288/KCU-Launcher/actions/workflows/build.yml/badge.svg)](https://github.com/kongbai9288/KCU-Launcher/actions/workflows/build.yml)
+![Загрузки](https://img.shields.io/github/downloads/kongbai9288/KCU-Launcher/total?style=flat-square&color=f18cb9)
+![Релиз](https://img.shields.io/github/v/release/kongbai9288/KCU-Launcher?style=flat-square&color=f18cb9)
 
 [![Discord](https://img.shields.io/badge/Discord-red?logo=discord&logoColor=white)](https://discord.gg/ffhvuXTwyV)
 [![QQ](https://img.shields.io/badge/QQ-green)](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=LwxydGEvBZJnn09sXOjkQo9tuuLcYwx5&authKey=seyY5pPUCIHMWS5FqVryq926T0G2GarSXetpxxV9DJxBVt%2FPcg1vxN%2F%2FXpsCowyk&noverify=0&group_code=762054349)
-[![Поддержать](https://img.shields.io/badge/sponsor-blue?logo=GitHub-Sponsors)](https://afdian.com/@tungs)
 
 </div>
 
 🌍 **Язык**
 [简体中文](./README.md) | [English](./README_EN.md) | Русский
 
-> 「Fold Craft Launcher」 — это лаунчер Minecraft: Java Edition для платформы Android, разрабатываемый командой FCL Team. Созданный на базе ключевых функций [HMCL](https://github.com/HMCL-dev/HMCL) и с интеграцией бэкенда [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher), он позволяет запускать Minecraft: Java Edition на мобильных устройствах, поддерживая загрузку и работу модов для всех версий игры.
+> 「KCU Launcher」 — это лаунчер Minecraft: Java Edition для Android, производное от [Fold Craft Launcher](https://github.com/FCL-Team/FoldCraftLauncher) команды FCL Team. Создан на базе ключевых функций [HMCL](https://github.com/HMCL-dev/HMCL) и бэкенда PojavLauncher, позволяет запускать Minecraft: Java Edition на мобильных устройствах, поддерживая загрузку и работу модов для всех версий игры.
 
 ---
 
@@ -32,7 +31,7 @@
 ⚙️ **Основные преимущества**  
 - Встроенные среды выполнения Java разных версий (Java 8/17/21/25) с возможностью импорта пользовательских версий Java
 - Виртуальная мышь и переназначение клавиш
-- Конвертация раскладок управления между FCL и ZalithLauncher2, импорт раскладок ZL2 с автоматическим преобразованием
+- Конвертация раскладок управления между KCU и ZalithLauncher2, импорт раскладок ZL2 с автоматическим преобразованием
 - Поддержка шейдеров (требуются рендереры VirGL/Zink/MG)
 - Гибкое управление ресурсами (моды/модпаки/текстуры/шейдеры/сохранения)
 - Настройка тем оформления (фон/цветовые схемы)
@@ -64,8 +63,8 @@
 
 ## 🤝 Участие и благодарности
 ### Стена участников
-<a href="https://github.com/FCL-Team/FoldCraftLauncher/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=FCL-Team/FoldCraftLauncher" />
+<a href="https://github.com/kongbai9288/KCU-Launcher/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=kongbai9288/KCU-Launcher" />
 </a>
 
 ### Связанные проекты
