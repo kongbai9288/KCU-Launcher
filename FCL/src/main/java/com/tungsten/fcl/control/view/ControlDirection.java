@@ -57,8 +57,6 @@ public class ControlDirection extends RelativeLayout implements CustomView {
     private final boolean displayMode;
     private Path boundaryPath;
     private final Paint boundaryPaint;
-    private final int screenWidth;
-    private final int screenHeight;
 
     private static final double ANGLE_0 = 0;
     private static final double ANGLE_360 = 360;
@@ -159,8 +157,6 @@ public class ControlDirection extends RelativeLayout implements CustomView {
         selectedPaint.setStrokeWidth(4);
         handlePaint.setAntiAlias(true);
         handlePaint.setStyle(Paint.Style.FILL);
-        screenWidth = AndroidUtilKt.getScreenWidth();
-        screenHeight = AndroidUtilKt.getScreenHeight();
 
         setWillNotDraw(false);
 
@@ -218,8 +214,6 @@ public class ControlDirection extends RelativeLayout implements CustomView {
         boundaryPaint.setColor(Color.RED);
         boundaryPaint.setStyle(Paint.Style.STROKE);
         boundaryPaint.setStrokeWidth(3);
-        screenWidth = AndroidUtilKt.getScreenWidth();
-        screenHeight = AndroidUtilKt.getScreenHeight();
 
         notifyListener = invalidate -> Schedulers.androidUIThread().execute(this::notifyData);
         dataChangeListener = invalidate -> Schedulers.androidUIThread().execute(() -> {
@@ -265,8 +259,8 @@ public class ControlDirection extends RelativeLayout implements CustomView {
             viewSize = ConvertUtils.dip2px(getContext(), getData().getBaseInfo().getAbsoluteWidth());
         } else {
             viewSize = getData().getBaseInfo().getPercentageWidth().getReference() == BaseInfoData.PercentageSize.Reference.SCREEN_WIDTH ?
-                    (int) (screenWidth * (getData().getBaseInfo().getPercentageWidth().getSize() / 1000f)) :
-                    (int) (screenHeight * (getData().getBaseInfo().getPercentageWidth().getSize() / 1000f));
+                    (int) (AndroidUtilKt.getScreenWidth() * (getData().getBaseInfo().getPercentageWidth().getSize() / 1000f)) :
+                    (int) (AndroidUtilKt.getScreenHeight() * (getData().getBaseInfo().getPercentageWidth().getSize() / 1000f));
         }
         return viewSize;
     }
@@ -279,8 +273,8 @@ public class ControlDirection extends RelativeLayout implements CustomView {
         post(() -> {
             int x;
             int y;
-            x = Math.round((screenWidth - getSize()) * (data.getBaseInfo().getXPosition() / 1000f));
-            y = Math.round((screenHeight - getSize()) * (data.getBaseInfo().getYPosition() / 1000f));
+            x = Math.round((AndroidUtilKt.getScreenWidth() - getSize()) * (data.getBaseInfo().getXPosition() / 1000f));
+            y = Math.round((AndroidUtilKt.getScreenHeight() - getSize()) * (data.getBaseInfo().getYPosition() / 1000f));
             if (!displayMode) {
                 setX(x);
                 setY(y);
@@ -601,8 +595,8 @@ public class ControlDirection extends RelativeLayout implements CustomView {
                             menu.getViewManager().selectView(this);
                         }
                     } else {
-                        getData().getBaseInfo().setXPosition(Math.round((1000 * getX()) / (screenWidth - getSize())));
-                        getData().getBaseInfo().setYPosition(Math.round((1000 * getY()) / (screenHeight - getSize())));
+                        getData().getBaseInfo().setXPosition(Math.round((1000 * getX()) / (AndroidUtilKt.getScreenWidth() - getSize())));
+                        getData().getBaseInfo().setYPosition(Math.round((1000 * getY()) / (AndroidUtilKt.getScreenHeight() - getSize())));
                         menu.getViewManager().saveController();
                     }
                     menu.getViewManager().showEditBar(this);
@@ -749,8 +743,8 @@ public class ControlDirection extends RelativeLayout implements CustomView {
         BaseInfoData baseInfo = getData().getBaseInfo();
         int pixel = Math.max(ConvertUtils.dip2px(getContext(), 5), getWidth());
         // 位置夹到屏内后与尺寸一起写回，保证刷新后视觉位置不变
-        float x = Math.max(0, Math.min(screenWidth - pixel, getX()));
-        float y = Math.max(0, Math.min(screenHeight - pixel, getY()));
+        float x = Math.max(0, Math.min(AndroidUtilKt.getScreenWidth() - pixel, getX()));
+        float y = Math.max(0, Math.min(AndroidUtilKt.getScreenHeight() - pixel, getY()));
         setX(x);
         setY(y);
         if (baseInfo.getSizeType() == BaseInfoData.SizeType.ABSOLUTE) {
@@ -762,15 +756,15 @@ public class ControlDirection extends RelativeLayout implements CustomView {
             baseInfo.getPercentageWidth().setSize(size);
             baseInfo.getPercentageHeight().setSize(size);
         }
-        baseInfo.setXPosition(Math.round((1000 * x) / (screenWidth - pixel)));
-        baseInfo.setYPosition(Math.round((1000 * y) / (screenHeight - pixel)));
+        baseInfo.setXPosition(Math.round((1000 * x) / (AndroidUtilKt.getScreenWidth() - pixel)));
+        baseInfo.setYPosition(Math.round((1000 * y) / (AndroidUtilKt.getScreenHeight() - pixel)));
         resizingSize = -1;
         notifyData();
         menu.getViewManager().saveController();
     }
 
     private int pixelToPermille(int pixel, BaseInfoData.PercentageSize.Reference reference) {
-        int base = reference == BaseInfoData.PercentageSize.Reference.SCREEN_WIDTH ? screenWidth : screenHeight;
+        int base = reference == BaseInfoData.PercentageSize.Reference.SCREEN_WIDTH ? AndroidUtilKt.getScreenWidth() : AndroidUtilKt.getScreenHeight();
         return Math.max(1, Math.min(1000, Math.round(pixel * 1000f / base)));
     }
 
@@ -1002,8 +996,8 @@ public class ControlDirection extends RelativeLayout implements CustomView {
             } else {
                 int x;
                 int y;
-                x = Math.round((screenWidth - getSize()) * (getData().getBaseInfo().getXPosition() / 1000f));
-                y = Math.round((screenHeight - getSize()) * (getData().getBaseInfo().getYPosition() / 1000f));
+                x = Math.round((AndroidUtilKt.getScreenWidth() - getSize()) * (getData().getBaseInfo().getXPosition() / 1000f));
+                y = Math.round((AndroidUtilKt.getScreenHeight() - getSize()) * (getData().getBaseInfo().getYPosition() / 1000f));
                 if (!displayMode) {
                     setX(x);
                     setY(y);
