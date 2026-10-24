@@ -2292,3 +2292,69 @@ all 326251249 / x86_64 174875280 / **arm64 169178690** / arm 161918485 / x86 155
 ### 遗留
 
 `about_desc` 仍是上游介绍文案；许可证**全文**未内置（只有 SPDX + 链接）。
+
+## 0.47.0 — 2026-10-24
+
+执行者：**yuanbao**
+
+- **许可证全文内置**（v0.46.0 遗留）
+- **`about_desc` 换成 KCU 自己的介绍**
+- 修一次**五架构全崩**的编译错误
+
+### 全文来自官方 API，不手写
+
+`GET /licenses/{key}`，五份共 **71682 字节**：
+
+| 文件 | 字节 |
+|---|---|
+| GPL-3.0 | 35149 |
+| LGPL-2.1 | 26526 |
+| LGPL-3.0 | 7652 |
+| BSD-3-Clause | 1499 |
+| Zlib | 856 |
+
+**为什么不手写**：这是法律文本，默写、转述、摘要都可能失真。官方 API 给的就是官方发布的原文。
+
+现在点条目 → 本地全文页，**不联网**。Android-OpenJDK-Build 官方没声明，走占位 + 官方链接。
+
+### `about_desc` 原来在替上游说话
+
+四段全在讲 Fold Craft Launcher，末句"if you are going to distribute this app, please follow GPL-v3"——**替上游声明**。
+
+改成介绍 KCU 自身。
+
+⚠ **只改了默认和中文**，其余 10 个语言仍是上游文案 —— 需要各语种翻译，我没做，**没伪装成已完成**。
+
+### 五架构全崩：漏了个 import
+
+```
+KcuLicenseActivity.java:100: error: cannot find symbol
+```
+
+用了 `new Intent(...)` 没导 `android.content.Intent`。加代码时只补逻辑没检查 import。
+
+同类 `KcuLicenseTextActivity` 不需要导（同包），所以没一起暴露。
+
+### 哈希碰撞第五次
+
+取 `EXTRA_FILE` 那行 → `publi`，**和 v0.28/0.29 两次一字不差**。
+
+自动换行得到的 `package` 和 `@Override` 都不算实质代码行，弃用。最终取 `onCreate` 那行 → `prote`。
+
+**规则 193 得改**：原文说"选含特征标识符的行"没用——**取字从行首开始**，行首是 public/private/float 就必撞，跟行尾特征无关。
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuLicenseTextActivity.java` |
+| 行 | **31** |
+| 5 个不同字母 | `p r o t e` |
+| **SHA-1** | **`a2d455d65e5ea85773bcf5e76b57b6178053f62e`** |
+
+### 编译验证（PROVEN）
+
+run **40081537478** 全矩阵 success，5 产物：
+all 326277469 / x86_64 174901364 / **arm64 169206130** / arm 161946535 / x86 155596376 B
+
+arm64 比上轮 **+27440 B**，和内置全文的体量对得上。
