@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.kongbai.kculauncher.R;
 import com.kongbai.kculauncher.setting.Accounts;
+import com.kongbai.kculauncher.util.KcuDevMode;
+import com.kongbai.kculauncher.util.KcuUnifiedLoginDialog;
 import com.kongbai.kculauncher.core.task.Task;
 import com.kongbai.kculauncher.library.component.ui.KCUCommonUI;
 
@@ -46,6 +48,14 @@ public class AccountUI extends KCUCommonUI implements View.OnClickListener {
         ListView serverListView = findViewById(R.id.server_list);
         serverListView.setAdapter(new ServerListAdapter(getContext()));
 
+        // 未开启开发者模式时合并为单一入口：只保留名称登录，
+        // 隐藏正版与第三方入口，避免默认路径把玩家引向凭据登录
+        if (!KcuDevMode.isEnabled()) {
+            addMicrosoftAccount.setVisibility(View.GONE);
+            addLoginServer.setVisibility(View.GONE);
+            serverListView.setVisibility(View.GONE);
+        }
+
         // 首次创建即刷新账户列表（原 onStart 生命周期，页面随重建重新初始化）
         loadAccounts();
     }
@@ -64,6 +74,11 @@ public class AccountUI extends KCUCommonUI implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
+        // 开发者模式未开启：三个入口合并为统一的名称登录
+        if (!KcuDevMode.isEnabled()) {
+            KcuUnifiedLoginDialog.show(getContext(), this::loadAccounts);
+            return;
+        }
         if (view == addOfflineAccount) {
             CreateAccountDialog dialog = new CreateAccountDialog(getContext(), Accounts.FACTORY_OFFLINE);
             dialog.show();
