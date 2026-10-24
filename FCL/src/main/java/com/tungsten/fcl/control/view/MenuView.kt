@@ -36,8 +36,13 @@ class MenuView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
 ) : View(context, attrs) {
 
-    private val screenWidth = getScreenWidth()
-    private val screenHeight = getScreenHeight()
+    /**
+     * 尺寸改为每次访问时动态获取。
+     * 原先在构造时快照为不可变值：小窗/分屏切换回全屏后仍是旧窗口尺寸，
+     * 菜单定位与拖拽 clamp 范围随之错误，表现为扩大后布局位置不对。
+     */
+    private val screenWidth get() = getScreenWidth()
+    private val screenHeight get() = getScreenHeight()
 
     private val defaultWidth = ConvertUtils.dip2px(context, 40f)
     private val defaultHeight = ConvertUtils.dip2px(context, 40f)
