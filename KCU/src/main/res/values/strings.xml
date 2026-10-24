@@ -1665,6 +1665,17 @@
     <string name="kcu_dev_clearing">清除中…</string>
     <string name="kcu_dev_cleared">已清除 %1$d 项</string>
     <string name="kcu_dev_clear_note">清除全部标记会同时清除年龄声明，下次启动需重新选择年龄。</string>
+    <string name="kcu_login_title">Add account</string>
+    <string name="kcu_login_hint">Enter your in-game name. We will check whether online sign-in is available for this name; if it is not, you will be signed in offline with this name.</string>
+    <string name="kcu_login_name_hint">In-game name</string>
+    <string name="kcu_login_confirm">Continue</string>
+    <string name="kcu_login_checking">Checking availability...</string>
+    <string name="kcu_login_name_empty">Please enter a name.</string>
+    <string name="kcu_login_name_invalid">Name must be 3 to 16 characters, letters, digits and underscore only.</string>
+    <string name="kcu_login_premium_title">Online sign-in available</string>
+    <string name="kcu_login_premium_body">This name is linked to a premium account. You can sign in with the Microsoft account that owns it, or continue offline with this name.</string>
+    <string name="kcu_login_use_microsoft">Use Microsoft account</string>
+    <string name="kcu_login_use_offline">Continue offline</string>
     <string name="kcu_stage_version">Current version</string>
     <string name="kcu_stage_version_none">Not selected</string>
     <string name="kcu_pick_java_title">选择运行时</string>
