@@ -97,7 +97,7 @@ def restore_tokens(text):
     return text
 
 changed = []
-skipped_dirs = {'.git', 'build', '.gradle', 'gradle', 'node_modules'}
+skipped_dirs = {'.git', 'build', '.gradle', 'gradle', 'node_modules', '.github'}
 
 for dirpath, dirnames, filenames in os.walk(ROOT):
     dirnames[:] = [d for d in dirnames if d not in skipped_dirs]
