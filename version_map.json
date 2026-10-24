@@ -1,6 +1,34 @@
 [
   {
     "type": "release",
+    "versionCode": 46,
+    "versionName": "0.46.0",
+    "date": "2026.10.24",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "承接 v0.20.0 用户提出但一直未做的要求：应用内需要图标且尽量本地不要联网获取，开源许可页与开发者项前面都要带图标并包含上游项目。",
+          "追溯发现关于页原状：AboutPage 的 LINKS 六条全部指向上游，包括 fcl-team.github.io、github.com/FCL-Team、discord、QQ 群、afdian 赞助上游作者、FCL 源码。三个问题是无图标、无开源许可入口、我们是 KCU 却在推上游。item_about.xml 原布局为 title 加 spacer 加跳转箭头，左侧没有图标位。",
+          "图标方案沿用 v0.43.0 的 KcuUi 字符徽章，零联网零新增 drawable。新增 KcuUi.badgeBackground 供独立图标视图复用，iconBadge 内部复用同一实现。item_about.xml 加三十二 dp 图标位，必须设 app:auto_text_tint 为 false 加白色文字，否则会被主题 tint 成黑字压在强调色底上，这是 v0.22.0 同类问题的重演。",
+          "关于页重排为三组：本应用（KCU 启动器、源代码仓库、QQ 交流群）、上游与开源组件（FCL、PojavLauncher、HMCL、Android-OpenJDK-Build、SDL3、LWJGL、MobileGlues）、许可（开源许可打开本地页）。移除上游赞助入口，因为我们不是上游，不该引导用户赞助上游作者。",
+          "新增 KcuLicenseActivity，数据来自 assets/licenses/licenses.json，读取与展示全程零网络请求。",
+          "SPDX 逐项取自 GitHub API 官方 license.spdx_id 字段而非凭印象填写：Fold Craft Launcher 为 GPL-3.0、PojavLauncher 为 LGPL-3.0 注意不是 GPL、HMCL 为 GPL-3.0、SDL3 为 Zlib、LWJGL 为 BSD-3-Clause、MobileGlues 为 LGPL-2.1 且与 v0.36.0 的二进制证据一致。",
+          "两个查不到的如实标注而非猜测：Android-OpenJDK-Build 官方仓库 license 字段为 None，标注官方仓库未声明 SPDX；Terracotta 搜索确认不到对应仓库，直接不列入清单。",
+          "审核截获的必错项：其一是 Kotlin 顶层函数不能用 import com.mio.util.openLink，它编译为 AndroidUtilKt 静态方法，已改为 AndroidUtilKt.openLink；其二是新建 Activity 未在 Manifest 注册会导致 startActivity 崩溃，已注册并设 exported 为 false。此外 optJSONObject 返回 null 会 NPE 故加判空，行容器改用无背景 LinearLayout 避免嵌套 card 内边距过挤，assets 读取异常走占位文案。",
+          "对用户使用逻辑的影响：打开关于页每行左侧有图标徽章；点开源许可打开本地页完全不联网；点许可条目跳项目主页这是唯一联网动作且由用户主动触发。说明行仍用 about_desc，该文案描述的是上游属遗留未改。",
+          "对未来的影响：新增上游组件时须同步 licenses.json 否则清单不全；SPDX 若上游改许可需同步；about_desc 仍是上游文案属遗留。",
+          "对代码逻辑的影响：KcuUi 新增一个方法，其余为新增文件与资源，未改已有 API 签名。",
+          "审核 pass。哈希回执：KcuLicenseActivity.java 第 97 行 row.setOnClickListener(v -> AndroidUtilKt.openLink(this, url))，五个字母 r o w s e 拼成 rowse，SHA-1 4ed3e64a49466f0cc9a5b2e700579fc6bef0bd6e。取材行即 Kotlin 顶层函数命名这个会被编译拦下的修正点。",
+          "冒烟测试：Actions run 40073514177 由 push 触发全矩阵并成功，五个产物分别为 all 326251249、x86_64 174875280、arm64 169178690、arm 161918485、x86 155568215 字节。",
+          "未验证：图标字符显示效果需实机，小窗切换行为需实机。实机安装仍为零验证。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 45,
     "versionName": "0.45.0",
     "date": "2026.10.24",
