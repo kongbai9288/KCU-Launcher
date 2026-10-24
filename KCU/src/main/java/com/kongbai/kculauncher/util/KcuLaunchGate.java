@@ -150,6 +150,9 @@ public final class KcuLaunchGate {
             }
             names.append("\u2022 ").append(mismatches.get(i).worldName);
         }
+        // 附上期望值：玩家用 NBT 工具改时需要知道该改成什么，只报不一致没法动手
+        String expected = mismatches.isEmpty()
+                ? "" : String.valueOf(mismatches.get(0).expected);
         ScrollView scroll = new ScrollView(context);
         android.widget.LinearLayout root = KcuUi.root(context);
         android.widget.LinearLayout card = KcuUi.card(context);
@@ -160,6 +163,10 @@ public final class KcuLaunchGate {
         card.addView(KcuUi.hint(context, names.toString()));
         card.addView(KcuUi.gap(context, 10));
         card.addView(KcuUi.hint(context, context.getString(R.string.kcu_uuid_note)));
+        if (!expected.isEmpty()) {
+            card.addView(KcuUi.gap(context, 10));
+            card.addView(KcuUi.status(context, expected));
+        }
 
         AlertDialog dialog = new AlertDialog.Builder(context).setView(scroll).create();
         android.widget.Button ok =
