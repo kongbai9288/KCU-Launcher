@@ -58,7 +58,7 @@
     <string name="about_developer" translatable="false">FCL-Team</string>
     <string name="about_sponsor">Sponsor</string>
     <string name="about_source">Open Source</string>
-    <string name="about_desc">Fold Craft Launcher is an Android Minecraft Launcher, allows user to launch Minecraft: Java Edition on Android device.\n\nFold Craft Launcher is developed by FCL-Team.\n\nFold Craft Launcher\'s most features are modified based on HMCLCore.\n\nThe app borrows and quotes some codes of PojavLauncher and Boat, so if you are going to distribute this app, please follow GPL-v3 License.</string>
+    <string name="about_desc">KCU Launcher 是一个 Android 上的 Minecraft: Java Edition 启动器，允许在安卓设备上运行 Java 版 Minecraft。\n\n本应用基于 Fold Craft Launcher 开发，并借鉴了 PojavLauncher、HMCL 等开源项目，遵循 GPL-v3 许可发布。\n\n页面下方的条目携带图标，点击「开源许可」可查看所使用开源项目的许可（全部内置于本地，不联网获取）。</string>
 
     <string name="account_add_server">Add Authentication Server</string>
     <string name="account_add_server_url">Server URL</string>
@@ -1671,4 +1671,6 @@
     <string name="kcu_license_title">开源许可</string>
     <string name="kcu_license_hint">本应用构建于以下开源项目之上。许可标识取自各项目官方仓库，点击可查看项目主页。</string>
     <string name="kcu_license_empty">许可清单暂不可用</string>
+    <string name="kcu_license_text_empty">未内置该协议的全文，请查看官方页面。</string>
+    <string name="kcu_license_open_official">查看官方页面</string>
 </resources>
