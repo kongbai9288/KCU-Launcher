@@ -100,8 +100,14 @@ public final class KcuNativeSync {
         }
     }
 
+    /**
+     * 与上次同步的结果比较。
+     *
+     * 时间戳用"不等"而非"更晚"：从备份恢复或跨设备拷贝时，新文件的 mtime 可能早于
+     * 已同步的旧文件，用"更晚"判定会漏掉这次更新，导致玩家换了文件却不生效。
+     */
     private static boolean needsCopy(File src, File dst) {
-        return !dst.isFile() || src.length() != dst.length() || src.lastModified() > dst.lastModified();
+        return !dst.isFile() || src.length() != dst.length() || src.lastModified() != dst.lastModified();
     }
 
     private static boolean copy(File src, File dst) {
