@@ -20,7 +20,7 @@
 
 ### PROVEN（有产物为证）
 
-- APK 持续编译通过（最新 run 40073514177 **全矩阵**，5 产物：all 326251249 / x86_64 174875280 / arm64 169178690 / arm 161918485 / x86 155568215 B）
+- APK 持续编译通过（最新 run 40081537478 **全矩阵**，5 产物：all 326277469 / x86_64 174901364 / arm64 169206130 / arm 161946535 / x86 155596376 B）
 - 包名已改为 `com.kcu.launcher`
 - 签名已接通并验签通过（`CN=kbs`，SHA-256 `d4e860232e977157c41459d7f139f9087036feb38623f07bd2c2f6575db4db4e`）
 - 公共目录根改造完成（`FCLPath`，marker 固化）
@@ -48,7 +48,8 @@
 - 屏幕尺寸快照已全仓排查并修完（TouchPad / MenuView / ControlButton / ControlDirection / FCLInput）
 - 屏幕尺寸快照**已全量修完**：TouchPad / MenuView / ControlButton / ControlDirection / FCLInput / TouchController / TouchControllerInputView 共 7 个类
 - 关于页已本地化：条目带字符图标、重排三组、开源许可页读本地 assets（零联网）
-- **遗留**：`about_desc` 仍是上游文案；许可证全文未内置
+- 许可证全文已内置（官方 API 拉取，5 份 71682 B），许可页全本地零联网
+- **遗留**：10 个非中英文语言的 `about_desc` 仍是上游文案（需各语种翻译）
 - 两个输入开关（`KCU_DP_THRESHOLD` / `KCU_MOUSE_DISGUISE`）效果未验证
 - manifest 是否真的生成、内容是否正确未确认
 - .so 双层目录同步行为未确认
