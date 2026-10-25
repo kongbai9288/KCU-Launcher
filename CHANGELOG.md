@@ -4091,3 +4091,127 @@ all 326252448 / x86_64 174875107 / **arm64 169181732** / arm 161919734 / x86 155
 ### 未验证
 
 该分支真机从未执行；**布局系统一次都没在真机上显示过**。
+
+## 0.68.0 — 2026-10-25
+
+执行者：**yuanbao**
+
+---
+
+# 专项审查：泄漏 / 黑洞 / 空指针
+
+## ⓿ 真内存泄漏：FPS 与内存采样线程
+
+```java
+fpsThread = new Thread(() -> {
+    while (...) { ... Thread.sleep(1000); }
+});
+```
+
+匿名内部类 → **持有 `GameMenu`** → 持有 `Activity` + 多个 View。
+
+**只在 `toggleFps(false)` 时停** ——
+而 `JVMActivity.onDestroy()` **从不调用**。
+
+```
+开着 FPS 退出游戏 → 线程继续每秒循环 → Activity 无法回收
+每进一次游戏 → toggleFps(true) 新建线程 → 旧的还在 → 累积
+```
+
+### 修法（不改变可见行为）
+
+| # | 改动 |
+|---|---|
+| 1 | 开启前**先停掉**上一个 |
+| 2 | 新增 `onDestroy()` + `stopXxxThread()` |
+| 3 | `JVMActivity.onDestroy` 调用 |
+
+---
+
+## ❶ 中断标志丢失
+
+```java
+catch (InterruptedException ignored) { }   // ← 标志已被 JVM 清除
+```
+
+→ `while (!Thread.currentThread().isInterrupted())`
+**永远为真** → **线程停不下来**。
+
+改为：
+
+```java
+catch (InterruptedException e) {
+    Thread.currentThread().interrupt();   // 恢复标志
+}
+```
+
+---
+
+## ❷ 空指针
+
+```java
+activity.getIntent().getExtras().getString("controller")
+```
+
+`getExtras()` **可为 null** → 整个菜单构造 NPE。
+
+改为先判空 → 传 null → `findControllerById` **回退第一项**，
+**行为与"未指定布局"一致，正常路径不变。**
+
+---
+
+## ❸ 静默失败改可见
+
+选 JDK 后**保存失败异常被吞** → 照常启动
+→ 玩家以为选过了 → **下次又弹同一个框**。
+
+改为：记日志 + Toast（新增 `kcu_pick_java_save_failed`）。
+
+---
+
+# 明确**不改**的（记录理由）
+
+| 类别 | 数量 | 理由 |
+|---|---|---|
+| 只含注释的 catch | **36 处** | 多数是**正常降级**（读写失败取默认值） |
+| 上游 `getController()` 未判空 | 多处 | 正常流程不会为 null；**大改风险 > 收益** |
+
+**用户要求"不能影响正常逻辑" → 这些不动。**
+
+---
+
+# ⚠ 本轮严重事故（如实记）
+
+**我误传了迁移前的旧 `JVMActivity.java`**
+
+```
+package com.tungsten.fcl.activity;   ← v0.48 迁移前的陈旧副本
+```
+
+把迁移后的正确文件**整个覆盖**
+→ `GameService.kt` 解析不到 `JVMActivity` → **五架构全崩**。
+
+**恢复**：从 v0.67 commit 取回正确版本重加改动。
+其余 4 个文件 **blob sha 比对确认未被污染**。
+
+---
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `GameMenu.java` |
+| 行 | **910** |
+| 该行原文 | `stopFpsThread();` |
+| 5 个不同字母 | `s t o p F` |
+| **SHA-1** | **`b475ea95a6cc17ae8a74143007e39fd9697543dc`** |
+
+### 编译验证（PROVEN）
+
+run **40162355431** 全矩阵 success，5 产物：
+all 326253449 / x86_64 174875996 / **arm64 169182706** / arm 161920822 / x86 155570019 B
+
+### 未验证
+
+线程是否真停止**没观察过**；泄漏是否真消除**没用内存工具确认**；
+**整个应用一次都没在真机装过。**
