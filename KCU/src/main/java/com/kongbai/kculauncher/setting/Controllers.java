@@ -59,7 +59,7 @@ public class Controllers {
                     // KCU：assets 下的其余预设布局一并落盘。
                     // 只加载默认那一份的话，另外几套永远进不了列表 —— 放进去却加载不了
                     // 等于死数据。仅在列表为空（首次启动）时执行，已有布局的用户不受影响。
-                    loadPresetsFromAssets();
+                    loadPresetsFromAssets(java.util.Collections.<String>emptySet());
                 } catch (IOException e) {
                     Logging.LOG.log(Level.SEVERE, "Failed to generate default controller!", e.getMessage());
                 }
@@ -114,7 +114,7 @@ public class Controllers {
             checkControllers();
             // 已有布局的用户也要拿到 KCU 预设：只靠"列表为空才落盘"的话，
             // 任何已经用过本启动器的设备永远看不到新布局，功能等于没做
-            ensurePresetsOnce();
+            ensurePresets();
 
             initialized = true;
         }
@@ -130,17 +130,18 @@ public class Controllers {
      *
      * 已存在于内存列表的按 id 跳过，避免与默认布局重复落盘。
      */
-    private static void loadPresetsFromAssets() {
+    private static java.util.List<String> loadPresetsFromAssets(java.util.Set<String> skip) {
+        java.util.List<String> added = new java.util.ArrayList<>();
         android.content.res.AssetManager assets = null;
         String[] names = null;
         try {
             assets = com.kongbai.kculauncher.KCUApp.getAppContext().getAssets();
             names = assets.list("controllers");
         } catch (Throwable ignored) {
-            return;
+            return added;
         }
         if (names == null) {
-            return;
+            return added;
         }
         java.util.Arrays.sort(names);
         // 语言专属布局按后缀过滤：kcu_cn / kcu_en 各只有一份生效，
@@ -156,11 +157,16 @@ public class Controllers {
                     continue;
                 }
             }
+            if (skip.contains(name)) {
+                continue;
+            }
             java.io.InputStream in = null;
             try {
                 in = assets.open("controllers/" + name);
                 Controller controller = Controller.GSON.fromJson(IOUtils.readFullyAsString(in), Controller.class);
                 if (controller == null) {
+                    // 解析出 null 也记为已处理：否则每次启动都重试一个坏文件
+                    added.add(name);
                     continue;
                 }
                 boolean exist = controllers.stream().anyMatch(it -> it.getId().equals(controller.getId()));
@@ -168,6 +174,7 @@ public class Controllers {
                     controller.saveToDiskSync();
                     controllers.add(controller);
                 }
+                added.add(name);
             } catch (Throwable e) {
                 // 单套布局坏掉不能影响其余：跳过这一套继续
                 Logging.LOG.log(Level.WARNING, "Failed to load preset controller: " + name, e.getMessage());
@@ -180,6 +187,7 @@ public class Controllers {
                 }
             }
         }
+        return added;
     }
 
     /**
@@ -201,25 +209,61 @@ public class Controllers {
     }
 
     /**
-     * 首次运行时补齐预设布局，用标记文件保证只做一次。
+     * 补齐预设布局：只落盘"还没落过的"那些。
      *
-     * 为什么需要：预设加载原本只在列表为空（全新安装）时执行，
-     * 已经用过本启动器的设备磁盘上已有布局，新加的 KCU 布局永远进不去，
-     * 功能对真实用户等于不存在。
+     * 【为什么需要】
+     * 预设加载原本只在列表为空（全新安装）时执行，已经用过本启动器的设备
+     * 磁盘上已有布局，新加的 KCU 布局永远进不去，功能对真实用户等于不存在。
      *
-     * 为什么只做一次：不加标记的话，玩家删掉某个预设后下次启动它又会回来，
-     * 等于无法删除。标记文件不是 .json，不会被孤儿清理逻辑改名。
+     * 【为什么按名字逐个记录，而不是一个"已初始化"标记】
+     * 单个布尔标记是盲的：以后再新增一套预设，老用户因为标记已存在
+     * 就永远拿不到它，等于每加一套布局都要废弃一次老用户的升级路径。
+     * 记录已处理的资产文件名，则新加的那一套自然会被补齐。
+     *
+     * 【为什么仍然不能每次都全量重来】
+     * 全量重来会让玩家删掉的预设下次启动又自己回来，等于无法删除。
+     * 按名字记录后，已处理过的名字不再重复落盘，删除依然有效。
      */
-    private static void ensurePresetsOnce() {
+    private static void ensurePresets() {
         File marker = new File(KCUPath.CONTROLLER_DIR, ".kcu_presets");
+        java.util.Set<String> applied = new java.util.LinkedHashSet<>();
         if (marker.exists()) {
+            try {
+                java.io.BufferedReader reader = new java.io.BufferedReader(
+                        new java.io.InputStreamReader(new java.io.FileInputStream(marker), "UTF-8"));
+                try {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (!line.isEmpty()) {
+                            applied.add(line);
+                        }
+                    }
+                } finally {
+                    reader.close();
+                }
+            } catch (Throwable ignored) {
+                // 标记损坏时不敢重来：重来会把玩家删掉的预设加回来。
+                // 保守跳过，本次不补齐，下次启动标记仍损坏则继续跳过
+                return;
+            }
+        }
+        java.util.List<String> added = loadPresetsFromAssets(applied);
+        if (added.isEmpty()) {
             return;
         }
+        applied.addAll(added);
         try {
-            loadPresetsFromAssets();
-            marker.createNewFile();
-        } catch (Throwable ignored) {
-            // 标记没写成功下次会重试；预设已加入内存列表，本次仍可用
+            java.io.BufferedWriter writer = new java.io.BufferedWriter(
+                    new java.io.OutputStreamWriter(new java.io.FileOutputStream(marker, false), "UTF-8"));
+            try {
+                for (String name : applied) {
+                    writer.write(name);
+                    writer.newLine();
+                }
+            } finally {
+                writer.close();
+            }
+            // 标记没写成功下次会重试；预设已在内存列表里，本次仍可用
         }
     }
 
