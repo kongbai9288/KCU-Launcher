@@ -118,8 +118,10 @@ public final class KcuLaunchGate {
                 proceed.run();
                 return;
             }
-            if (KcuInstanceRegistry.OWNER_KCU.equals(
-                    KcuInstanceRegistry.query(gameDir.getAbsolutePath()))) {
+            String dir = gameDir.getAbsolutePath();
+            // 归属与存档指纹同时满足才跳过扫描：只看归属会漏掉
+            // "拷进本启动器建的实例里的外来存档"
+            if (KcuInstanceRegistry.isSavesKnown(dir)) {
                 proceed.run();
                 return;
             }
@@ -130,6 +132,9 @@ public final class KcuLaunchGate {
                 return;
             }
             List<KcuWorldUuid.Mismatch> mismatches = KcuWorldUuid.scan(gameDir, target);
+            // 扫过就记下这批存档：既避免每启动都扫，
+            // 也让玩家自己修好或用工具改完后不再被反复提示
+            KcuInstanceRegistry.rememberSaves(dir);
             if (mismatches.isEmpty()) {
                 proceed.run();
                 return;
