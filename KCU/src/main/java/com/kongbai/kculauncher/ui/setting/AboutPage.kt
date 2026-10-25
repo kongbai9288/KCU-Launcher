@@ -150,7 +150,7 @@ class AboutPage(context: Context?, id: Int) : KCUPage(context, id, R.layout.page
         private val onLinkClick: (Int) -> Unit,
         private val onDevClick: () -> Unit,
         private val onUpdateClick: () -> Unit
-    ) : RecyclerView.Adapter<AboutAdapter.Holder>() {
+    ) : RecyclerView.Adapter<Holder>() {
 
         override fun getItemCount(): Int = 1 + DEVS.size + 1 + LINKS.size
 
@@ -262,7 +262,7 @@ class AboutPage(context: Context?, id: Int) : KCUPage(context, id, R.layout.page
      * 必须定义在适配器之外：Kotlin 不允许在 inner class 内部再声明嵌套类。
      * 适配器之所以是 inner，是因为构造应用卡片要读本页的版本与系统信息。
      */
-    private class Holder(itemView: View) : RecyclerView.ViewHolder(itemView)
+    class Holder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
     companion object {
         private const val TYPE_APP = 0
