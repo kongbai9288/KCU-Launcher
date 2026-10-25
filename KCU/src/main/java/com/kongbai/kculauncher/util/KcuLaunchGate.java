@@ -131,15 +131,19 @@ public final class KcuLaunchGate {
                 proceed.run();
                 return;
             }
-            List<KcuWorldUuid.Mismatch> mismatches = KcuWorldUuid.scan(gameDir, target);
-            // 扫过就记下这批存档：既避免每启动都扫，
-            // 也让玩家自己修好或用工具改完后不再被反复提示
-            KcuInstanceRegistry.rememberSaves(dir);
-            if (mismatches.isEmpty()) {
+            KcuWorldUuid.ScanResult scan = KcuWorldUuid.scan(gameDir, target);
+            if (scan.mismatches.isEmpty()) {
+                // 确实读到标识且全部一致才算验证通过，此时才建立信任。
+                // checked 为 0 表示一个世界都没读出来 —— 那不是"一致"，
+                // 是"没验证"，不能据此跳过以后的检查
+                if (scan.checked > 0) {
+                    KcuInstanceRegistry.markSavesVerified(dir);
+                }
                 proceed.run();
                 return;
             }
-            showUuidAdvice(context, mismatches, proceed);
+            // 有不一致时不标记：玩家还没处理，下次启动仍需提示
+            showUuidAdvice(context, scan.mismatches, proceed);
         } catch (Throwable ignored) {
             proceed.run();
         }
