@@ -140,9 +140,18 @@ public class Controllers {
             return;
         }
         java.util.Arrays.sort(names);
+        // 语言专属布局按后缀过滤：kcu_cn / kcu_en 各只有一份生效，
+        // 全落盘会让列表里同时出现两套同名 KCU 布局
+        String langSuffix = "_" + langTag();
         for (String name : names) {
             if (!name.endsWith(".json")) {
                 continue;
+            }
+            String base = name.substring(0, name.length() - ".json".length());
+            if (base.endsWith("_cn") || base.endsWith("_en")) {
+                if (!base.endsWith(langSuffix)) {
+                    continue;
+                }
             }
             java.io.InputStream in = null;
             try {
@@ -168,6 +177,24 @@ public class Controllers {
                 }
             }
         }
+    }
+
+    /**
+     * 当前界面语言标签，只区分 cn 与 en 两种。
+     *
+     * 其余语言一律按 en 处理：布局文字只有中英两版，落到 en 比落到一个
+     * 不存在的版本更安全。宁可显示英文，也不要因为取不到对应文件而少一套布局。
+     */
+    private static String langTag() {
+        try {
+            java.util.Locale locale = java.util.Locale.getDefault();
+            if (java.util.Locale.CHINA.equals(locale)
+                    || "zh".equals(locale.getLanguage())) {
+                return "cn";
+            }
+        } catch (Throwable ignored) {
+        }
+        return "en";
     }
 
     /**
