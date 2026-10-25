@@ -1,6 +1,28 @@
 [
   {
     "type": "release",
+    "versionCode": 73,
+    "versionName": "0.73.0",
+    "date": "2026.10.26",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "继续黑洞与泄漏审查，找到一个会直接破坏用户正常逻辑的缺陷。KcuNativeOrder.loadInOrder 在循环里无论配置为 abort 还是 skip，只要有一个库 dlopen 失败就把 allOk 置为假，而方法末尾无条件 return allOk。调用点 KCULauncher 判断返回值为假就终止启动并写日志称配置为 abort。结果是玩家把 onFailure 明确写成 skip，期望跳过失败的库继续启动，实际却仍然无法启动，且日志里的说法与玩家的真实配置不符，会把排查引向错误方向。这是我自己在上一次修复 abort 行为时引入的。",
+          "修法为让返回值只表示是否应当终止启动。改为 return 非 cfg.abortOnFailure 或 allOk，四种组合逐一推演：配置为 abort 且有失败终止启动、配置为 abort 且无失败继续、配置为 skip 且有失败继续、配置为 skip 且无失败继续，全部符合预期语义。",
+          "同时补上三处静默。一是 dlopen 失败此前只置标志不记录，玩家排查渲染异常时没有任何线索，现记录失败的库名与异常。二是文件名不合法被跳过时无任何记录，玩家会以为自己排好了顺序而实际该文件从未被加载，现记录被忽略的名字。三是运行时目录中找不到该库被跳过时同样无记录，现记录未同步的库名。这三条与 KcuNativeSync 同步失败静默形成完整链路，同步失败也能在这里被发现。",
+          "第二处修复是资源管理。KcuWorldUuid 读取 level.dat 时先建 FileInputStream，再包 PushbackInputStream，识别到 gzip 时再包 GZIPInputStream，而 finally 里只关闭最内层的 FileInputStream。关闭内层只能释放文件句柄，套在外面的 GZIPInputStream 持有的 Inflater 原生内存要等它的 close 才释放，否则只能等垃圾回收终结。该方法在启动路径上按世界逐个调用，世界多了会累积原生内存压力。改为用一个变量始终指向最外层流，finally 里关闭它，关闭会级联到内层。同时补上第二字节读到负一时直接返回，避免把负一当作数据回退进缓冲区。",
+          "上传前按防错规则 189 逐文件校验包名，本次还额外比对了本地与远端声明的包名是否完全一致。上传首轮因误用 util 包路径取不到 KcuNativeOrder 而失败，其真实包名为 launcher.utils，修正后成功。",
+          "审核 pass。哈希回执：KcuWorldUuid.java 第一百七十四行 InputStream outer 等号 null 分号，五个字母 I n p u t 拼成 Input，SHA-1 b568d47f2e244743b1fd7472db836ef9769c21f8。先尝试从 KcuNativeOrder 的返回行取材，五个字母为 retun，与历史多次碰撞，故改取本行。",
+          "冒烟测试：Actions run 40210452205 全矩阵 success，五个产物分别为 all 326253839、x86_64 174876388、arm64 169182977、arm 161921271、x86 155570441 字节。",
+          "未验证：配置为 skip 且确有库失败时是否真能继续启动从未在真机触发过；三处新增日志从未在真机输出过；NBT 读取的流关闭改进未用内存工具确认；整个应用仍一次都没在真机安装运行过。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 72,
     "versionName": "0.72.0",
     "date": "2026.10.25",
