@@ -161,19 +161,32 @@ public final class KcuWorldUuid {
                 ((long) value[2] << 32) | (value[3] & 0xFFFFFFFFL));
     }
 
-    /** 按文件头识别压缩方式读取；支持 GZip 与未压缩，读不出来返回 null */
+    /**
+     * 按文件头识别压缩方式读取；支持 GZip 与未压缩，读不出来返回 null。
+     *
+     * 【必须关闭最外层流】
+     * 关闭 FileInputStream 只能释放文件句柄，套在外面的 GZIPInputStream 持有的
+     * Inflater 的原生内存要等它的 close 才释放，否则只能等 GC 终结。
+     * 本方法在启动路径上按世界逐个调用，世界多了会累积原生内存压力。
+     * 因此用一个变量始终指向最外层，finally 里关它，关闭会级联到内层。
+     */
     private static CompoundTag read(File file) {
-        InputStream is = null;
+        InputStream outer = null;
         try {
-            is = new FileInputStream(file);
-            java.io.PushbackInputStream pis = new java.io.PushbackInputStream(is, 2);
+            outer = new FileInputStream(file);
+            java.io.PushbackInputStream pis = new java.io.PushbackInputStream(outer, 2);
+            outer = pis;
             int first = pis.read();
             int second = pis.read();
+            if (second < 0) {
+                return null;
+            }
             pis.unread(second);
             pis.unread(first);
             InputStream source = pis;
             if (first == 0x1f && second == 0x8b) {
                 source = new GZIPInputStream(pis);
+                outer = source;
             }
             Tag tag = NBTIO.readTag(source);
             if (tag instanceof CompoundTag compound) {
@@ -183,9 +196,9 @@ public final class KcuWorldUuid {
         } catch (Throwable ignored) {
             return null;
         } finally {
-            if (is != null) {
+            if (outer != null) {
                 try {
-                    is.close();
+                    outer.close();
                 } catch (Throwable ignored) {
                 }
             }
