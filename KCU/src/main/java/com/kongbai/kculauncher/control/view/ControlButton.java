@@ -759,6 +759,25 @@ public class ControlButton extends AppCompatButton implements CustomView {
         }
     }
 
+    /**
+     * 取消本控件在消息队列里尚未执行的延时任务。
+     *
+     * 【为什么需要】
+     * autoClickRunnable 只要 autoClick 为真就每 20 毫秒自我重投一次，没有外部停止入口。
+     * 它持有本控件，本控件持有 GameMenu，GameMenu 又持有 Activity 与若干 View。
+     * 玩家开着自动点击直接退出游戏时，宿主销毁并不会让这个循环停下来，
+     * 结果消息队列一直持有整条引用链，Activity 无法回收，且循环仍在持续发送按键事件。
+     *
+     * 【为什么只在这里清】
+     * 正常游戏流程中关闭自动点击走的是 handleAutoClick(event, false)，
+     * 本方法只在宿主销毁时调用，不改变任何游戏中的行为。
+     */
+    public void cancelPendingEvents() {
+        autoClick = false;
+        autoClickHandler.removeCallbacks(autoClickRunnable);
+        handler.removeCallbacks(runnable);
+    }
+
     private void cancelTickEvent(ButtonEventData.Event event) {
         if (event.isAutoKeep()) {
             if (event.isAutoClick()) {
