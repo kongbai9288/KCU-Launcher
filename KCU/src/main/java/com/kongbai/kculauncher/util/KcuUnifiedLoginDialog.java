@@ -3,6 +3,7 @@ package com.kongbai.kculauncher.util;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.text.TextUtils;
+import android.widget.Toast;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
@@ -214,7 +215,11 @@ public final class KcuUnifiedLoginDialog {
                 try {
                     Accounts.addAccount(account);
                     Accounts.setSelectedAccount(account);
-                } catch (Throwable ignored) {
+                } catch (Throwable e) {
+                    // 不能只吞掉：对话框照常消失，玩家以为账号建好了，
+                    // 回到列表却是空的，且不会有任何提示说明为什么
+                    android.util.Log.w("KCU", "Failed to add offline account", e);
+                    Toast.makeText(context, R.string.kcu_login_add_failed, Toast.LENGTH_LONG).show();
                 }
             }
             dismiss();
