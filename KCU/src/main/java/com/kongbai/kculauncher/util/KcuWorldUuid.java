@@ -30,6 +30,17 @@ public final class KcuWorldUuid {
     private KcuWorldUuid() {
     }
 
+    /**
+     * 单次扫描的世界数上限。
+     *
+     * 扫描跑在启动路径上，每读一个世界就要解压并解析一次 level.dat。
+     * 世界数量多时逐个处理会拖慢启动，因此设上限；超出部分本次不扫。
+     */
+    private static final int MAX_SCAN_WORLDS = 32;
+
+    /** level.dat 的体积上限，超过则跳过：正常的远小于此，异常大的多半已损坏 */
+    private static final long MAX_LEVEL_DAT_BYTES = 64L * 1024 * 1024;
+
     public static final class Mismatch {
         /** 世界目录名 */
         public final String worldName;
@@ -64,10 +75,18 @@ public final class KcuWorldUuid {
         if (worlds == null) {
             return result;
         }
+        int scanned = 0;
         for (File world : worlds) {
             if (!world.isDirectory()) {
                 continue;
             }
+            // 扫描发生在启动路径上，每个世界都要解压并解析一次 level.dat。
+            // 世界很多时逐个读会明显拖慢启动，因此设上限。
+            // 超出上限后不再继续，结果可能不完整 —— 这属于已知取舍，不假装能覆盖全部
+            if (scanned >= MAX_SCAN_WORLDS) {
+                break;
+            }
+            scanned++;
             UUID found = readWorldUuid(world);
             if (found == null || found.equals(target)) {
                 continue;
@@ -89,6 +108,10 @@ public final class KcuWorldUuid {
             levelDat = new File(world, "special_level.dat");
         }
         if (!levelDat.isFile()) {
+            return null;
+        }
+        // 体积异常大的多半已损坏，解压会拖慢启动；跳过即可，宁可漏报
+        if (levelDat.length() > MAX_LEVEL_DAT_BYTES || levelDat.length() <= 0) {
             return null;
         }
         CompoundTag root = read(levelDat);
