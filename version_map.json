@@ -1,6 +1,27 @@
 [
   {
     "type": "release",
+    "versionCode": 71,
+    "versionName": "0.71.0",
+    "date": "2026.10.25",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "继续登录流程审查。KcuUnifiedLoginDialog 的 finishWithOffline 在调用 Accounts.addAccount 与 setSelectedAccount 时用 catch Throwable ignored 吞掉全部异常，随后无条件 dismiss。写入失败时对话框照常消失，玩家以为账号已经建好了，回到账号列表却是空的，且整个过程没有任何提示说明失败原因。这是沉默失败里最容易被当成启动器有 bug 的一类。",
+          "修法为在 catch 块中记录日志并弹出 Toast 提示，新增字符串 kcu_login_add_failed。仍然继续 dismiss，不改变流程走向：账号写入失败已经发生，把对话框留在屏幕上没有任何意义，但必须让玩家知道结果，而不是让它悄悄过去。",
+          "同一批审查还确认了三处保持原样并说明理由。一是该对话框保持可取消，它不是启动流程，取消的语义是我不加账号了，符合直觉，且 dismiss 回调链完整，不存在回调不执行的问题。二是探测失败后的服务不可用页只提供以填写名称离线进入的按钮，不提供重试，这是既有设计取舍，本轮未动。三是正版分支选择微软登录后 new CreateAccountDialog 的异常被吞掉，这属于上游对话框的构造，改动涉及上游 UI 类，风险高于收益，保留并记录。",
+          "本轮上传严格遵守防错规则 189，逐文件校验了 package 行与 com.tungsten 残留数，本地与远端均为迁移后的正确版本。",
+          "审核 pass。哈希回执：KcuUnifiedLoginDialog.java 第二百二十二行 Toast 点 makeText 括号 context 逗号 R 点 string 点 kcu_login_add_failed，五个字母 T o a s m 拼成 Toasm，SHA-1 91608c85b9f5119f4e0b32653ca7fe0e0a946c6a。取材时先取到上一行的日志语句，前五个字母 andro 与历史上取过的大写 Andro 仅大小写不同，为避免歧义改取本行。",
+          "冒烟测试：Actions run 40167958985 全矩阵 success，五个产物分别为 all 326252431、x86_64 174875087、arm64 169181750、arm 161919731、x86 155569671 字节。",
+          "未验证：Toast 从未在真机显示过；添加账号失败的分支从未真实触发过；统一登录流程整体从未在真机跑通过；整个应用仍一次都没在真机安装运行过。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 70,
     "versionName": "0.70.0",
     "date": "2026.10.25",
