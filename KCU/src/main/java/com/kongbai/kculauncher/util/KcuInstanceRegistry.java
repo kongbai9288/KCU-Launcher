@@ -253,19 +253,30 @@ public final class KcuInstanceRegistry {
     }
 
     /**
-     * 记下当前存档指纹，表示"这批存档已经确认过"。
+     * 扫描通过后把实例标记为已验证：升级归属为 kcu 并记下当前存档指纹。
      *
-     * 未登记的实例不记录：没有归属依据时建立信任，等于把来源不明的存档当成确认过的。
+     * 只有"确实读到世界标识且与本账号一致"时才调用 —— 调用方负责判断，
+     * 本方法不重复校验。读不出任何标识的实例不算通过，否则等于把
+     * 一份来源不明的存档当成确认过的。
+     *
+     * 这里不动实例目录内的标记文件：那表示"实例由本启动器创建"，
+     * 而扫描通过只说明"这批存档与本账号一致"，两者不是一回事。
+     * 标记文件缺失时若注册表被清空，下次会重新扫描兜底，不会永久跳过。
+     *
+     * 升级归属而非只记指纹，是为了让迁移来的实例也能享受跳过扫描：
+     * 它们没有创建标记，但存档确已被验证过一次。
      */
-    public static void rememberSaves(String dir) {
+    public static void markSavesVerified(String dir) {
         if (dir == null || dir.isEmpty()) {
             return;
         }
         Map<String, Entry> map = readAll();
         Entry entry = map.get(dir);
-        if (entry == null || !OWNER_KCU.equals(entry.owner)) {
-            return;
+        if (entry == null) {
+            entry = new Entry();
+            entry.createdAt = System.currentTimeMillis();
         }
+        entry.owner = OWNER_KCU;
         entry.savesFingerprint = computeSavesFingerprint(dir);
         entry.lastSeen = System.currentTimeMillis();
         map.put(dir, entry);
