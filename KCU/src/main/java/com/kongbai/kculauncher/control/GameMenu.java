@@ -1323,6 +1323,14 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
     private boolean layoutUserOverride = false;
 
     /**
+     * 本次会话的"无按键"状态是否由外设自动触发。
+     *
+     * 只有自动关掉的才需要在条件消失时还原。玩家自己在设置里选中空布局
+     * （想用纯外设、不要虚拟按键）是明确意图，不能替他换成有按键的布局。
+     */
+    private boolean layoutAutoClosed = false;
+
+    /**
      * 按当前外设情况决定布局开或关。
      *
      * 【为什么不能直接写 isKcuLayoutEnabled】
@@ -1343,20 +1351,26 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
         if (layoutUserOverride) {
             return;
         }
+        boolean userOff = !menuSetting.isKcuLayoutEnabled();
         boolean peripheral = hasPhysicalInputDevice();
-        boolean wantEmpty = !menuSetting.isKcuLayoutEnabled() || peripheral;
+        boolean wantEmpty = userOff || peripheral;
         if (wantEmpty == isCurrentLayoutEmpty()) {
             return;
         }
         if (wantEmpty) {
             applyLayoutEnabled(false);
-            // 只在因外设而关闭时提示：玩家自己关的不必再告诉他
-            if (peripheral) {
+            // 只有"玩家没关、纯因外设而关"才算自动关闭，这类才需要在条件消失时还原，
+            // 也只有这类需要提示：玩家自己关的不必再告诉他
+            layoutAutoClosed = peripheral && !userOff;
+            if (layoutAutoClosed) {
                 Toast.makeText(activity, R.string.menu_settings_kcu_layout_enabled_auto_off,
                         Toast.LENGTH_LONG).show();
             }
-        } else {
+        } else if (layoutAutoClosed) {
+            // 想显示按键却正显示空布局：只在本次是自动关掉的情况下还原。
+            // 玩家自己选的空布局属于明确意图，不能替他换回来
             applyLayoutEnabled(true);
+            layoutAutoClosed = false;
         }
     }
 
