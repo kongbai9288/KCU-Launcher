@@ -157,8 +157,24 @@ class SplashActivity : KCUActivity() {
                 }
                 // 先导入外部工具放置的待导入离线账号，再导出当前快照，
                 // 顺序不可颠倒，否则导出内容不含刚导入的账号
-                runCatching { KcuAccountTransfer.importPending() }.exceptionOrNull()?.let {
-                    Logging.LOG.log(Level.WARNING, "KcuAccountTransfer: " + it.message)
+                val imported = runCatching { KcuAccountTransfer.importPending() }
+                    .onFailure { Logging.LOG.log(Level.WARNING, "KcuAccountTransfer: " + it.message) }
+                    .getOrDefault(KcuAccountTransfer.NO_PENDING_FILE)
+                // 结果必须对玩家可见：玩家放好迁移文件后正等着账号出现，
+                // 一声不响地跳过会让他以为启动器把账号弄丢了。
+                // 只有在确实存在待导入文件时才提示 —— 没有文件属于正常情况，不应打扰
+                if (imported != KcuAccountTransfer.NO_PENDING_FILE) {
+                    withContext(Dispatchers.Main) {
+                        android.widget.Toast.makeText(
+                            applicationContext,
+                            if (imported > 0) {
+                                getString(R.string.kcu_transfer_imported, imported)
+                            } else {
+                                getString(R.string.kcu_transfer_none)
+                            },
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
                 runCatching { KcuAccountTransfer.export() }.exceptionOrNull()?.let {
                     Logging.LOG.log(Level.WARNING, "KcuAccountTransfer: " + it.message)
