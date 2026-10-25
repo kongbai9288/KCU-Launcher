@@ -67,23 +67,33 @@ public final class KcuNativeOrder {
         boolean allOk = true;
         for (String name : cfg.order) {
             if (!isSafeName(name)) {
+                // 名字不合法说明配置写错了，必须留下记录：
+                // 否则玩家以为自己排好了顺序，实际该文件从未被加载
+                android.util.Log.w("KCU", "Ignored unsafe native library name: " + name);
                 continue;
             }
             File so = new File(runtime, name);
             // 只加载同步进来的文件：未同步说明源目录已无该文件，或校验未通过
             if (!so.isFile()) {
+                android.util.Log.w("KCU", "Native library not synced, skipped: " + name);
                 continue;
             }
             try {
                 bridge.dlopen(so.getAbsolutePath());
-            } catch (Throwable ignored) {
+            } catch (Throwable e) {
                 allOk = false;
+                // 必须留下记录：否则玩家排查渲染异常时没有任何线索可查
+                android.util.Log.w("KCU", "Failed to dlopen native library: " + name, e);
                 if (cfg.abortOnFailure) {
                     return false;
                 }
             }
         }
-        return allOk;
+        // 返回值只表示"是否应当终止启动"。
+        // 配置为 skip 时单个库失败不得传导到调用点 —— 跳过失败的库继续启动
+        // 才是 skip 的语义，若把失败传出去，玩家选了跳过却仍然无法启动，
+        // 且调用点日志会写成"配置为 abort"，与实际配置不符，反而误导排查
+        return !cfg.abortOnFailure || allOk;
     }
 
     /**
