@@ -57,6 +57,14 @@ public final class KcuInstanceRegistry {
         public long lastSeen;
         /** 首次登记时的版本标识，可为空 */
         public String version = "";
+        /**
+         * 最近一次确认过存档状态时的存档指纹。
+         *
+         * 只认"实例是本启动器建的"还不够：玩家完全可能把别处的存档拷进
+         * 本启动器建的实例里。指纹用于区分"存档还是上次那批"，
+         * 变了就重新扫，避免为了省一次扫描而永远漏掉后来拷进来的存档。
+         */
+        public long savesFingerprint = -1;
     }
 
     /** 读取全部条目；失败返回空表 */
@@ -88,6 +96,8 @@ public final class KcuInstanceRegistry {
                                 entry.lastSeen = reader.nextLong();
                             } else if ("version".equals(field)) {
                                 entry.version = reader.nextString();
+                            } else if ("savesFingerprint".equals(field)) {
+                                entry.savesFingerprint = reader.nextLong();
                             } else {
                                 reader.skipValue();
                             }
@@ -167,9 +177,76 @@ public final class KcuInstanceRegistry {
             entry.createdAt = System.currentTimeMillis();
         }
         entry.lastSeen = System.currentTimeMillis();
+        // 新建时实例内还没有存档，指纹记为"空"。之后玩家拷入存档会改变指纹，
+        // 从而重新触发扫描 —— 这正是只认实例归属会漏掉的场景
+        entry.savesFingerprint = computeSavesFingerprint(dir);
         if (version != null) {
             entry.version = version;
         }
+        map.put(dir, entry);
+        write(map);
+    }
+
+    /**
+     * 存档指纹：由存档目录名与最后修改时间推导。
+     *
+     * 不读 level.dat —— 那正是要省下的开销。只做一次目录列举，成本远低于解析 NBT。
+     *
+     * @return 无存档目录时返回 0，实例目录不可用返回 -1
+     */
+    public static long computeSavesFingerprint(String dir) {
+        if (dir == null || dir.isEmpty()) {
+            return -1;
+        }
+        File saves = new File(dir, "saves");
+        File[] children = saves.listFiles();
+        if (children == null) {
+            return 0;
+        }
+        long fingerprint = 0;
+        for (File child : children) {
+            if (!child.isDirectory()) {
+                continue;
+            }
+            fingerprint = fingerprint * 31 + child.getName().hashCode();
+            fingerprint = fingerprint * 31 + child.lastModified();
+        }
+        return fingerprint;
+    }
+
+    /**
+     * 该实例的存档状态是否已确认过、可以跳过扫描。
+     *
+     * 两个条件缺一不可：实例确由本启动器创建，且存档指纹与上次确认时一致。
+     */
+    public static boolean isSavesKnown(String dir) {
+        if (dir == null || dir.isEmpty()) {
+            return false;
+        }
+        Map<String, Entry> map = readAll();
+        Entry entry = map.get(dir);
+        if (entry == null || !OWNER_KCU.equals(entry.owner)) {
+            return false;
+        }
+        return entry.savesFingerprint == computeSavesFingerprint(dir);
+    }
+
+    /**
+     * 记下当前存档指纹，表示"这批存档已经确认过"。
+     *
+     * 未登记的实例不记录：没有归属依据时建立信任，等于把来源不明的存档当成确认过的。
+     */
+    public static void rememberSaves(String dir) {
+        if (dir == null || dir.isEmpty()) {
+            return;
+        }
+        Map<String, Entry> map = readAll();
+        Entry entry = map.get(dir);
+        if (entry == null || !OWNER_KCU.equals(entry.owner)) {
+            return;
+        }
+        entry.savesFingerprint = computeSavesFingerprint(dir);
+        entry.lastSeen = System.currentTimeMillis();
         map.put(dir, entry);
         write(map);
     }
@@ -216,6 +293,7 @@ public final class KcuInstanceRegistry {
                 writer.name("lastSeen").value(one.getValue().lastSeen);
                 writer.name("version").value(one.getValue().version == null
                         ? "" : one.getValue().version);
+                writer.name("savesFingerprint").value(one.getValue().savesFingerprint);
                 writer.endObject();
             }
             writer.endObject();
