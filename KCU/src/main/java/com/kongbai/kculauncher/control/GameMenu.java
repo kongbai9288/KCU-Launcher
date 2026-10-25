@@ -731,6 +731,8 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
 
         editModeProperty.set(isSimulated());
         controllerProperty.set(Controllers.findControllerById(activity.getIntent().getExtras().getString("controller")));
+        // 有外设时自动关布局：放在布局确定之后，否则会把刚设好的布局又切走
+        autoDisableLayoutOnPhysicalInput();
         selectDefaultViewGroup();
 
         baseLayout = findViewById(R.id.base_layout);
@@ -1168,6 +1170,10 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
                 }
                 applyForceResolution();
                 break;
+            case KCU_LAYOUT_ENABLED:
+                menuSetting.setKcuLayoutEnabled(checked);
+                applyLayoutEnabled(checked);
+                break;
             case DISABLE_GESTURE:
                 menuSetting.setDisableGesture(checked);
                 break;
@@ -1263,6 +1269,92 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
         } else if (tag == RightMenuTag.SHOW_MEMORY) {
             memoryText.resetPosition();
         }
+    }
+
+    /**
+     * 布局总开关：开=恢复玩家选中的布局，关=切到空布局。
+     *
+     * 关闭时不清空玩家的选择，只切到空布局；
+     * 再打开时从记录的 id 恢复，找不到就回退到列表第一项。
+     * 若直接把选择置空，玩家再打开时会发现自己原来的布局丢了。
+     */
+    private void applyLayoutEnabled(boolean enabled) {
+        if (enabled) {
+            Controller target = null;
+            String id = menuSetting.getKcuLastControllerId();
+            if (id != null && !id.isEmpty()) {
+                target = Controllers.findControllerById(id);
+            }
+            if (target == null) {
+                java.util.List<Controller> all = Controllers.getControllers();
+                for (Controller c : all) {
+                    if (!EMPTY_CONTROLLER_ID.equals(c.getId())) {
+                        target = c;
+                        break;
+                    }
+                }
+            }
+            if (target != null) {
+                setController(target);
+            }
+        } else {
+            Controller current = getController();
+            if (current != null && !EMPTY_CONTROLLER_ID.equals(current.getId())) {
+                menuSetting.setKcuLastControllerId(current.getId());
+            }
+            Controller empty = Controllers.findControllerById(EMPTY_CONTROLLER_ID);
+            if (empty != null) {
+                setController(empty);
+            }
+        }
+    }
+
+    /** 空布局的 id，与 assets 下 kcu_empty.json 保持一致 */
+    private static final String EMPTY_CONTROLLER_ID =
+            "a1000000-0000-4000-8000-0000000000ff";
+
+    /**
+     * 检测到实体输入设备（键盘/鼠标/手柄）时自动关闭布局。
+     *
+     * 有外设就不需要虚拟按键，留着只会挡视野。
+     * 只在游戏启动时判断一次：运行中插拔属于少数场景，
+     * 且中途切换布局会打断正在进行的按键状态。
+     */
+    private void autoDisableLayoutOnPhysicalInput() {
+        if (!menuSetting.isKcuLayoutEnabled()) {
+            return;
+        }
+        if (!hasPhysicalInputDevice()) {
+            return;
+        }
+        menuSetting.setKcuLayoutEnabled(false);
+        applyLayoutEnabled(false);
+        Toast.makeText(activity, R.string.menu_settings_kcu_layout_enabled_auto_off,
+                Toast.LENGTH_LONG).show();
+    }
+
+    private static boolean hasPhysicalInputDevice() {
+        int[] ids = android.view.InputDevice.getDeviceIds();
+        if (ids == null) {
+            return false;
+        }
+        for (int id : ids) {
+            android.view.InputDevice device = android.view.InputDevice.getDevice(id);
+            if (device == null || device.isVirtual()) {
+                continue;
+            }
+            int sources = device.getSources();
+            boolean keyboard = (sources & android.view.InputDevice.SOURCE_KEYBOARD)
+                    == android.view.InputDevice.SOURCE_KEYBOARD;
+            boolean mouse = (sources & android.view.InputDevice.SOURCE_MOUSE)
+                    == android.view.InputDevice.SOURCE_MOUSE;
+            boolean gamepad = (sources & android.view.InputDevice.SOURCE_GAMEPAD)
+                    == android.view.InputDevice.SOURCE_GAMEPAD;
+            if (keyboard || mouse || gamepad) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void handleRightSpinnerSelect(RightMenuTag tag, int position) {
