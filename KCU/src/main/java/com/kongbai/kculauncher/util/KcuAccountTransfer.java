@@ -37,6 +37,9 @@ public final class KcuAccountTransfer {
     /** 启动器导出时写入，表示"这是当前账号快照" */
     private static final String STATUS_EXPORTED = "exported";
 
+    /** importPending 的返回值：表示没有待导入文件，属于正常无操作 */
+    public static final int NO_PENDING_FILE = -1;
+
     private KcuAccountTransfer() {
     }
 
@@ -75,16 +78,23 @@ public final class KcuAccountTransfer {
      * 仅当外部工具把状态置为 pending 时才导入。
      * 导入完成后文件被重写为 exported，因此同一份文件不会被重复导入。
      *
-     * @return 实际新增的账号数量
+     * 【返回值为什么要区分"无操作"与"导入了零个"】
+     * 文件不存在或状态不是 pending 属于正常的无操作，不需要告知玩家。
+     * 但文件确实是 pending 而最终一个都没导入成功，说明名称非法、
+     * 已存在同名账号或写入失败 —— 玩家此时正等着账号出现，
+     * 一声不响地跳过会让他以为启动器把自己的账号弄丢了。
+     * 调用方据此区分：负数表示无操作，大于等于零表示确实处理过。
+     *
+     * @return 实际新增的账号数量；文件不存在或状态不是 pending 时返回 -1
      */
     public static int importPending() {
         File file = getFile();
         if (!file.isFile()) {
-            return 0;
+            return NO_PENDING_FILE;
         }
         String status = readStatus(file);
         if (!STATUS_PENDING.equals(status)) {
-            return 0;
+            return NO_PENDING_FILE;
         }
         List<Entry> entries = readEntries(file);
         int added = 0;
@@ -111,7 +121,10 @@ public final class KcuAccountTransfer {
             try {
                 Accounts.addAccount(created);
                 added++;
-            } catch (Throwable ignored) {
+            } catch (Throwable e) {
+                // 单个账号失败不能中断整批导入，但必须留下记录：
+                // 否则玩家发现少了一个账号时无任何线索可查
+                android.util.Log.w("KCU", "Failed to import account: " + entry.name, e);
             }
         }
         // 无论成功多少都改写状态，避免反复导入
