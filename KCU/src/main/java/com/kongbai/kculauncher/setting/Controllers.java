@@ -263,6 +263,7 @@ public class Controllers {
             } finally {
                 writer.close();
             }
+        } catch (Throwable ignored) {
             // 标记没写成功下次会重试；预设已在内存列表里，本次仍可用
         }
     }
