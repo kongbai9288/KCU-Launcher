@@ -65,6 +65,9 @@ class SplashActivity : KCUActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 私有目录读写需要 Application 上下文，越早越好：
+        // 开发者模式的授权标记存在私有目录，晚于解锁流程初始化会读不到
+        com.kongbai.kculauncher.util.KcuDevMode.init(this)
         installSplashScreen()
         binding = ActivitySplashBinding.inflate(layoutInflater)
         sharedPreferences = getSharedPreferences("launcher", MODE_PRIVATE)
@@ -143,6 +146,14 @@ class SplashActivity : KCUActivity() {
     }
 
     fun enterLauncher() {
+        // 请求文件被置为 true 说明玩家想开开发者模式：
+        // 此时必须弹令牌框校验归属，只认公共目录文件等于谁都能开
+        if (com.kongbai.kculauncher.util.KcuDevMode.isRequested() &&
+            !com.kongbai.kculauncher.util.KcuDevMode.isEnabled()
+        ) {
+            com.kongbai.kculauncher.util.KcuDevUnlockDialog.show(this, null)
+            return
+        }
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 RendererManager.init(this@SplashActivity)
