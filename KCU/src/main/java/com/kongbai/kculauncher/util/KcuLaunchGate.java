@@ -11,10 +11,15 @@ import com.kongbai.kculauncher.core.game.JavaVersion;
 import com.kongbai.kculauncher.setting.Accounts;
 import com.kongbai.kculauncher.core.auth.Account;
 
+import android.widget.Toast;
+
+import com.kongbai.kculauncher.core.util.Logging;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  * 导入版本的启动前处理。
@@ -87,7 +92,10 @@ public final class KcuLaunchGate {
                 try {
                     profile.getRepository().getVersionSetting(id).setJava(java.getName());
                     profile.getRepository().saveVersionSetting(id);
-                } catch (Throwable ignored) {
+                } catch (Throwable e) {
+                    // 保存失败若只吞掉，玩家会以为自己选过了，下次启动又弹一次同样的框
+                    Logging.LOG.log(Level.WARNING, "KCU: failed to save java selection", e);
+                    Toast.makeText(context, R.string.kcu_pick_java_save_failed, Toast.LENGTH_LONG).show();
                 }
                 dialog.dismiss();
                 refreshDisplay(profile, id, versionDir, meta);
