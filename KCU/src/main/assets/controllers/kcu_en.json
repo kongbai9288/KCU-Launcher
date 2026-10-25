@@ -4,7 +4,7 @@
  "version": "1.2.1",
  "versionCode": 1210,
  "author": "kongbai9288",
- "description": "KCU layout: labelled buttons, thin grey border, swipe chain enabled.",
+ "description": "KCU layout: labelled buttons, thin grey border, swipe chain on action keys.",
  "controllerVersion": 21,
  "buttonStyles": [
   {
@@ -131,7 +131,7 @@
         "outputKeycodes": [],
         "bindViewGroup": []
        },
-       "swipable": true
+       "swipable": false
       }
      },
      {
@@ -275,7 +275,7 @@
         "outputKeycodes": [],
         "bindViewGroup": []
        },
-       "swipable": true
+       "swipable": false
       }
      },
      {
