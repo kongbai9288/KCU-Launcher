@@ -591,6 +591,7 @@
     <string name="menu_settings_physical_mouse_mode">实体鼠标控制</string>
     <string name="menu_settings_kcu_dp_threshold">KCU 点击容差改用 dp</string>
     <string name="kcu_age_title">年龄确认</string>
+    <string name="kcu_pick_java_save_failed">保存运行时选择失败，下次启动可能会再次询问。</string>
     <string name="kcu_age_prompt">请选择你的年龄段，以便应用确定可用范围</string>
     <string name="kcu_age_unit"> 岁</string>
     <string name="kcu_age_confirm">确认</string>
