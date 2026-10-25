@@ -95,6 +95,14 @@ object Profiles {
             registerProfileSave(current)
             registerProfileSave(home)
             profiles.addAll(listOf(current, home))
+            // 仅首次启动创建默认实例时标记：此刻实例目录确实由本启动器建立。
+            // 不能对配置里加载出来的实例做标记 —— 那些可能来自上游迁移，
+            // 误标会让其永久跳过存档检测
+            runCatching {
+                val registry = com.kongbai.kculauncher.util.KcuInstanceRegistry
+                registry.markCreated(current.gameDir.absolutePath, current.selectedVersion)
+                registry.markCreated(home.gameDir.absolutePath, home.selectedVersion)
+            }
         }
     }
 
