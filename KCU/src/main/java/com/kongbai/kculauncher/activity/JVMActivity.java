@@ -1,4 +1,4 @@
-package com.tungsten.fcl.activity;
+package com.kongbai.kculauncher.activity;
 
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -24,23 +24,23 @@ import androidx.annotation.Nullable;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.tungsten.fcl.R;
-import com.tungsten.fcl.control.GameMenu;
-import com.tungsten.fcl.control.JarExecutorMenu;
-import com.tungsten.fcl.control.MenuCallback;
-import com.tungsten.fcl.control.MenuType;
-import com.tungsten.fcl.control.view.MenuView;
-import com.tungsten.fcl.game.sdl.SdlBridge;
-import com.mio.flite.FliteTts;
-import com.mio.service.GameService;
-import com.tungsten.fcl.setting.GameOption;
-import com.tungsten.fcl.terracotta.Terracotta;
-import com.mio.util.AndroidUtilKt;
-import com.tungsten.fclauncher.bridge.FCLBridge;
-import com.tungsten.fclauncher.keycodes.FCLKeycodes;
-import com.tungsten.fclauncher.keycodes.LwjglGlfwKeycode;
-import com.tungsten.fclcore.util.Logging;
-import com.tungsten.fcllibrary.component.FCLActivity;
+import com.kongbai.kculauncher.R;
+import com.kongbai.kculauncher.control.GameMenu;
+import com.kongbai.kculauncher.control.JarExecutorMenu;
+import com.kongbai.kculauncher.control.MenuCallback;
+import com.kongbai.kculauncher.control.MenuType;
+import com.kongbai.kculauncher.control.view.MenuView;
+import com.kongbai.kculauncher.game.sdl.SdlBridge;
+import com.kongbai.kculauncher.mio.flite.FliteTts;
+import com.kongbai.kculauncher.mio.service.GameService;
+import com.kongbai.kculauncher.setting.GameOption;
+import com.kongbai.kculauncher.terracotta.Terracotta;
+import com.kongbai.kculauncher.mio.util.AndroidUtilKt;
+import com.kongbai.kculauncher.launcher.bridge.KCUBridge;
+import com.kongbai.kculauncher.launcher.keycodes.KCUKeycodes;
+import com.kongbai.kculauncher.launcher.keycodes.LwjglGlfwKeycode;
+import com.kongbai.kculauncher.core.util.Logging;
+import com.kongbai.kculauncher.library.component.KCUActivity;
 
 import org.libsdl.app.SDLActivity;
 import org.lwjgl.glfw.CallbackBridge;
@@ -48,7 +48,7 @@ import org.lwjgl.glfw.CallbackBridge;
 import java.util.Objects;
 import java.util.logging.Level;
 
-public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextureListener {
+public class JVMActivity extends KCUActivity implements TextureView.SurfaceTextureListener {
 
     private TextureView textureView;
 
@@ -88,7 +88,7 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
 
     private MenuCallback menu;
     private static MenuType menuType;
-    private static FCLBridge fclBridge;
+    private static KCUBridge fclBridge;
     private boolean isTranslated = false;
     private static boolean isRunning = false;
     private long volumeDownTime = 0;
@@ -96,7 +96,7 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
     private int lastLetterboxWidth = -1;
     private int lastLetterboxHeight = -1;
 
-    public static void setFCLBridge(FCLBridge fclBridge, MenuType menuType) {
+    public static void setKCUBridge(KCUBridge fclBridge, MenuType menuType) {
         JVMActivity.fclBridge = fclBridge;
         JVMActivity.menuType = menuType;
     }
@@ -116,7 +116,7 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
         GameService.start(this);
         textureView = findViewById(R.id.texture_view);
         textureView.setSurfaceTextureListener(this);
-        if (FCLBridge.FORCE_RESOLUTION) {
+        if (KCUBridge.FORCE_RESOLUTION) {
             applyForceResolutionLayout();
         }
 
@@ -148,7 +148,7 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
         // onConfigurationChanged 等回调期窗口尺寸尚未稳定(还是过渡值),letterbox 以布局结果为准;
         // 对比基准与计算基准同为 TextureView 父容器实测尺寸,保证输入换算与显示区域同源
         getWindow().getDecorView().getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            if (!FCLBridge.FORCE_RESOLUTION) {
+            if (!KCUBridge.FORCE_RESOLUTION) {
                 return;
             }
             ViewGroup container = (ViewGroup) textureView.getParent();
@@ -189,15 +189,15 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
         }
         lastLetterboxWidth = screenWidth;
         lastLetterboxHeight = screenHeight;
-        if (FCLBridge.FORCE_RESOLUTION) {
-            FCLBridge.FORCE_RESOLUTION_SCALE = (float) screenHeight / FCLBridge.FORCE_RESOLUTION_HEIGHT;
-            params.width = (int) (FCLBridge.FORCE_RESOLUTION_WIDTH * FCLBridge.FORCE_RESOLUTION_SCALE);
-            params.height = (int) (FCLBridge.FORCE_RESOLUTION_HEIGHT * FCLBridge.FORCE_RESOLUTION_SCALE);
-            FCLBridge.FORCE_RESOLUTION_START_SIZE = (screenWidth - params.width) / 2;
-            textureView.setX(FCLBridge.FORCE_RESOLUTION_START_SIZE);
+        if (KCUBridge.FORCE_RESOLUTION) {
+            KCUBridge.FORCE_RESOLUTION_SCALE = (float) screenHeight / KCUBridge.FORCE_RESOLUTION_HEIGHT;
+            params.width = (int) (KCUBridge.FORCE_RESOLUTION_WIDTH * KCUBridge.FORCE_RESOLUTION_SCALE);
+            params.height = (int) (KCUBridge.FORCE_RESOLUTION_HEIGHT * KCUBridge.FORCE_RESOLUTION_SCALE);
+            KCUBridge.FORCE_RESOLUTION_START_SIZE = (screenWidth - params.width) / 2;
+            textureView.setX(KCUBridge.FORCE_RESOLUTION_START_SIZE);
         } else {
-            FCLBridge.FORCE_RESOLUTION_SCALE = -1;
-            FCLBridge.FORCE_RESOLUTION_START_SIZE = -1;
+            KCUBridge.FORCE_RESOLUTION_SCALE = -1;
+            KCUBridge.FORCE_RESOLUTION_START_SIZE = -1;
             params.width = ViewGroup.LayoutParams.MATCH_PARENT;
             params.height = ViewGroup.LayoutParams.MATCH_PARENT;
             textureView.setX(0);
@@ -208,10 +208,10 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
     /** 按当前模式计算游戏渲染窗口尺寸：强制分辨率取固定值,普通模式 = 视图尺寸 × windowScale(宽含 cursorOffset),工具页用默认值 */
     private int[] resolveWindowSize(int viewWidth, int viewHeight) {
         if (menuType != MenuType.GAME) {
-            return new int[]{FCLBridge.DEFAULT_WIDTH, FCLBridge.DEFAULT_HEIGHT};
+            return new int[]{KCUBridge.DEFAULT_WIDTH, KCUBridge.DEFAULT_HEIGHT};
         }
-        if (FCLBridge.FORCE_RESOLUTION) {
-            return new int[]{FCLBridge.FORCE_RESOLUTION_WIDTH, FCLBridge.FORCE_RESOLUTION_HEIGHT};
+        if (KCUBridge.FORCE_RESOLUTION) {
+            return new int[]{KCUBridge.FORCE_RESOLUTION_WIDTH, KCUBridge.FORCE_RESOLUTION_HEIGHT};
         }
         double factor = fclBridge.getScaleFactor();
         int width = (int) ((viewWidth + ((GameMenu) menu).getMenuSetting().getCursorOffset()) * factor);
@@ -420,8 +420,8 @@ public class JVMActivity extends FCLActivity implements TextureView.SurfaceTextu
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && !((GameMenu) menu).getTouchCharInput().isEnabled()) {
                     if (event.getAction() != KeyEvent.ACTION_UP)
                         return true;
-                    menu.getInput().sendKeyEvent(FCLKeycodes.KEY_ESC, true);
-                    menu.getInput().sendKeyEvent(FCLKeycodes.KEY_ESC, false);
+                    menu.getInput().sendKeyEvent(KCUKeycodes.KEY_ESC, true);
+                    menu.getInput().sendKeyEvent(KCUKeycodes.KEY_ESC, false);
                     return true;
                 } else if ((event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN || event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP)) {
                     MenuView menuView = ((GameMenu) menu).getMenuView();
