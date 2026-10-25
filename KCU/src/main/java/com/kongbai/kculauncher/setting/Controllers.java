@@ -112,6 +112,9 @@ public class Controllers {
 
             addControllersFromDisk();
             checkControllers();
+            // 已有布局的用户也要拿到 KCU 预设：只靠"列表为空才落盘"的话，
+            // 任何已经用过本启动器的设备永远看不到新布局，功能等于没做
+            ensurePresetsOnce();
 
             initialized = true;
         }
@@ -195,6 +198,29 @@ public class Controllers {
         } catch (Throwable ignored) {
         }
         return "en";
+    }
+
+    /**
+     * 首次运行时补齐预设布局，用标记文件保证只做一次。
+     *
+     * 为什么需要：预设加载原本只在列表为空（全新安装）时执行，
+     * 已经用过本启动器的设备磁盘上已有布局，新加的 KCU 布局永远进不去，
+     * 功能对真实用户等于不存在。
+     *
+     * 为什么只做一次：不加标记的话，玩家删掉某个预设后下次启动它又会回来，
+     * 等于无法删除。标记文件不是 .json，不会被孤儿清理逻辑改名。
+     */
+    private static void ensurePresetsOnce() {
+        File marker = new File(KCUPath.CONTROLLER_DIR, ".kcu_presets");
+        if (marker.exists()) {
+            return;
+        }
+        try {
+            loadPresetsFromAssets();
+            marker.createNewFile();
+        } catch (Throwable ignored) {
+            // 标记没写成功下次会重试；预设已加入内存列表，本次仍可用
+        }
     }
 
     /**
