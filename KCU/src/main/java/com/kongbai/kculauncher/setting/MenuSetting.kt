@@ -291,6 +291,26 @@ class MenuSetting {
             changed()
         }
 
+    /**
+     * 布局总开关。开=使用玩家选中的布局，关=切到空布局（无按钮）。
+     *
+     * 默认开：关闭意味着没有虚拟按键，玩家若不知情会以为启动器坏了。
+     */
+    var isKcuLayoutEnabled: Boolean = true
+        set(value) {
+            if (field == value) return
+            field = value
+            changed()
+        }
+
+    /** 布局关闭前玩家选中的布局 id，用于再打开时恢复 */
+    var kcuLastControllerId: String = ""
+        set(value) {
+            if (field == value) return
+            field = value
+            changed()
+        }
+
     // KCU：点击判定阈值改用与密度无关的 dp（原实现写死 10 px，高密屏上容差不足 3 dp）
     // 默认关闭，保持上游原行为；出问题可一键回退
     var isKcuDpThreshold: Boolean = false
@@ -427,6 +447,8 @@ class MenuSetting {
                 addProperty("physicalMouseMode", src.isPhysicalMouseMode)
                 addProperty("kcuDpThreshold", src.isKcuDpThreshold)
                 addProperty("kcuMouseDisguise", src.isKcuMouseDisguise)
+                addProperty("kcuLayoutEnabled", src.isKcuLayoutEnabled)
+                addProperty("kcuLastControllerId", src.kcuLastControllerId)
                 addProperty("itemBarWidth", src.itemBarWidth)
                 addProperty("itemBarHeight", src.itemBarHeight)
                 addProperty("windowScale", src.windowScale)
@@ -492,6 +514,8 @@ class MenuSetting {
                 ms.isPhysicalMouseMode = json["physicalMouseMode"]?.asBoolean ?: false
                 ms.isKcuDpThreshold = json["kcuDpThreshold"]?.asBoolean ?: false
                 ms.isKcuMouseDisguise = json["kcuMouseDisguise"]?.asBoolean ?: false
+                ms.isKcuLayoutEnabled = json["kcuLayoutEnabled"]?.asBoolean ?: true
+                ms.kcuLastControllerId = json["kcuLastControllerId"]?.asString ?: ""
                 ms.itemBarWidth = json["itemBarWidth"]?.asInt ?: 0
                 ms.itemBarHeight = json["itemBarHeight"]?.asInt ?: 0
                 ms.windowScale = json["windowScale"]?.asDouble ?: 1.0
