@@ -51,6 +51,8 @@ enum class RightMenuTag {
 
     // KCU：新增实验开关，均默认关闭，便于与原始行为 A/B 对比
     KCU_DP_THRESHOLD, KCU_MOUSE_DISGUISE,
+    // KCU：布局总开关（默认开）
+    KCU_LAYOUT_ENABLED,
 
     // 手柄
     GAMEPAD_CONTROL, GAMEPAD_RESET_MAPPER, GAMEPAD_BUTTON_BINDING, GAMEPAD_DEADZONE,
@@ -306,6 +308,11 @@ class RightMenuAdapter(
                 R.string.menu_settings_kcu_mouse_disguise,
                 { menuSetting.isKcuMouseDisguise },
                 RightMenuTag.KCU_MOUSE_DISGUISE
+            ),
+            Row.SwitchRow(
+                R.string.menu_settings_kcu_layout_enabled,
+                { menuSetting.isKcuLayoutEnabled },
+                RightMenuTag.KCU_LAYOUT_ENABLED
             ),
             Row.KeyBindRow(
                 R.string.menu_settings_capture_pointer_key,
