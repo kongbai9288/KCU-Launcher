@@ -4521,3 +4521,104 @@ all 326253968 / x86_64 174876567 / **arm64 169183146** / arm 161921396 / x86 155
 
 迁移导入**从未在真机执行过**；
 **整个应用一次都没在真机装过。**
+
+## 0.73.0 — 2026-10-26
+
+执行者：**yuanbao**
+
+---
+
+# 选了 `skip`，**照样启动不了**
+
+```java
+} catch (Throwable ignored) {
+    allOk = false;          // ← 无论 abort 还是 skip 都置假
+    if (cfg.abortOnFailure) return false;
+}
+return allOk;               // ← skip 也把失败传出去
+```
+
+调用点：
+
+```java
+if (!loadInOrder(...)) {
+    log("...配置为 abort，终止启动");
+    return;                 // ← 终止！
+}
+```
+
+**玩家写 `onFailure: "skip"` → 期望跳过失败继续**
+→ **实际照样启动不了**
+→ 日志还写"配置为 abort"，**与实际配置不符** → **排查被引偏**
+
+**这是我自己上一次修 abort 时引入的。**
+
+## 修法：返回值只表示"是否终止启动"
+
+```java
+return !cfg.abortOnFailure || allOk;
+```
+
+| abort | allOk | 返回 | 结果 |
+|---|---|---|---|
+| true | true | true | 继续 ✓ |
+| true | false | false | 终止 ✓ |
+| false | true | true | 继续 ✓ |
+| **false** | **false** | **true** | **继续 ✓** |
+
+四种组合逐一推演，**全部符合语义**。
+
+## 补三处静默
+
+| 场景 | 原来 |
+|---|---|
+| dlopen 失败 | 只置标志，**无线索** |
+| 文件名不合法被忽略 | **无记录**，玩家以为排好了 |
+| 运行时目录无此库 | **无记录** |
+
+与 `KcuNativeSync` 同步失败静默**形成完整链路**。
+
+---
+
+# NBT 读取**只关了内层流**
+
+```java
+is  = new FileInputStream(file);
+pis = new PushbackInputStream(is, 2);
+if (gzip) source = new GZIPInputStream(pis);
+...
+finally { is.close(); }   // ← 只关最内层
+```
+
+关内层**只释放文件句柄** ——
+外层 `GZIPInputStream` 的 **Inflater 原生内存**要等它的 close，
+否则**只能等 GC 终结**。
+
+**启动路径上按世界逐个调用** → 世界多了**累积原生内存压力**。
+
+→ 改为**始终关最外层**，关闭级联到内层。
+
+---
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `KcuWorldUuid.java` |
+| 行 | **174** |
+| 该行原文 | `InputStream outer = null;` |
+| 5 个不同字母 | `I n p u t` |
+| **SHA-1** | **`b568d47f2e244743b1fd7472db836ef9769c21f8`** |
+
+> 先取 KcuNativeOrder 返回行，五个字母 `retun`
+> **与历史多次碰撞** → 改取本行。
+
+### 编译验证（PROVEN）
+
+run **40210452205** 全矩阵 success，5 产物：
+all 326253839 / x86_64 174876388 / **arm64 169182977** / arm 161921271 / x86 155570441 B
+
+### 未验证
+
+skip 且确有库失败时是否真能继续**从未触发过**；
+**整个应用一次都没在真机装过。**
