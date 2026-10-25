@@ -7,7 +7,6 @@ import com.kongbai.kculauncher.core.auth.offline.OfflineAccountFactory;
 import com.kongbai.kculauncher.core.auth.offline.Skin;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -127,9 +126,5 @@ public final class KcuAccountFlow {
             }
         }
         return true;
-    }
-
-    public static String normalize(String username) {
-        return username == null ? "" : username.trim().toLowerCase(Locale.ROOT);
     }
 }
