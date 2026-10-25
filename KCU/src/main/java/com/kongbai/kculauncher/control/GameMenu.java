@@ -730,7 +730,11 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
         });
 
         editModeProperty.set(isSimulated());
-        controllerProperty.set(Controllers.findControllerById(activity.getIntent().getExtras().getString("controller")));
+        // getExtras() 可能为 null，直接取值会抛 NPE 让整个菜单构造失败。
+        // 取不到时传 null，findControllerById 会回退到列表第一项，行为与"未指定"一致
+        android.os.Bundle extras = activity.getIntent() == null ? null : activity.getIntent().getExtras();
+        String controllerId = extras == null ? null : extras.getString("controller");
+        controllerProperty.set(Controllers.findControllerById(controllerId));
         // 有外设时自动关布局：放在布局确定之后，否则会把刚设好的布局又切走
         applyPeripheralPolicy();
         selectDefaultViewGroup();
@@ -892,6 +896,21 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
             gyroscope.enableSensor();
         }
     }
+
+    /**
+     * 停止本对象开启的后台线程。
+     *
+     * FPS / 内存采样线程是匿名内部类，隐式持有本对象，本对象又持有 Activity 与
+     * 若干 View。宿主销毁时若不停止，这两个线程会一直持有整条引用链，
+     * Activity 无法被回收，且每进入一次游戏就多一个线程。
+     *
+     * 必须由宿主显式调用：本类不继承 Activity，没有可覆写的销毁回调。
+     */
+    public void onDestroy() {
+        stopFpsThread();
+        stopMemoryThread();
+    }
+
 
     @Override
     public void onGraphicOutput() {
@@ -1589,6 +1608,9 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
         if (isSimulated()) {
             return;
         }
+        // 先无条件停掉上一个线程：每次进入游戏都会调用一次本方法，
+        // 不停会让线程随进入次数累积，且旧线程持有本对象导致 Activity 无法回收
+        stopFpsThread();
         if (checked) {
             fpsThread = new Thread(() -> {
                 KCUBridge.getFps();
@@ -1596,18 +1618,25 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
                     Schedulers.androidUIThread().execute(() -> fpsText.setText("FPS:" + KCUBridge.getFps()));
                     try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException ignored) {
+                    } catch (InterruptedException e) {
+                        // 必须恢复中断标志：抛出 InterruptedException 时标志已被清除，
+                        // 不恢复的话上面的 while 条件永远为真，线程停不下来
+                        Thread.currentThread().interrupt();
                     }
                 }
             });
             fpsThread.setName("FCL FPS Thread");
             fpsThread.start();
         } else {
-            if (fpsThread != null) {
-                fpsThread.interrupt();
-                fpsThread = null;
-            }
             fpsText.setText("");
+        }
+    }
+
+    /** 停止 FPS 采样线程；线程持有本对象引用，不停止会让 Activity 无法回收 */
+    private void stopFpsThread() {
+        if (fpsThread != null) {
+            fpsThread.interrupt();
+            fpsThread = null;
         }
     }
 
@@ -1617,6 +1646,8 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
         if (isSimulated()) {
             return;
         }
+        // 同 toggleFps：先停掉上一个，避免线程累积与本对象被旧线程持有
+        stopMemoryThread();
         if (checked) {
             memoryThread = new Thread(() -> {
                 while (menuSetting.isShowMemory() && !Thread.currentThread().isInterrupted()) {
@@ -1631,18 +1662,24 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
                     Schedulers.androidUIThread().execute(() -> memoryText.setText("Mem(" + usage + "%): " + usedMemory + " / " + totalMemory + " MB"));
                     try {
                         Thread.sleep(1000);
-                    } catch (InterruptedException ignored) {
+                    } catch (InterruptedException e) {
+                        // 同 FPS 线程：不恢复中断标志会让 while 条件永远为真
+                        Thread.currentThread().interrupt();
                     }
                 }
             });
             memoryThread.setName("FCL Memory Thread");
             memoryThread.start();
         } else {
-            if (memoryThread != null) {
-                memoryThread.interrupt();
-                memoryThread = null;
-            }
             memoryText.setText("");
+        }
+    }
+
+    /** 停止内存采样线程；线程持有本对象引用，不停止会让 Activity 无法回收 */
+    private void stopMemoryThread() {
+        if (memoryThread != null) {
+            memoryThread.interrupt();
+            memoryThread = null;
         }
     }
 
