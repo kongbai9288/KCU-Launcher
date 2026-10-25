@@ -46,6 +46,7 @@ import com.kongbai.kculauncher.activity.JVMCrashActivity;
 import com.kongbai.kculauncher.control.data.ButtonStyles;
 import com.kongbai.kculauncher.control.data.ControlButtonData;
 import com.kongbai.kculauncher.control.data.ControlButtonStyle;
+import com.kongbai.kculauncher.control.view.ControlButton;
 import com.kongbai.kculauncher.control.data.ControlDirectionData;
 import com.kongbai.kculauncher.control.data.ControlDirectionStyle;
 import com.kongbai.kculauncher.control.data.ControlViewGroup;
@@ -909,6 +910,16 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
     public void onDestroy() {
         stopFpsThread();
         stopMemoryThread();
+        // 取消按键上未执行的延时任务：自动点击每 20 毫秒自我重投一次，
+        // 玩家开着它退出游戏时消息队列会一直持有控件与整条 Activity 引用链
+        if (baseLayout != null) {
+            for (int i = 0; i < baseLayout.getChildCount(); i++) {
+                android.view.View child = baseLayout.getChildAt(i);
+                if (child instanceof ControlButton) {
+                    ((ControlButton) child).cancelPendingEvents();
+                }
+            }
+        }
     }
 
 
