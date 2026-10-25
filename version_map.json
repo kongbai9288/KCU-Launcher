@@ -1,6 +1,29 @@
 [
   {
     "type": "release",
+    "versionCode": 65,
+    "versionName": "0.65.0",
+    "date": "2026.10.25",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "审查发现并修复一个会让布局永久消失的缺陷。上一轮外设自动关布局时调用了 menuSetting.setKcuLayoutEnabled(false)，而 menuSetting 注册了持久化监听会把值写入 menu_setting.json。后果是玩家插着 OTG 或手柄玩一次后，即使拔掉外设，下次启动读到的仍是 false，布局再也不出现，玩家只会以为启动器坏了。根本原因是把条件行为错误地做成了永久设置。",
+          "修法是把玩家意图与外设策略分离。isKcuLayoutEnabled 只表示玩家意图且只有玩家手动切换才写，外设情况每次启动重新判断、不落盘。新增 applyPeripheralPolicy 取代 autoDisableLayoutOnPhysicalInput，每次启动计算 wantEmpty 等于玩家意图为关或检测到外设，与当前状态一致时直接返回不做任何切换。",
+          "加状态一致即返回这一判断很重要：每次启动无脑调 applyLayoutEnabled(true) 会把玩家自己在管理页选的布局重置成上次记住的那个，等于玩家的选择白做。只在确实需要切换时才动作。",
+          "新增 layoutUserOverride 运行时标记。玩家在插着外设时手动打开布局说明他此刻想要按键，若策略继续生效他刚打开就会被关掉，看起来像开关失灵。该标记只存内存不持久化，否则手动开过一次会让自动策略以后永远失效。",
+          "提示逻辑也一并修正：只有因外设而关闭时才弹提示，玩家自己手动关的不必再告诉他。",
+          "顺带审查确认两处安全：menuSetting 在 706 至 720 行已初始化且有 new MenuSetting 兜底，735 行调用不会空指针；空布局下 selectDefaultViewGroup 有 viewGroups 非空判断、initializeController 遍历空列表均安全。",
+          "审核 pass。哈希回执：GameMenu.java 第七百三十五行 applyPeripheralPolicy 括号，五个字母 a p l y e 拼成 aplye，SHA-1 656be21bff7b2f8e214483d0c2c031f9986aee84。",
+          "冒烟测试：Actions run 40155991472 全矩阵 success，五个产物分别为 all 326253103、x86_64 174875452、arm64 169182310、arm 161920332、x86 155569703 字节。",
+          "未验证：拔掉外设后布局是否真能自动恢复从未在真机跑过；外设检测在真实设备上是否会误判未验证；整个布局系统仍未在真机显示过一次。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 64,
     "versionName": "0.64.0",
     "date": "2026.10.25",
