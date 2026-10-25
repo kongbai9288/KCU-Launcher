@@ -1682,6 +1682,7 @@
     <string name="kcu_login_uuid_field">Leave empty to use the default</string>
     <string name="kcu_login_uuid_invalid">That is not a valid identifier. Leave empty to use the default.</string>
     <string name="kcu_login_unavailable_title">Online service unavailable</string>
+    <string name="kcu_login_add_failed">Failed to add the account. Please check storage space and try again.</string>
     <string name="kcu_login_unavailable_body">The Mojang service may be unavailable, so you will enter offline mode. Fill in your name to log in to the game.</string>
     <string name="kcu_login_uuid_note">Note: the offline identifier may differ from the one used when signing in online. You can edit it with the NBT editor in KCU-Migrator.</string>
     <string name="kcu_uuid_title">Save identifier may conflict</string>
