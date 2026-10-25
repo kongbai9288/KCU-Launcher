@@ -84,6 +84,8 @@ public final class KcuLaunchGate {
         // 不可取消：按返回键会让 proceed 永不执行，表现为"点了启动什么都没发生"
         AlertDialog dialog = new AlertDialog.Builder(context).setView(scroll).create();
         dialog.setCancelable(false);
+        // 点对话框外部同样会让它消失，必须一并关掉，否则返回键那道防护形同虚设
+        dialog.setCanceledOnTouchOutside(false);
         for (JavaVersion java : candidates) {
             android.widget.Button button = KcuUi.secondaryButton(context, java.getName());
             button.setOnClickListener(v -> {
@@ -184,6 +186,11 @@ public final class KcuLaunchGate {
         card.addView(KcuUi.hint(context, context.getString(R.string.kcu_uuid_note)));
 
         AlertDialog dialog = new AlertDialog.Builder(context).setView(scroll).create();
+        // 不可取消：按返回键或点外部会让对话框消失但 proceed 永不执行，
+        // 表现为"点了启动什么都没发生"，玩家只会以为启动器坏了。
+        // 与选运行时的对话框保持一致——本弹窗只做劝导，唯一出口就是"继续启动"
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
         android.widget.Button ok =
                 KcuUi.primaryButton(context, context.getString(R.string.kcu_uuid_continue));
         ok.setOnClickListener(v -> {
