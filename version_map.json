@@ -1,6 +1,29 @@
 [
   {
     "type": "release",
+    "versionCode": 66,
+    "versionName": "0.66.0",
+    "date": "2026.10.25",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "审查发现上一轮的预设补齐标记是盲的。ensurePresetsOnce 用单个存在性标记 .kcu_presets 表示已初始化，一旦标记存在就不再补齐。后果是以后每新增一套预设布局，老用户因为标记已存在就永远拿不到它，等于每加一套布局都要废弃一次老用户的升级路径。",
+          "改为 ensurePresets：标记文件不再只表示是否初始化，而是逐行记录已处理过的资产文件名。每次启动读取已处理名单，只对不在名单内的资产执行落盘，处理完把新名字追加回名单。这样以后新增的预设自然会被补齐，而玩家删除过的预设因为名字已在名单里不会被重新加回来，删除依然有效。",
+          "标记文件损坏或读取失败时保守跳过而不是清空重来。重来会把玩家删掉的预设加回来，那比少补一套布局更容易引起困惑。",
+          "解析出 null 的布局也记为已处理，否则每次启动都会重试同一个坏文件。",
+          "实现时回避了 java.nio.file.Files：它要求 API 26，项目 minSdk 恰为 26 处于边界上，没必要为此承担风险，改用 java.io 的 BufferedReader 与 BufferedWriter，语义相同且无版本约束。",
+          "编译失败过一次并如实记录：Controllers.java 第 255 行报错 try 没有 catch、finally 或资源声明。原因是我按行号区间替换代码块时把原本的 catch 行一并替换掉了，新版代码只补了内层 try finally 而外层 try 没有收尾。已补回 catch。这类错误编译期就能发现，但如果没有 v0.40 建立的日志取证手段就只能盲猜。",
+          "审核 pass。哈希回执：Controllers.java 第六十二行 loadPresetsFromAssets 括号 java.util.Collections 点 尖括号 String 尖括号 emptySet 括号，五个字母 l o a d P 拼成 loadP，SHA-1 7807e64ffcc993a599a1af50c4dcab5b19178bcb。",
+          "冒烟测试：Actions run 40157415838 全矩阵 success，五个产物分别为 all 326253322、x86_64 174875770、arm64 169182486、arm 161920537、x86 155569792 字节。",
+          "未验证：补齐逻辑从未在真机执行，标记文件内容是否正确未验证；新增预设能否真被补齐未验证；布局本身仍一次都没在真机上显示过。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 65,
     "versionName": "0.65.0",
     "date": "2026.10.25",
