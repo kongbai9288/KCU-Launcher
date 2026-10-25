@@ -56,6 +56,10 @@ public class Controllers {
                     // 必须同步写盘：异步保存未落盘前磁盘上没有布局文件，紧随的扫描会拿到空结果，
                     // 后续兜底逻辑会反复触发保存与清理
                     DEFAULT_CONTROLLER.saveToDiskSync();
+                    // KCU：assets 下的其余预设布局一并落盘。
+                    // 只加载默认那一份的话，另外几套永远进不了列表 —— 放进去却加载不了
+                    // 等于死数据。仅在列表为空（首次启动）时执行，已有布局的用户不受影响。
+                    loadPresetsFromAssets();
                 } catch (IOException e) {
                     Logging.LOG.log(Level.SEVERE, "Failed to generate default controller!", e.getMessage());
                 }
@@ -113,6 +117,57 @@ public class Controllers {
         }
         CALLBACKS.forEach(callback -> Schedulers.androidUIThread().execute(callback));
         CALLBACKS.clear();
+    }
+
+    /**
+     * 把 assets/controllers 下的预设布局全部落盘。
+     *
+     * 用 AssetManager 列举而非写死文件名：写死的话新增布局文件不会被加载，
+     * 且每加一套都要改一次代码。列举方式下，往该目录放 json 即可生效。
+     *
+     * 已存在于内存列表的按 id 跳过，避免与默认布局重复落盘。
+     */
+    private static void loadPresetsFromAssets() {
+        android.content.res.AssetManager assets = null;
+        String[] names = null;
+        try {
+            assets = com.kongbai.kculauncher.KCUApp.getAppContext().getAssets();
+            names = assets.list("controllers");
+        } catch (Throwable ignored) {
+            return;
+        }
+        if (names == null) {
+            return;
+        }
+        java.util.Arrays.sort(names);
+        for (String name : names) {
+            if (!name.endsWith(".json")) {
+                continue;
+            }
+            java.io.InputStream in = null;
+            try {
+                in = assets.open("controllers/" + name);
+                Controller controller = Controller.GSON.fromJson(IOUtils.readFullyAsString(in), Controller.class);
+                if (controller == null) {
+                    continue;
+                }
+                boolean exist = controllers.stream().anyMatch(it -> it.getId().equals(controller.getId()));
+                if (!exist) {
+                    controller.saveToDiskSync();
+                    controllers.add(controller);
+                }
+            } catch (Throwable e) {
+                // 单套布局坏掉不能影响其余：跳过这一套继续
+                Logging.LOG.log(Level.WARNING, "Failed to load preset controller: " + name, e.getMessage());
+            } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
+        }
     }
 
     /**
