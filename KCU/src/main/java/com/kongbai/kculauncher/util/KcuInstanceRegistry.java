@@ -8,7 +8,10 @@ import com.kongbai.kculauncher.launcher.utils.KCUPath;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -188,9 +191,21 @@ public final class KcuInstanceRegistry {
     }
 
     /**
-     * 存档指纹：由存档目录名与最后修改时间推导。
+     * 存档指纹：由存档目录下的世界目录名集合推导。
      *
-     * 不读 level.dat —— 那正是要省下的开销。只做一次目录列举，成本远低于解析 NBT。
+     * 不读 level.dat —— 那正是要省下的开销。只做一次目录列举。
+     *
+     * 【为什么只用目录名，不掺 lastModified】
+     * 掺入修改时间会让指纹在"玩过一局之后"就变化，于是每次启动都要重新扫描，
+     * 跳过扫描这个优化形同虚设。目录名只在"世界被新建或被拷入"时才变化，
+     * 这正是需要重新扫描的时机，其余情况保持稳定。
+     *
+     * 【已知代价】
+     * 用同名世界目录整体覆盖（目录名不变）不会改变指纹，因而不会重新扫描。
+     * 这是为换取稳定跳过而接受的取舍，需在文档中写明而非假装不存在。
+     *
+     * 目录名排序后再计算：listFiles 的返回顺序不保证稳定，
+     * 不排序会让"内容没变"被判成"变了"，同样导致频繁重扫。
      *
      * @return 无存档目录时返回 0，实例目录不可用返回 -1
      */
@@ -203,13 +218,19 @@ public final class KcuInstanceRegistry {
         if (children == null) {
             return 0;
         }
-        long fingerprint = 0;
+        List<String> names = new ArrayList<>();
         for (File child : children) {
-            if (!child.isDirectory()) {
-                continue;
+            if (child.isDirectory()) {
+                names.add(child.getName());
             }
-            fingerprint = fingerprint * 31 + child.getName().hashCode();
-            fingerprint = fingerprint * 31 + child.lastModified();
+        }
+        if (names.isEmpty()) {
+            return 0;
+        }
+        java.util.Collections.sort(names);
+        long fingerprint = 0;
+        for (String name : names) {
+            fingerprint = fingerprint * 31 + name.hashCode();
         }
         return fingerprint;
     }
