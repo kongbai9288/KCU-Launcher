@@ -41,6 +41,22 @@ public final class KcuWorldUuid {
     /** level.dat 的体积上限，超过则跳过：正常的远小于此，异常大的多半已损坏 */
     private static final long MAX_LEVEL_DAT_BYTES = 64L * 1024 * 1024;
 
+    /**
+     * 扫描结果。
+     *
+     * 除了不一致项，还要带回"实际读到标识的世界数"。
+     * 没有它就无法区分两种情况：
+     *   一、读到了且一致  —— 真的验证过，可以建立信任
+     *   二、一个都没读出来 —— 什么都没验证，不能当通过
+     *
+     * 把"读不出来"当成"一致"，会让一份来源不明的存档被永久跳过检查。
+     */
+    public static final class ScanResult {
+        public final List<Mismatch> mismatches = new ArrayList<>();
+        /** 实际读到标识的世界数 */
+        public int checked;
+    }
+
     public static final class Mismatch {
         /** 世界目录名 */
         public final String worldName;
@@ -62,8 +78,8 @@ public final class KcuWorldUuid {
      * 读不出来的一律跳过：宁可漏报也不误报 —— 误报会让玩家在没问题的存档上
      * 执行一次破坏性改写。
      */
-    public static List<Mismatch> scan(File instanceDir, UUID target) {
-        List<Mismatch> result = new ArrayList<>();
+    public static ScanResult scan(File instanceDir, UUID target) {
+        ScanResult result = new ScanResult();
         if (instanceDir == null || target == null || !instanceDir.isDirectory()) {
             return result;
         }
@@ -88,10 +104,15 @@ public final class KcuWorldUuid {
             }
             scanned++;
             UUID found = readWorldUuid(world);
-            if (found == null || found.equals(target)) {
+            if (found == null) {
+                // 读不出来不计入已验证：无法证明它与本账号一致
                 continue;
             }
-            result.add(new Mismatch(world.getName(), found, target));
+            result.checked++;
+            if (found.equals(target)) {
+                continue;
+            }
+            result.mismatches.add(new Mismatch(world.getName(), found, target));
         }
         return result;
     }
