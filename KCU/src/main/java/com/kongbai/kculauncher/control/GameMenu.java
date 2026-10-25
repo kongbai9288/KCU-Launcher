@@ -732,7 +732,7 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
         editModeProperty.set(isSimulated());
         controllerProperty.set(Controllers.findControllerById(activity.getIntent().getExtras().getString("controller")));
         // 有外设时自动关布局：放在布局确定之后，否则会把刚设好的布局又切走
-        autoDisableLayoutOnPhysicalInput();
+        applyPeripheralPolicy();
         selectDefaultViewGroup();
 
         baseLayout = findViewById(R.id.base_layout);
@@ -1172,6 +1172,7 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
                 break;
             case KCU_LAYOUT_ENABLED:
                 menuSetting.setKcuLayoutEnabled(checked);
+                layoutUserOverride = true;
                 applyLayoutEnabled(checked);
                 break;
             case DISABLE_GESTURE:
@@ -1314,23 +1315,55 @@ public class GameMenu implements MenuCallback, KCUBridgeCallback {
             "a1000000-0000-4000-8000-0000000000ff";
 
     /**
-     * 检测到实体输入设备（键盘/鼠标/手柄）时自动关闭布局。
+     * 玩家本次会话内手动操作过布局开关。
      *
-     * 有外设就不需要虚拟按键，留着只会挡视野。
-     * 只在游戏启动时判断一次：运行中插拔属于少数场景，
-     * 且中途切换布局会打断正在进行的按键状态。
+     * 只存在内存中，不持久化：下次启动仍应按外设情况重新判断，
+     * 否则"手动开过一次"会让自动策略在以后永远失效。
      */
-    private void autoDisableLayoutOnPhysicalInput() {
-        if (!menuSetting.isKcuLayoutEnabled()) {
+    private boolean layoutUserOverride = false;
+
+    /**
+     * 按当前外设情况决定布局开或关。
+     *
+     * 【为什么不能直接写 isKcuLayoutEnabled】
+     * menuSetting 有持久化监听，写一次就落盘。若检测到外设时把它置 false，
+     * 玩家拔掉外设后下次启动读到的仍是 false，布局永久消失 —— 玩家只会以为坏了。
+     * "有外设就关"是条件行为，不是一次性设置，必须每次启动重新判断。
+     * 因此这里只读玩家意图，不改它：每次启动重新计算该不该显示按键。
+     *
+     * 【为什么状态一致时直接返回】
+     * 每次启动无脑调 applyLayoutEnabled(true) 会把玩家自己选的布局重置成
+     * "记住的那个"，等于玩家在管理页的切换白做了。只在确实需要切换时才动。
+     *
+     * 【为什么手动操作后本次不再自动覆盖】
+     * 玩家在插着外设时手动打开布局，说明他此刻想要按键；
+     * 若策略继续生效，他刚打开就会被关掉，看起来像开关失灵。
+     */
+    private void applyPeripheralPolicy() {
+        if (layoutUserOverride) {
             return;
         }
-        if (!hasPhysicalInputDevice()) {
+        boolean peripheral = hasPhysicalInputDevice();
+        boolean wantEmpty = !menuSetting.isKcuLayoutEnabled() || peripheral;
+        if (wantEmpty == isCurrentLayoutEmpty()) {
             return;
         }
-        menuSetting.setKcuLayoutEnabled(false);
-        applyLayoutEnabled(false);
-        Toast.makeText(activity, R.string.menu_settings_kcu_layout_enabled_auto_off,
-                Toast.LENGTH_LONG).show();
+        if (wantEmpty) {
+            applyLayoutEnabled(false);
+            // 只在因外设而关闭时提示：玩家自己关的不必再告诉他
+            if (peripheral) {
+                Toast.makeText(activity, R.string.menu_settings_kcu_layout_enabled_auto_off,
+                        Toast.LENGTH_LONG).show();
+            }
+        } else {
+            applyLayoutEnabled(true);
+        }
+    }
+
+    /** 当前生效的是否为空布局（无按键） */
+    private boolean isCurrentLayoutEmpty() {
+        Controller current = getController();
+        return current == null || EMPTY_CONTROLLER_ID.equals(current.getId());
     }
 
     private static boolean hasPhysicalInputDevice() {
