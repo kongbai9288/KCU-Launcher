@@ -4215,3 +4215,108 @@ all 326253449 / x86_64 174875996 / **arm64 169182706** / arm 161920822 / x86 155
 
 线程是否真停止**没观察过**；泄漏是否真消除**没用内存工具确认**；
 **整个应用一次都没在真机装过。**
+
+## 0.69.0 — 2026-10-25
+
+执行者：**yuanbao**
+
+---
+
+# 自动点击循环：又一条泄漏链
+
+```java
+autoClickRunnable = new Runnable() {
+    public void run() {
+        handleKeyEvent(event, true);
+        handleKeyEvent(event, false);
+        if (autoClick) {
+            autoClickHandler.postDelayed(autoClickRunnable, 20);  // 自我重投
+        }
+    }
+};
+```
+
+关闭时：
+
+```java
+private void handleAutoClick(Event event, boolean enable) {
+    autoClick = enable;   // ← 只置标志，不 removeCallbacks
+}
+```
+
+## 泄漏链
+
+```
+消息队列
+  → Runnable（匿名内部类）
+    → ControlButton
+      → GameMenu
+        → Activity + 多个 View
+```
+
+**开着自动点击退出游戏 → 循环不停 → Activity 无法回收**
+（且每 20ms 仍在发按键事件）
+
+---
+
+# 修法
+
+| 改动 | 说明 |
+|---|---|
+| `ControlButton.cancelPendingEvents()` | 置假 + 清两个待执行任务 |
+| `GameMenu.onDestroy` 遍历 baseLayout | 对 ControlButton 逐个调用 |
+
+## 不改正常逻辑（用户明确要求）
+
+- 取消**只在宿主销毁路径**调用
+- 游戏进行中仍走原 `handleAutoClick`
+- **两条路径互不干扰**
+- 移除的是**尚未执行**的任务，正在发生的行为不受影响
+
+## 全仓确认
+
+`ControlButton` 是**唯一**持有 Handler 的 CustomView → **无遗漏**。
+
+## 明确不改
+
+`ViewManager` 进度对话框的 postDelayed
+已有 `loadDialog == dialog` 保护 → 上游既有设计 → **保留**。
+
+---
+
+# 防错规则 189–195（新增 7 条）
+
+| # | 来自 |
+|---|---|
+| 189–191 | **上一轮误传陈旧文件事故** |
+| 192–195 | 本轮线程/消息队列泄漏规律 |
+
+核心：**上传前逐文件校验 package 行**，
+出 `Unresolved reference` **先怀疑旧副本覆盖**，
+批量上传用 **blob sha 确认基线**。
+
+---
+
+### 审核：pass
+
+| 项 | 值 |
+|---|---|
+| 文件 | `ControlButton.java` |
+| 行 | **776** |
+| 该行原文 | `autoClick = false;` |
+| 5 个不同字母 | `a u t o C` |
+| **SHA-1** | **`fb9383e8bf46331c7aeb6f569bf81beb56c08ce6`** |
+
+> 首次取材取到声明行 `public void cancelPendingEvents()`
+> 前五个字母是 `publi`，**与历史多次碰撞** → 改取赋值行。
+
+### 编译验证（PROVEN）
+
+run **40165304484** 全矩阵 success，5 产物：
+all 326252699 / x86_64 174875393 / **arm64 169182019** / arm 161919982 / x86 155569967 B
+
+### 未验证
+
+循环中退出是否真停止**没观察过**；
+Activity 是否真回收**没用内存工具确认**；
+**整个应用一次都没在真机装过。**
