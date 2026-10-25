@@ -1,6 +1,29 @@
 [
   {
     "type": "release",
+    "versionCode": 70,
+    "versionName": "0.70.0",
+    "date": "2026.10.25",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "继续启动流程审查，找到一个会让玩家以为启动器坏掉的问题。KcuLaunchGate 的存档身份劝导弹窗 showUuidAdvice 没有设置不可取消，玩家可以按返回键或点击对话框外部让它消失，而对话框的继续回调里才调用 proceed.run()。弹窗一消失 proceed 就永不执行，表现为玩家点了启动、弹窗闪一下就没了、游戏始终不启动，且没有任何提示。",
+          "这个弹窗是 v0.55 之后补的，而同文件的选运行时弹窗 showJavaPicker 当初就写了 setCancelable(false) 并注明原因是按返回键会让 proceed 永不执行。同一个教训在同一个文件的后加方法里重复出现，说明当时只防了先写的那个。",
+          "修法为给劝导弹窗补 setCancelable(false) 与 setCanceledOnTouchOutside(false)。只关返回键不够，点击对话框外部同样会让它消失，两道必须一起关，否则返回键那道防护形同虚设。该弹窗只做劝导不改写存档，唯一出口就是继续启动，与选运行时弹窗的语义一致。",
+          "顺带补齐选运行时弹窗：它原本只有 setCancelable(false)，缺少 setCanceledOnTouchOutside(false)，存在同样一条取消路径未堵。一并补上并清理了因此重复的两行注释。",
+          "明确不改的一处：统一登录对话框 KcuUnifiedLoginDialog 保持可取消。它不是启动流程，取消的语义是我不加账号了，符合直觉，且它有自己的 dismiss 回调链，不存在 proceed 不执行的问题。",
+          "本轮上传严格遵守 v0.69 新增的防错规则 189，上传前逐文件校验了 package 行与 com.tungsten 残留数，本地与远端均为迁移后的正确版本，未再次出现旧副本覆盖。",
+          "审核 pass。哈希回执：KcuLaunchGate.java 第八十八行 dialog 点 setCanceledOnTouchOutside 括号 false 括号 分号，五个字母 d i a l o 拼成 dialo，SHA-1 5d444a3ded6dac0ba59f7d0b5bb6892aaec2335e。该取值在两处方法里都能取到，取的是先出现的选运行时弹窗那处。",
+          "冒烟测试：Actions run 40166524106 全矩阵 success，五个产物分别为 all 326252723、x86_64 174875417、arm64 169182076、arm 161920068、x86 155569965 字节。",
+          "未验证：按返回键与点外部的实际行为从未在真机触发过；劝导弹窗本身从未在真机显示过；整个应用仍一次都没在真机安装运行过。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 69,
     "versionName": "0.69.0",
     "date": "2026.10.25",
