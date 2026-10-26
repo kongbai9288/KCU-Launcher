@@ -61,6 +61,7 @@ public final class KcuDialog {
     private final LinearLayout card;
     private final List<EditText> fields = new ArrayList<>();
     private final List<android.widget.Button> buttons = new ArrayList<>();
+    private final List<Integer> kinds = new ArrayList<>();
 
     private Icon icon = Icon.INFO;
     private boolean blocking;
@@ -129,12 +130,18 @@ public final class KcuDialog {
         finish();
     }
 
-    /** 取主按钮。需要在构建完成后补挂监听器时使用 */
+    /**
+     * 取主按钮。需要在构建完成后补挂监听器时使用。
+     * 按语义查找而非取第 0 个：调用方完全可能先加次要按钮再加主按钮，
+     * 按下标取会拿到次要按钮，属于难以察觉的错配。
+     */
     public android.widget.Button primaryButton() {
-        if (buttons.isEmpty()) {
-            return null;
+        for (int i = 0; i < buttons.size(); i++) {
+            if (kinds.get(i) == 0) {
+                return buttons.get(i);
+            }
         }
-        return buttons.get(0);
+        return null;
     }
 
     /** 取第 index 个输入框的内容 */
@@ -271,6 +278,10 @@ public final class KcuDialog {
                 });
                 card.addView(b);
                 buttons.add(b);
+                kinds.add(kind);
+                // 按钮之间必须有间距：选运行时会一次列出多个候选，
+                // 不加间距会挤成一整片，是迁移过程中容易丢掉的观感细节
+                card.addView(KcuUi.gap(context, 8));
             }
         }
 
