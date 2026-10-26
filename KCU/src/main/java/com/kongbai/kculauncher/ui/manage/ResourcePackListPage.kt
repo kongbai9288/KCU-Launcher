@@ -156,14 +156,15 @@ class ResourcePackListPage(context: Context?, id: Int) :
                     val bad = mutableListOf<String>()
                     dir.mkdirs()
                     for (file in files) {
-                        val name = file.fileName(activity)
                         try {
+                            val name = file.fileName(activity)
                             val input = file.openInputStream(activity) ?: throw IOException()
                             val target = uniqueTarget(dir, name)
                             target.outputStream().use { output -> input.copyTo(output) }
                             ok.add(name)
                         } catch (_: Exception) {
-                            bad.add(name)
+                            // 单个文件失败只计入失败列表，不影响其余文件的导入
+                            bad.add(file.fileName(activity))
                         }
                     }
                     ok to bad
