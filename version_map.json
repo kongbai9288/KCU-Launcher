@@ -1,6 +1,28 @@
 [
   {
     "type": "release",
+    "versionCode": 75,
+    "versionName": "0.75.0",
+    "date": "2026.10.26",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "审查上一轮改动时发现一个会直接把玩家挡在应用外面的缺陷。上一版的令牌解锁只在校验成功时推进流程，而 SplashActivity 在弹出对话框后就 return，onGranted 回调又传的是 null。结果是玩家在关于页连点五次写入请求文件后，进入应用弹出令牌框，一旦取消或令牌填错，流程就停在启动页，既进不去启动器也没有任何后续动作；而请求文件仍然存在且未授权，下次启动又弹，形成死循环。玩家连点之后就再也用不了这个应用。",
+          "修法分三处。一是把回调语义从只在成功时调用改为无论成功、失败还是取消都调用一次且仅一次，新增 finish 方法并用 fired 标记防止取消与校验完成两条路径重复触发，同时在对话框上挂取消监听。二是 KcuDevMode 增加进程内提示标记 isUnlockPrompted 与 markUnlockPrompted，一次启动最多提示一次，避免同一次启动被反复打断。三是校验失败时刻意不删除请求文件，玩家改对令牌后仍可再试，而授权成功会同时清掉请求文件。",
+          "另外把 KcuDevMode.init 补到 KCUApp onCreate 中作为兜底。授权标记存在应用私有目录，读写都要 Context，原先只在 SplashActivity 初始化，若从其他入口进入则 appContext 为空，hasAuthorization 恒为假、grant 恒失败，开发者模式永远开不了。放在 Application 里最保险，且只取 Application 上下文，与进程同生命周期，不持有 Activity，不构成泄漏。",
+          "编译失败一次，是我引入的：在 Kotlin 里写了 val devMode 等于 KcuDevMode，Java 类没有伴生对象不能当值引用，连带其后的四个方法全部解析不到。这与 v0.60 踩过的是同一个坑，已改为全限定名直接调用。",
+          "上传前按防错规则 189 逐文件校验包名与 com.tungsten 残留数，本轮共修改四个文件。五个失败 issue 已逐条注明原因关闭。",
+          "审核 pass。哈希回执：KcuDevUnlockDialog.java 第八十一行 finish 括号 onFinished 括号 分号，五个字母 f i n s h 拼成 finsh，SHA-1 83b9f4c107f88f79c5d9a367279584a986b2301a。该行是校验成功分支的放行调用，正是本轮死锁修复的核心。先取第九十九行的取消监听行，五个字母 dialo 与 v0.70 完全碰撞，故改取本行。",
+          "冒烟测试：Actions run 40268025562 全矩阵 success，五个产物分别为 all 326257183、x86_64 174879990、arm64 169185745、arm 161926720、x86 155574755 字节。",
+          "未验证：取消对话框后是否真能进入启动器从未在真机触发过；令牌校验流程从未在真机执行过；进程内只提示一次的行为没有观察过；KCUApp 的兜底初始化未验证；整个应用仍一次都没在真机安装运行过。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 74,
     "versionName": "0.74.0",
     "date": "2026.10.26",
