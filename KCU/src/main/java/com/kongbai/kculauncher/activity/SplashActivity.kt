@@ -152,9 +152,11 @@ class SplashActivity : KCUActivity() {
         // 只在成功时放行的话，玩家取消或令牌填错就会被永久挡在应用外面，
         // 且请求文件还在，下次启动又弹，形成死循环。
         // 进程内只提示一次，避免同一次启动反复弹。
-        val devMode = com.kongbai.kculauncher.util.KcuDevMode
-        if (devMode.isRequested() && !devMode.isEnabled() && !devMode.isUnlockPrompted()) {
-            devMode.markUnlockPrompted()
+        if (com.kongbai.kculauncher.util.KcuDevMode.isRequested()
+            && !com.kongbai.kculauncher.util.KcuDevMode.isEnabled()
+            && !com.kongbai.kculauncher.util.KcuDevMode.isUnlockPrompted()
+        ) {
+            com.kongbai.kculauncher.util.KcuDevMode.markUnlockPrompted()
             com.kongbai.kculauncher.util.KcuDevUnlockDialog.show(this) {
                 enterLauncher()
             }
