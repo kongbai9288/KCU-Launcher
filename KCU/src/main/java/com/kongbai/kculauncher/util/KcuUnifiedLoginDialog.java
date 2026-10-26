@@ -68,12 +68,20 @@ public final class KcuUnifiedLoginDialog {
         }
 
         void start() {
-            buildInput();
+            buildInput(null);
             dialog.show();
         }
 
         /** 阶段一：填写名称 */
-        private void buildInput() {
+        /**
+         * 阶段一：填写名称。
+         *
+         * @param notice 需要一并显示的问题说明，可为 null。
+         *   不能靠调用方先 appendStatus 再 buildInput 来显示：
+         *   buildInput 会 removeAllViews，刚加的提示会被立刻清掉且引用置空，
+         *   玩家点确认后界面重绘却看不到任何原因，表现为"点了没反应"。
+         */
+        private void buildInput(CharSequence notice) {
             card.removeAllViews();
             statusView = null;
             card.addView(KcuUi.header(context, "\u2261", context.getString(R.string.kcu_login_title)));
@@ -95,6 +103,11 @@ public final class KcuUnifiedLoginDialog {
             uuidEdit.setSingleLine(true);
             card.addView(uuidEdit);
             card.addView(KcuUi.gap(context, 18));
+            if (notice != null) {
+                statusView = KcuUi.status(context, notice);
+                card.addView(statusView);
+                card.addView(KcuUi.gap(context, 10));
+            }
 
             android.widget.Button confirm =
                     KcuUi.primaryButton(context, context.getString(R.string.kcu_login_confirm));
@@ -115,8 +128,8 @@ public final class KcuUnifiedLoginDialog {
                 if (!TextUtils.isEmpty(rawUuid.trim())) {
                     customUuid = KcuUuid.parse(rawUuid);
                     if (customUuid == null) {
-                        appendStatus(context.getString(R.string.kcu_login_uuid_invalid));
-                        buildInput();
+                        // 必须把原因带进重绘，否则界面刷新后玩家看不到任何提示
+                        buildInput(context.getString(R.string.kcu_login_uuid_invalid));
                         return;
                     }
                 }
