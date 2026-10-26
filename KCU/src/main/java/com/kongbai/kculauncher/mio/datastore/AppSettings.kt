@@ -113,11 +113,20 @@ data class AppSettingsPreference(
 )
 
 object AppSettingsSerializer : Serializer<AppSettingsPreference> {
+    /**
+     * 忽略未知 key：字段改名或删除后旧数据仍可解码，
+     * 避免整份回退默认值把玩家其余设置一并清空。
+     *
+     * 本项目删过设置项（如 isCloseSkinModel），将来也还会删，
+     * 这条是通用兜底 —— 与上游是否做过字段改名无关。
+     */
+    private val json = Json { ignoreUnknownKeys = true }
+
     override val defaultValue: AppSettingsPreference = AppSettingsPreference()
 
     override suspend fun readFrom(input: InputStream): AppSettingsPreference {
         return try {
-            Json.decodeFromString<AppSettingsPreference>(input.readBytes().decodeToString())
+            json.decodeFromString<AppSettingsPreference>(input.readBytes().decodeToString())
         } catch (_: SerializationException) {
             defaultValue
         }
