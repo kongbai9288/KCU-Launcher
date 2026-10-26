@@ -147,11 +147,17 @@ class SplashActivity : KCUActivity() {
 
     fun enterLauncher() {
         // 请求文件被置为 true 说明玩家想开开发者模式：
-        // 此时必须弹令牌框校验归属，只认公共目录文件等于谁都能开
-        if (com.kongbai.kculauncher.util.KcuDevMode.isRequested() &&
-            !com.kongbai.kculauncher.util.KcuDevMode.isEnabled()
-        ) {
-            com.kongbai.kculauncher.util.KcuDevUnlockDialog.show(this, null)
+        // 此时必须弹令牌框校验归属，只认公共目录文件等于谁都能开。
+        // 但无论校验结果如何都必须继续进入启动器 ——
+        // 只在成功时放行的话，玩家取消或令牌填错就会被永久挡在应用外面，
+        // 且请求文件还在，下次启动又弹，形成死循环。
+        // 进程内只提示一次，避免同一次启动反复弹。
+        val devMode = com.kongbai.kculauncher.util.KcuDevMode
+        if (devMode.isRequested() && !devMode.isEnabled() && !devMode.isUnlockPrompted()) {
+            devMode.markUnlockPrompted()
+            com.kongbai.kculauncher.util.KcuDevUnlockDialog.show(this) {
+                enterLauncher()
+            }
             return
         }
         lifecycleScope.launch {
