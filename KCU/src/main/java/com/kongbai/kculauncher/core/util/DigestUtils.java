@@ -17,6 +17,8 @@
  */
 package com.kongbai.kculauncher.core.util;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -32,6 +34,17 @@ public final class DigestUtils {
     }
 
     private static final int STREAM_BUFFER_LENGTH = 1024;
+
+    private static final java.util.regex.Pattern SHA1_PATTERN =
+            java.util.regex.Pattern.compile("[0-9a-f]{40}", java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    /**
+     * 判断字符串是否为合法的 SHA-1 十六进制摘要。
+     * 用于校验外部提供的哈希值（如镜像源响应头），避免把任意字符串当成摘要去比对。
+     */
+    public static boolean isSha1Digest(@Nullable String s) {
+        return s != null && SHA1_PATTERN.matcher(s).matches();
+    }
 
     public static MessageDigest getDigest(String algorithm) {
         try {
