@@ -269,11 +269,17 @@ public final class KcuDialog {
                         ? KcuUi.primaryButton(context, text)
                         : KcuUi.secondaryButton(context, text);
                 b.setOnClickListener(v -> {
-                    if (onClick != null) {
-                        onClick.onClick(v);
-                    }
-                    if (autoDismiss) {
-                        dismiss();
+                    try {
+                        if (onClick != null) {
+                            onClick.onClick(v);
+                        }
+                    } finally {
+                        // 监听器抛异常也必须关闭并放行：
+                        // 一旦漏掉，blocking 对话框会永远留在屏幕上，
+                        // 玩家既没有出口，onFinish 也不会执行
+                        if (autoDismiss) {
+                            dismiss();
+                        }
                     }
                 });
                 card.addView(b);
@@ -295,7 +301,14 @@ public final class KcuDialog {
         dialog.setCanceledOnTouchOutside(!effectiveBlocking);
         // 取消同样要放行：这是本框架存在的根本原因
         dialog.setOnCancelListener((DialogInterface d) -> finish());
-        dialog.show();
+        try {
+            dialog.show();
+        } catch (Throwable e) {
+            // 宿主已结束等情况下 show 会抛异常。此时对话框根本没出现，
+            // 若不主动放行，onFinish 永不执行，调用方会一直等下去
+            android.util.Log.w("KCU", "KcuDialog show failed", e);
+            finish();
+        }
         return this;
     }
 }
