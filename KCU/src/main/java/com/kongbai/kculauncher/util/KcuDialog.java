@@ -95,6 +95,28 @@ public final class KcuDialog {
         return v;
     }
 
+    /**
+     * 输入行。与 KcuUi.fieldRow 的区别是前置徽章用语义色 ——
+     * 复用 KcuUi 版本的话，警告类弹窗会出现"标题橙、输入框青"的配色分裂。
+     * 结构与 KcuUi 保持一致，仍是徽章加输入区，editOf 取第 1 个子视图依然成立。
+     */
+    private static LinearLayout fieldRow(Context context, Icon icon,
+                                         CharSequence hint, CharSequence glyph) {
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        TextView b = badge(context, icon);
+        b.setText(glyph);
+        row.addView(b);
+        EditText e = KcuUi.field(context, hint);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        lp.leftMargin = KcuUi.dp(context, 12);
+        e.setLayoutParams(lp);
+        row.addView(e);
+        return row;
+    }
+
     private static LinearLayout header(Context context, Icon icon, CharSequence title) {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.HORIZONTAL);
@@ -115,8 +137,12 @@ public final class KcuDialog {
             return;
         }
         finished = true;
-        if (onFinish != null) {
-            onFinish.run();
+        Runnable pending = onFinish;
+        // 先清空再执行：回调通常捕获 Activity，且可能耗时或抛出。
+        // 若等执行完再清，异常路径下本对象会一直持有 Activity 与回调
+        onFinish = null;
+        if (pending != null) {
+            pending.run();
         }
     }
 
@@ -168,7 +194,8 @@ public final class KcuDialog {
         }
 
         public Builder title(CharSequence text) {
-            target.pendingTitle = text;
+            // 允许为空：调用方可能只靠图标表达语义，空指针不应在此处炸掉
+            target.pendingTitle = text == null ? "" : text;
             return this;
         }
 
@@ -252,7 +279,7 @@ public final class KcuDialog {
         if (!pendingFields.isEmpty()) {
             card.addView(KcuUi.gap(context, 16));
             for (Object[] one : pendingFields) {
-                LinearLayout row = KcuUi.fieldRow(context, (CharSequence) one[0], (CharSequence) one[1]);
+                LinearLayout row = fieldRow(context, icon, (CharSequence) one[0], (CharSequence) one[1]);
                 card.addView(row);
                 fields.add(KcuUi.editOf(row));
                 card.addView(KcuUi.gap(context, 10));
