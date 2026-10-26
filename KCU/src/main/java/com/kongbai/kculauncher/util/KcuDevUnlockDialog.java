@@ -54,21 +54,36 @@ public final class KcuDevUnlockDialog {
             Toast.makeText(context, R.string.kcu_dev_unlock_checking, Toast.LENGTH_SHORT).show();
             ExecutorService worker = Executors.newSingleThreadExecutor();
             worker.execute(() -> {
-                boolean owner = KcuDevMode.verifyOwner(token);
+                // 校验结果必须在任何情况下都回到主线程并恢复按钮：
+                // 一旦 verifyOwner 抛出未捕获异常，Runnable 会直接终止，
+                // post 永不执行 —— 按钮保持禁用、对话框不关闭、没有任何提示，
+                // 玩家只能靠返回键退出，表现为点了校验后彻底没反应
+                boolean owner = false;
+                Throwable failure = null;
+                try {
+                    owner = KcuDevMode.verifyOwner(token);
+                } catch (Throwable e) {
+                    failure = e;
+                }
+                final boolean result = owner;
+                final Throwable error = failure;
                 new Handler(context.getMainLooper()).post(() -> {
                     primary.setEnabled(true);
-                    if (owner && KcuDevMode.grant()) {
-                        KcuDevMode.refresh();
-                        Toast.makeText(context, R.string.kcu_dev_unlock_ok, Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                    } else {
-                        // 不区分"令牌无效"与"写入失败"以外的细节，
-                        // 但必须留下可查记录，否则排查时无从下手
-                        android.util.Log.w("KCU", "Dev unlock failed, owner=" + owner);
-                        Toast.makeText(context, R.string.kcu_dev_unlock_failed, Toast.LENGTH_SHORT).show();
-                        // 失败不关闭：不删请求文件，玩家改对令牌后仍可再试
+                    try {
+                        if (error == null && result && KcuDevMode.grant()) {
+                            KcuDevMode.refresh();
+                            Toast.makeText(context, R.string.kcu_dev_unlock_ok, Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                        } else {
+                            // 不区分"令牌无效"与"写入失败"以外的细节，
+                            // 但必须留下可查记录，否则排查时无从下手
+                            android.util.Log.w("KCU", "Dev unlock failed, owner=" + result, error);
+                            Toast.makeText(context, R.string.kcu_dev_unlock_failed, Toast.LENGTH_SHORT).show();
+                            // 失败不关闭：不删请求文件，玩家改对令牌后仍可再试
+                        }
+                    } finally {
+                        worker.shutdownNow();
                     }
-                    worker.shutdownNow();
                 });
             });
         });
