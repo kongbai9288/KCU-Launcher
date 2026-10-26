@@ -28,6 +28,10 @@ public class KCUApp extends Application implements Application.ActivityLifecycle
     public void onCreate() {
         // enabledStrictMode();
         super.onCreate();
+        // 开发者模式的授权标记存在私有目录，读写都要 Context。
+        // 放在这里初始化最保险：无论从哪个入口进入应用都已就绪。
+        // 只取 Application 上下文，与进程同生命周期，不持有 Activity
+        com.kongbai.kculauncher.util.KcuDevMode.init(this);
         this.registerActivityLifecycleCallbacks(this);
 //        PerfUtil.install();
     }
