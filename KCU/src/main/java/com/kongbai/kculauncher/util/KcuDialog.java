@@ -266,6 +266,11 @@ public final class KcuDialog {
         // 此处退回可取消，宁可让流程放空，也不能把人锁死在对话框上
         boolean effectiveBlocking = blocking && buttonCount > 0;
 
+        // 清空既有集合再重建：build 若被调用两次，
+        // 旧的输入框与按钮仍留在集合里，fieldText 会取到已被移除的视图
+        fields.clear();
+        buttons.clear();
+        kinds.clear();
         card.removeAllViews();
         card.addView(header(context, icon, pendingTitle));
         if (pendingBody.length() > 0) {
