@@ -47,6 +47,8 @@ public final class KcuUnifiedLoginDialog {
         private final AlertDialog dialog;
         private final LinearLayout card;
         private String name = "";
+        /** 状态行视图；复用以免多次提示堆积 */
+        private android.widget.TextView statusView = null;
         /** 玩家自定义标识；留空表示使用按名称推导的默认值 */
         private java.util.UUID customUuid = null;
 
@@ -59,6 +61,10 @@ public final class KcuUnifiedLoginDialog {
             root.addView(card);
             scroll.addView(root);
             this.dialog = new AlertDialog.Builder(context).setView(scroll).create();
+            // 取消同样要放行：框架约定是 onFinish 一定被调用一次，
+            // 这个对话框尚未迁到 KcuDialog，但约定必须一致。
+            // 否则将来一旦把它接进启动流程，取消就会变成"点了没反应"
+            this.dialog.setOnCancelListener(d -> dismiss());
         }
 
         void start() {
@@ -69,6 +75,7 @@ public final class KcuUnifiedLoginDialog {
         /** 阶段一：填写名称 */
         private void buildInput() {
             card.removeAllViews();
+            statusView = null;
             card.addView(KcuUi.header(context, "\u2261", context.getString(R.string.kcu_login_title)));
             card.addView(KcuUi.gap(context, 12));
             card.addView(KcuUi.body(context, context.getString(R.string.kcu_login_hint)));
@@ -121,6 +128,7 @@ public final class KcuUnifiedLoginDialog {
 
         private void buildChecking() {
             card.removeAllViews();
+            statusView = null;
             card.addView(KcuUi.header(context, "\u2261", context.getString(R.string.kcu_login_title)));
             card.addView(KcuUi.gap(context, 18));
             card.addView(KcuUi.status(context, context.getString(R.string.kcu_login_checking)));
@@ -152,6 +160,7 @@ public final class KcuUnifiedLoginDialog {
         /** 探测失败：说明服务不可用，并说明将以该名称离线进入 */
         private void buildServiceUnavailable() {
             card.removeAllViews();
+            statusView = null;
             card.addView(KcuUi.header(context, "!", context.getString(R.string.kcu_login_unavailable_title)));
             card.addView(KcuUi.gap(context, 12));
             card.addView(KcuUi.body(context, context.getString(R.string.kcu_login_unavailable_body)));
@@ -169,6 +178,7 @@ public final class KcuUnifiedLoginDialog {
         /** 阶段二：名称对应正版账号，让玩家决定走哪条路 */
         private void buildPremiumChoice() {
             card.removeAllViews();
+            statusView = null;
             card.addView(KcuUi.header(context, "!", context.getString(R.string.kcu_login_premium_title)));
             card.addView(KcuUi.gap(context, 12));
             card.addView(KcuUi.body(context, context.getString(R.string.kcu_login_premium_body)));
@@ -225,9 +235,18 @@ public final class KcuUnifiedLoginDialog {
             dismiss();
         }
 
+        /**
+         * 显示状态行。复用同一个视图而不是每次追加 ——
+         * 玩家连点几次确认就会堆出好几行同样的提示，既难看又把按钮挤下去。
+         */
         private void appendStatus(String text) {
-            card.addView(KcuUi.gap(context, 10));
-            card.addView(KcuUi.status(context, text));
+            if (statusView == null) {
+                statusView = KcuUi.status(context, text);
+                card.addView(KcuUi.gap(context, 10));
+                card.addView(statusView);
+                return;
+            }
+            statusView.setText(text);
         }
 
         private void dismiss() {
