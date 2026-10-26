@@ -1,8 +1,6 @@
 package com.kongbai.kculauncher.util;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.widget.ScrollView;
 
 import com.kongbai.kculauncher.mio.JavaManager;
 import com.kongbai.kculauncher.R;
@@ -73,42 +71,33 @@ public final class KcuLaunchGate {
             return;
         }
 
-        ScrollView scroll = new ScrollView(context);
-        android.widget.LinearLayout root = KcuUi.root(context);
-        android.widget.LinearLayout card = KcuUi.card(context);
-        card.addView(KcuUi.header(context, "\u2261", context.getString(R.string.kcu_pick_java_title)));
-        card.addView(KcuUi.gap(context, 12));
-        card.addView(KcuUi.body(context, context.getString(R.string.kcu_pick_java_hint)));
-        card.addView(KcuUi.gap(context, 16));
-
-        // 不可取消：按返回键会让 proceed 永不执行，表现为"点了启动什么都没发生"
-        AlertDialog dialog = new AlertDialog.Builder(context).setView(scroll).create();
-        dialog.setCancelable(false);
-        // 点对话框外部同样会让它消失，必须一并关掉，否则返回键那道防护形同虚设
-        dialog.setCanceledOnTouchOutside(false);
+        // 交给统一弹窗：blocking 会同时关掉返回键与点击外部，
+        // 并且无论走哪条路径都保证 proceed 被执行一次
+        KcuDialog.Builder builder = KcuDialog.builder(context)
+                .icon(KcuDialog.Icon.GEAR)
+                .title(context.getString(R.string.kcu_pick_java_title))
+                .body(context.getString(R.string.kcu_pick_java_hint))
+                .blocking(true)
+                .onFinish(proceed);
         for (JavaVersion java : candidates) {
-            android.widget.Button button = KcuUi.secondaryButton(context, java.getName());
-            button.setOnClickListener(v -> {
-                meta.java = java.getName();
+            final String name = java.getName();
+            builder.secondary(name, v -> {
+                meta.java = name;
                 KcuVersionMeta.write(versionDir, meta);
                 try {
-                    profile.getRepository().getVersionSetting(id).setJava(java.getName());
+                    profile.getRepository().getVersionSetting(id).setJava(name);
                     profile.getRepository().saveVersionSetting(id);
                 } catch (Throwable e) {
                     // 保存失败若只吞掉，玩家会以为自己选过了，下次启动又弹一次同样的框
                     Logging.LOG.log(Level.WARNING, "KCU: failed to save java selection", e);
                     Toast.makeText(context, R.string.kcu_pick_java_save_failed, Toast.LENGTH_LONG).show();
                 }
-                dialog.dismiss();
                 refreshDisplay(profile, id, versionDir, meta);
-                proceed.run();
             });
-            card.addView(button);
-            card.addView(KcuUi.gap(context, 8));
         }
-        root.addView(card);
-        scroll.addView(root);
-        dialog.show();
+        // 没有候选时不会走到这里：上面已提前放行。
+        // 若真出现零按钮的异常情况，框架会自动退回可取消，不会把玩家锁死
+        builder.show();
     }
 
     /**
@@ -174,33 +163,19 @@ public final class KcuLaunchGate {
                     .append(one.found).append("\n  \u2192 ")
                     .append(one.expected);
         }
-        ScrollView scroll = new ScrollView(context);
-        android.widget.LinearLayout root = KcuUi.root(context);
-        android.widget.LinearLayout card = KcuUi.card(context);
-        card.addView(KcuUi.header(context, "!", context.getString(R.string.kcu_uuid_title)));
-        card.addView(KcuUi.gap(context, 12));
-        card.addView(KcuUi.body(context, context.getString(R.string.kcu_uuid_body)));
-        card.addView(KcuUi.gap(context, 10));
-        card.addView(KcuUi.hint(context, names.toString()));
-        card.addView(KcuUi.gap(context, 10));
-        card.addView(KcuUi.hint(context, context.getString(R.string.kcu_uuid_note)));
-
-        AlertDialog dialog = new AlertDialog.Builder(context).setView(scroll).create();
         // 不可取消：按返回键或点外部会让对话框消失但 proceed 永不执行，
         // 表现为"点了启动什么都没发生"，玩家只会以为启动器坏了。
-        // 与选运行时的对话框保持一致——本弹窗只做劝导，唯一出口就是"继续启动"
-        dialog.setCancelable(false);
-        dialog.setCanceledOnTouchOutside(false);
-        android.widget.Button ok =
-                KcuUi.primaryButton(context, context.getString(R.string.kcu_uuid_continue));
-        ok.setOnClickListener(v -> {
-            dialog.dismiss();
-            proceed.run();
-        });
-        card.addView(ok);
-        root.addView(card);
-        scroll.addView(root);
-        dialog.show();
+        // 由框架统一保证两道都关掉，且 proceed 一定被执行一次
+        KcuDialog.builder(context)
+                .icon(KcuDialog.Icon.WARN)
+                .title(context.getString(R.string.kcu_uuid_title))
+                .body(context.getString(R.string.kcu_uuid_body))
+                .hint(names.toString())
+                .hint(context.getString(R.string.kcu_uuid_note))
+                .primary(context.getString(R.string.kcu_uuid_continue), null)
+                .blocking(true)
+                .onFinish(proceed)
+                .show();
     }
 
     /** 已探测过就跳过；未探测过则试一次，成功则写回 meta 与版本 JSON */
