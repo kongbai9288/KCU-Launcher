@@ -43,6 +43,16 @@ public final class KcuDevMode {
     private static volatile Boolean cached;
 
     /**
+     * 本次进程是否已经弹过令牌框。
+     *
+     * 没有它会出现这样的死循环：玩家连点五次写入请求文件，
+     * 进入应用弹出令牌框，取消或校验失败后流程停在启动页，
+     * 下次进入又弹 —— 玩家连点之后就再也进不了启动器。
+     * 因此无论校验结果如何都必须放行，且本次进程内只提示一次。
+     */
+    private static volatile boolean unlockPrompted;
+
+    /**
      * 私有目录写入需要 Context，而判断是否开启的调用点分布在各处 UI，
      * 逐个传参会牵动过多文件。这里只保存 Application 的上下文，
      * 它与进程同生命周期，不会持有 Activity，不构成泄漏。
@@ -225,6 +235,15 @@ public final class KcuDevMode {
     /** 清除缓存，下次调用重新读取文件 */
     public static void refresh() {
         cached = null;
+    }
+
+    /** 本次进程是否已提示过解锁。提示过就不再重复弹，避免锁死启动流程 */
+    public static boolean isUnlockPrompted() {
+        return unlockPrompted;
+    }
+
+    public static void markUnlockPrompted() {
+        unlockPrompted = true;
     }
 
     private static boolean matchFile() {
