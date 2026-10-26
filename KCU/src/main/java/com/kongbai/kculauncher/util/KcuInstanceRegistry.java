@@ -71,6 +71,15 @@ public final class KcuInstanceRegistry {
     }
 
     /** 读取全部条目；失败返回空表 */
+    /**
+     * 读取全部登记项。
+     *
+     * 解析一旦失败就返回空表，而不是返回已经解析出的那部分。
+     * 返回部分结果危害更大：调用方拿到的是一份看起来正常、实则残缺的表，
+     * 随后又把它整体写回，残缺就变成永久性的了。
+     * 返回空表的后果是所有实例都按来源不明处理，会重新扫描存档 ——
+     * 代价是慢一点，方向是安全的。
+     */
     public static Map<String, Entry> readAll() {
         Map<String, Entry> map = new LinkedHashMap<>();
         File file = getFile();
@@ -114,7 +123,11 @@ public final class KcuInstanceRegistry {
                 }
             }
             reader.endObject();
-        } catch (Throwable ignored) {
+        } catch (Throwable e) {
+            // 不能只吞掉：文件损坏会导致所有实例都被当成来源不明，
+            // 每次启动都要重新扫描存档，表现为启动莫名变慢且无任何提示
+            android.util.Log.w("KCU", "KcuInstanceRegistry read failed, treating as empty", e);
+            map.clear();
         } finally {
             close(reader);
         }
@@ -302,15 +315,27 @@ public final class KcuInstanceRegistry {
         write(map);
     }
 
-    private static void write(Map<String, Entry> map) {
+    /**
+     * 整体写回。
+     *
+     * 先写同目录下的临时文件再改名覆盖。直接以截断方式打开目标文件的话，
+     * 写入途中进程被杀或抛异常，留在磁盘上的就是一个半截文件；
+     * 改名在同一分区内是原子操作，要么是新内容要么是旧内容，不会出现半截。
+     *
+     * 加锁是因为各处调用都是"先读整表、改一项、再整表写回"的模式：
+     * 实例创建与启动流程可能在不同线程同时进行，两次写入交错会让其中
+     * 一次的结果被整体覆盖，同样会表现为登记项莫名消失。
+     */
+    private static synchronized void write(Map<String, Entry> map) {
         JsonWriter writer = null;
+        File file = getFile();
+        File tmp = new File(file.getParentFile(), FILE_NAME + ".tmp");
         try {
-            File file = getFile();
             File parent = file.getParentFile();
             if (parent != null && !parent.exists()) {
                 parent.mkdirs();
             }
-            writer = new JsonWriter(new FileWriter(file, false));
+            writer = new JsonWriter(new FileWriter(tmp, false));
             writer.setIndent("  ");
             writer.beginObject();
             writer.name("schemaVersion").value(SCHEMA_VERSION);
@@ -331,7 +356,18 @@ public final class KcuInstanceRegistry {
             writer.endObject();
             writer.endObject();
             writer.flush();
-        } catch (Throwable ignored) {
+            close(writer);
+            writer = null;
+            if (!tmp.renameTo(file)) {
+                throw new java.io.IOException("rename failed: " + tmp);
+            }
+        } catch (Throwable e) {
+            // 登记失败的结果是下次启动重新扫描存档，
+            // 属于可恢复的降级，但必须留下记录否则无从排查
+            android.util.Log.w("KCU", "KcuInstanceRegistry write failed", e);
+            if (tmp.exists()) {
+                tmp.delete();
+            }
         } finally {
             close(writer);
         }
