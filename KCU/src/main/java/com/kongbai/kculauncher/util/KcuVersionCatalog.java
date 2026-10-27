@@ -169,7 +169,8 @@ public final class KcuVersionCatalog {
             byte[] buf = new byte[8192];
             int n;
             int total = 0;
-            while ((n = in.read(buf)) > 0) {
+            // 以 -1 为结束：个别输入流会返回 0，按 > 0 判结束会提前截断内容
+            while ((n = in.read(buf)) != -1) {
                 total += n;
                 if (total > MAX_BYTES) {
                     return null;
