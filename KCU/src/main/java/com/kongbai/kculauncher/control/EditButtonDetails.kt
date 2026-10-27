@@ -124,6 +124,7 @@ internal class EditButtonDetails(
             mouseMode.isChecked = event.isSwitchMouseMode
             input.isChecked = event.isInput
             quickInput.isChecked = event.isQuickInput
+            pasteClipboard.isChecked = event.isPasteClipboard
             FXUtils.bindBoolean(autoKeep, event.autoKeepProperty())
             FXUtils.bindBoolean(autoClick, event.autoClickProperty())
             FXUtils.bindBoolean(openMenu, event.openMenuProperty())
@@ -131,6 +132,7 @@ internal class EditButtonDetails(
             FXUtils.bindBoolean(mouseMode, event.switchMouseModeProperty())
             FXUtils.bindBoolean(input, event.inputProperty())
             FXUtils.bindBoolean(quickInput, event.quickInputProperty())
+            FXUtils.bindBoolean(pasteClipboard, event.pasteClipboardProperty())
 
             outputText.setText(event.outputText)
             event.outputTextProperty().bind(outputText.stringProperty())
