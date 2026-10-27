@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -258,7 +259,7 @@ public class Controller implements Cloneable, Observable {
     }
 
     private static Controller parseLightweight0(File file) throws IOException {
-        try (JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+        try (JsonReader reader = new JsonReader(new StringReader(unwrap(file)))) {
             String id = null;
             String name = "";
             String version = "";
@@ -402,7 +403,7 @@ public class Controller implements Cloneable, Observable {
      */
     public ControlViewGroup.ViewData loadViewGroupData(ControlViewGroup viewGroup) {
         if (file == null) return null;
-        try (JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+        try (JsonReader reader = new JsonReader(new StringReader(unwrap(file)))) {
             reader.beginObject();
             while (reader.hasNext()) {
                 if ("viewGroups".equals(reader.nextName())) {
@@ -570,8 +571,17 @@ public class Controller implements Cloneable, Observable {
 
     // function
 
+    /**
+     * 布局文件名。
+     *
+     * 【为什么不再用 .json】
+     * 磁盘上的布局文件若保持 .json，用上游启动器打开同一目录就会把它当成
+     * 自己格式的布局去解析。我们改动过内部结构，上游解析出来的可能是一个
+     * 结构不完整的布局（缺字段、类型不符），后果由用户承担且无从排查。
+     * 换成专用扩展名后，上游在扫描目录时根本不会把它列入候选。
+     */
     public String getFileName() {
-        return getId() + ".json";
+        return getId() + ".kcul";
     }
 
     public synchronized void saveToDisk() {
@@ -601,11 +611,50 @@ public class Controller implements Cloneable, Observable {
         writeToFile();
     }
 
+    private static final int KCU_LAYOUT_SCHEMA = 1;
+
     private String serialize() {
-        return new GsonBuilder()
+        String body = new GsonBuilder()
                 .registerTypeAdapterFactory(new JavaFxPropertyTypeAdapterFactory(true, true))
                 .setPrettyPrinting()
                 .create().toJson(this);
+        // 外层再包一层信封：即使有人把文件改名成 .json 塞给上游启动器，
+        // 上游读到的根节点也不是它所期望的布局对象，只会解析失败，
+        // 不会得到一个"看起来能加载、实际缺字段"的半截布局
+        JsonObject envelope = new JsonObject();
+        envelope.addProperty("kcuLayout", KCU_LAYOUT_SCHEMA);
+        envelope.addProperty("app", "kcu");
+        envelope.add("controller", JsonParser.parseString(body));
+        return new GsonBuilder().setPrettyPrinting().create().toJson(envelope);
+    }
+
+    /**
+     * 取出信封内的布局内容；旧格式（未包装）原样返回。
+     *
+     * 兼容旧文件是必须的：升级前用户已经存过布局，读不出来就等于把他的按键配置弄丢。
+     */
+    private static String unwrap(File file) throws IOException {
+        String text = FileUtils.readText(file);
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        // 先看有没有信封标记，避免对大文件无条件做一次完整解析
+        if (!text.contains("\"kcuLayout\"")) {
+            return text;
+        }
+        try {
+            JsonElement root = JsonParser.parseString(text);
+            if (root.isJsonObject()) {
+                JsonObject obj = root.getAsJsonObject();
+                JsonElement body = obj.get("controller");
+                if (obj.has("kcuLayout") && body != null && body.isJsonObject()) {
+                    return body.toString();
+                }
+            }
+        } catch (Exception e) {
+            Logging.LOG.log(Level.WARNING, "Failed to unwrap layout envelope: " + file.getName(), e);
+        }
+        return text;
     }
 
     // synchronized 与 saveToDisk/saveToDiskSync 互斥，避免两路写并发时 .tmp 被对方移走
@@ -618,11 +667,11 @@ public class Controller implements Cloneable, Observable {
     }
 
     public void changeId(String newId) throws IOException {
-        renameFile(getFileName(), newId + ".json");
+        renameFile(getFileName(), newId + ".kcul");
         setId(newId);
         // 轻量对象同步更新源文件引用，避免按需加载读取已删除的旧文件
         if (file != null) {
-            file = new File(KCUPath.CONTROLLER_DIR, newId + ".json");
+            file = new File(KCUPath.CONTROLLER_DIR, newId + ".kcul");
         }
     }
 
