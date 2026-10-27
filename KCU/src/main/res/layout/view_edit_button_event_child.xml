@@ -233,6 +233,33 @@
         <com.kongbai.kculauncher.library.component.view.KCUTextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="@string/edit_button_event_paste_clipboard"
+            android:layout_gravity="center"
+            app:auto_text_tint="true"
+            android:singleLine="true"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <com.kongbai.kculauncher.library.component.view.KCUSwitch
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:id="@+id/paste_clipboard"/>
+
+    </com.kongbai.kculauncher.library.component.view.KCULinearLayout>
+
+    <com.kongbai.kculauncher.library.component.view.KCULinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <com.kongbai.kculauncher.library.component.view.KCUTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="@string/edit_button_event_keycodes"
             android:layout_gravity="center"
             app:auto_text_tint="true"
