@@ -3,6 +3,7 @@ package com.kongbai.kculauncher.control.data;
 import static com.kongbai.kculauncher.control.data.JsonElements.get;
 import static com.kongbai.kculauncher.util.FXUtils.onInvalidating;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -14,13 +15,17 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.JsonAdapter;
 import com.kongbai.kculauncher.core.fakefx.beans.InvalidationListener;
 import com.kongbai.kculauncher.core.fakefx.beans.Observable;
+import com.kongbai.kculauncher.core.fakefx.beans.property.IntegerProperty;
 import com.kongbai.kculauncher.core.fakefx.beans.property.ObjectProperty;
+import com.kongbai.kculauncher.core.fakefx.beans.property.SimpleIntegerProperty;
 import com.kongbai.kculauncher.core.fakefx.beans.property.SimpleObjectProperty;
 import com.kongbai.kculauncher.core.fakefx.beans.property.SimpleStringProperty;
 import com.kongbai.kculauncher.core.fakefx.beans.property.StringProperty;
 import com.kongbai.kculauncher.core.util.fakefx.ObservableHelper;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -55,6 +60,57 @@ public class ControlButtonData implements Cloneable, Observable, CustomControl {
 
     public String getText() {
         return textProperty.get();
+    }
+
+    /**
+     * 多字符模式：同一个按钮预置多套文字，运行时按顺序切换。
+     *
+     * 存盘时两套信息都要写：候选文字本身，以及当前选中第几个。
+     * 只写文字不写序号的话，玩家在游戏里切到第二个，下次进来又回到第一个，
+     * 看上去像设置没保存。
+     */
+    private final List<String> texts = new ArrayList<>();
+
+    private final IntegerProperty textIndexProperty = new SimpleIntegerProperty(this, "textIndex", 0);
+
+    public List<String> getTexts() {
+        return texts;
+    }
+
+    public void setTexts(List<String> list) {
+        texts.clear();
+        if (list != null) {
+            for (String item : list) {
+                if (item != null) texts.add(item);
+            }
+        }
+        // 候选变化后旧序号可能越界，回落到第一个，避免切出空白文字
+        if (getTextIndex() >= texts.size()) {
+            setTextIndex(0);
+            if (!texts.isEmpty()) setText(texts.get(0));
+        }
+    }
+
+    public IntegerProperty textIndexProperty() {
+        return textIndexProperty;
+    }
+
+    public int getTextIndex() {
+        return textIndexProperty.get();
+    }
+
+    public void setTextIndex(int index) {
+        textIndexProperty.set(index);
+    }
+
+    /** 切到下一套文字并立即更新按钮显示；只有一套时不产生任何变化 */
+    public void switchToNextText() {
+        if (texts.size() <= 1) {
+            return;
+        }
+        int next = (getTextIndex() + 1) % texts.size();
+        setTextIndex(next);
+        setText(texts.get(next));
     }
 
     /**
@@ -117,6 +173,7 @@ public class ControlButtonData implements Cloneable, Observable, CustomControl {
 
     public void addPropertyChangedListener(InvalidationListener listener) {
         textProperty.addListener(listener);
+        textIndexProperty.addListener(listener);
         styleProperty.addListener(listener);
         baseInfoProperty.addListener(listener);
         eventProperty.addListener(listener);
@@ -145,6 +202,8 @@ public class ControlButtonData implements Cloneable, Observable, CustomControl {
     public ControlButtonData clone() {
         ControlButtonData data = new ControlButtonData(UUID.randomUUID().toString());
         data.setText(getText());
+        data.setTexts(new ArrayList<>(texts));
+        data.setTextIndex(getTextIndex());
         data.setStyle(getStyle().clone());
         data.setBaseInfo(getBaseInfo().clone());
         data.setEvent(getEvent().clone());
@@ -178,6 +237,12 @@ public class ControlButtonData implements Cloneable, Observable, CustomControl {
 
             obj.addProperty("id", src.getId());
             obj.addProperty("text", src.getText());
+            JsonArray textsArray = new JsonArray();
+            for (String item : src.getTexts()) {
+                textsArray.add(item);
+            }
+            obj.add("texts", textsArray);
+            obj.addProperty("textIndex", src.getTextIndex());
             obj.addProperty("style", src.getStyle().getName());
             obj.add("baseInfo", new BaseInfoData.Serializer().serialize(src.getBaseInfo(), null, null));
             obj.add("event", new ButtonEventData.Serializer().serialize(src.getEvent(), null, null));
@@ -194,6 +259,16 @@ public class ControlButtonData implements Cloneable, Observable, CustomControl {
             ControlButtonData data = new ControlButtonData(Optional.ofNullable(get(obj, "id")).map(JsonElement::getAsString).orElse(UUID.randomUUID().toString()));
 
             data.setText(Optional.ofNullable(get(obj, "text")).map(JsonElement::getAsString).orElse(""));
+            // 旧布局没有这两个字段，缺失时保持空候选即可，切换事件自然不产生变化
+            List<String> textsList = new ArrayList<>();
+            JsonElement textsElement = get(obj, "texts");
+            if (textsElement != null && textsElement.isJsonArray()) {
+                for (JsonElement item : textsElement.getAsJsonArray()) {
+                    if (item.isJsonPrimitive()) textsList.add(item.getAsString());
+                }
+            }
+            data.setTexts(textsList);
+            data.setTextIndex(Optional.ofNullable(get(obj, "textIndex")).map(JsonElement::getAsInt).orElse(0));
             if (!ButtonStyles.isInitialized()) {
                 ButtonStyles.init();
             }
