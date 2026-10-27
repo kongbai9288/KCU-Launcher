@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.kongbai.kculauncher.R;
 import com.kongbai.kculauncher.core.util.Logging;
+import com.kongbai.kculauncher.library.browser.SelectedFile;
 import com.kongbai.kculauncher.setting.Profiles;
 import com.kongbai.kculauncher.util.KcuUi;
 import com.kongbai.kculauncher.util.KcuVersionCatalog;
@@ -220,18 +221,25 @@ public class KcuImportActivity extends Activity {
         });
     }
 
-    /** 取路径最后一段并去掉 .jar；取不到就回退空串由调用方提示 */
+    /**
+     * 取文件的显示名并去掉 .jar；取不到就回退空串由调用方提示。
+     *
+     * 【为什么不能取路径最后一段】
+     * 系统文件选择器返回的 content:// 地址，路径末段常常是 "msf:12345"
+     * 这类与文件名无关的标识串，直接拿来当版本 id 会得到一个毫无意义的名字，
+     * 玩家看列表根本认不出这是哪个版本。改按显示名取，拿不到才回退空串提示。
+     */
     private String deriveId(Uri uri) {
         try {
-            String path = uri.getPath();
-            if (path == null) {
+            String name = new SelectedFile(uri).fileName(this);
+            if (name == null) {
                 return "";
             }
-            String name = path.substring(path.lastIndexOf('/') + 1);
+            name = name.trim();
             if (name.toLowerCase().endsWith(".jar")) {
-                name = name.substring(0, name.length() - 4);
+                name = name.substring(0, name.length() - 4).trim();
             }
-            return name.trim();
+            return name;
         } catch (Throwable e) {
             return "";
         }
@@ -263,16 +271,25 @@ public class KcuImportActivity extends Activity {
         if (file.isFile()) {
             return;
         }
+        File tmp = new File(dir, id + ".json.kcupart");
+        boolean ok = false;
         OutputStream out = null;
         try {
-            out = new FileOutputStream(file, false);
+            out = new FileOutputStream(tmp, false);
             String json = "{\n  \"id\": \"" + id + "\",\n  \"jar\": \"" + id + "\"\n}\n";
             out.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             out.flush();
+            ok = true;
         } catch (Throwable ignored) {
             // 写不出来不影响 jar 已就位，仅版本不会出现在列表中
         } finally {
             close(out);
+            if (!ok && !tmp.delete()) {
+                Logging.LOG.warning("KcuImport: unable to delete partial " + tmp);
+            }
+        }
+        if (ok && !tmp.renameTo(file) && !tmp.delete()) {
+            Logging.LOG.warning("KcuImport: unable to delete " + tmp);
         }
     }
 
@@ -289,7 +306,29 @@ public class KcuImportActivity extends Activity {
         }
     }
 
+    /**
+     * 先下载到临时文件，只有完整写完才改名为目标文件。
+     *
+     * 【为什么不能直接写目标文件】
+     * 直接写的话，中途失败会在目标路径留下半截文件。清单路径是先落盘版本 json
+     * 再下载 jar 的，半截 jar 配上完整 json 会让这个版本照样出现在版本列表里，
+     * 玩家一点开就是坏的，而界面上早就提示过导入失败，看上去自相矛盾。
+     * 先写临时文件、成功再改名，目标路径要么没有文件，要么是完整内容。
+     */
     private boolean download(String address, File target) {
+        File tmp = new File(target.getParentFile(), target.getName() + ".kcupart");
+        boolean ok = false;
+        try {
+            ok = downloadTo(address, tmp);
+        } finally {
+            if (!ok && !tmp.delete()) {
+                Logging.LOG.warning("KcuImport: unable to delete partial " + tmp);
+            }
+        }
+        return ok && place(tmp, target);
+    }
+
+    private boolean downloadTo(String address, File target) {
         HttpURLConnection conn = null;
         InputStream in = null;
         OutputStream out = null;
@@ -305,7 +344,7 @@ public class KcuImportActivity extends Activity {
             out = new FileOutputStream(target, false);
             byte[] buf = new byte[8192];
             int n;
-            while ((n = in.read(buf)) > 0) {
+            while ((n = in.read(buf)) != -1) {
                 out.write(buf, 0, n);
             }
             out.flush();
@@ -322,7 +361,21 @@ public class KcuImportActivity extends Activity {
         }
     }
 
+    /** 同 {@link #download}：先写临时文件，完整才改名，避免失败留下半截文件 */
     private boolean copy(Uri uri, File target) {
+        File tmp = new File(target.getParentFile(), target.getName() + ".kcupart");
+        boolean ok = false;
+        try {
+            ok = copyTo(uri, tmp);
+        } finally {
+            if (!ok && !tmp.delete()) {
+                Logging.LOG.warning("KcuImport: unable to delete partial " + tmp);
+            }
+        }
+        return ok && place(tmp, target);
+    }
+
+    private boolean copyTo(Uri uri, File target) {
         InputStream in = null;
         OutputStream out = null;
         try {
@@ -333,7 +386,7 @@ public class KcuImportActivity extends Activity {
             out = new FileOutputStream(target, false);
             byte[] buf = new byte[8192];
             int n;
-            while ((n = in.read(buf)) > 0) {
+            while ((n = in.read(buf)) != -1) {
                 out.write(buf, 0, n);
             }
             out.flush();
@@ -345,6 +398,17 @@ public class KcuImportActivity extends Activity {
             close(out);
             close(in);
         }
+    }
+
+    /** 同目录内改名就位；改名失败则清掉临时文件并返回失败 */
+    private boolean place(File tmp, File target) {
+        if (tmp.renameTo(target)) {
+            return true;
+        }
+        if (!tmp.delete()) {
+            Logging.LOG.warning("KcuImport: unable to delete " + tmp);
+        }
+        return false;
     }
 
     private void close(Object stream) {
