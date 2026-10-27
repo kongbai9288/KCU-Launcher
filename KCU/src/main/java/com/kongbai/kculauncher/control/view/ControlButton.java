@@ -852,6 +852,9 @@ public class ControlButton extends AppCompatButton implements CustomView {
         if (event.isQuickInput()) {
             menu.openQuickInput();
         }
+        if (event.isSwitchText()) {
+            getData().switchToNextText();
+        }
         if (event.isPasteClipboard()) {
             // 粘贴优先于预设文本：玩家临时复制的内容比写死在布局里的更可能是此刻想发的
             String clipboard = readClipboardText();
