@@ -77,15 +77,26 @@ public final class KcuUuid {
         }
     }
 
+    /**
+     * 写入玩家自定义值。
+     *
+     * 【为什么用同步落盘而不是异步】
+     * 这个值决定账号身份，也决定存档比对用的是哪个标识。
+     * 异步写入只保证改动进了内存，若尚未落盘时进程被终止，
+     * 玩家下次启动会发现自己填过的标识不见了，而界面上没有任何提示，
+     * 看上去像设置自己丢了 —— 与启动时又弹一次运行时选择框是同一类问题。
+     * 这里只是几个字节，同步写回的开销可以忽略。
+     */
     public static void setCustom(Context context, String username, UUID uuid) {
         if (context == null || username == null || username.trim().isEmpty()) {
             return;
         }
         try {
-            if (uuid == null) {
-                prefs(context).edit().remove(keyOf(username)).apply();
-            } else {
-                prefs(context).edit().putString(keyOf(username), uuid.toString()).apply();
+            boolean ok = uuid == null
+                    ? prefs(context).edit().remove(keyOf(username)).commit()
+                    : prefs(context).edit().putString(keyOf(username), uuid.toString()).commit();
+            if (!ok) {
+                android.util.Log.w("KCU", "Failed to save custom uuid for " + username);
             }
         } catch (Throwable ignored) {
         }
