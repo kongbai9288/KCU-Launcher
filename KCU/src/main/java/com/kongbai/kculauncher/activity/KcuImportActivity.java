@@ -188,11 +188,28 @@ public class KcuImportActivity extends Activity {
                 setStatus(getString(R.string.kcu_import_no_dir));
                 return;
             }
-            // 版本 json 由清单地址直接落盘：它本身就是官方原样内容，
-            // 比自行拼一个最小 json 更完整，后续依赖补全也能读到
-            boolean ok = download(entry.url, new File(target.getParentFile(), entry.id + ".json"))
-                    && download(jarUrl, target);
-            finishImport(entry.id, target, ok);
+            File dir = target.getParentFile();
+
+            // 先落 jar 再落 json：顺序反了会在 jar 失败时留下一个只有 json 的版本目录，
+            // 它照样出现在版本列表里，玩家点开却是坏的，而界面刚刚才提示过导入失败
+            if (!download(jarUrl, target)) {
+                removeIfEmpty(dir);
+                setStatus(getString(R.string.kcu_import_failed));
+                return;
+            }
+
+            // 版本 json 优先取官方原样内容，比自行拼一个最小 json 更完整，
+            // 后续依赖补全也能读到；取不到时退回最小 json，版本依然可用
+            File json = new File(dir, entry.id + ".json");
+            if (!download(entry.url, json)) {
+                writeVersionJson(dir, entry.id);
+            }
+            if (!json.isFile()) {
+                removeIfEmpty(dir);
+                setStatus(getString(R.string.kcu_import_failed));
+                return;
+            }
+            finishImport(entry.id, target, true);
         });
     }
 
@@ -397,6 +414,17 @@ public class KcuImportActivity extends Activity {
         } finally {
             close(out);
             close(in);
+        }
+    }
+
+    /** 导入失败时清掉空目录，避免留下一个不会被识别、也不会被清理的版本目录 */
+    private void removeIfEmpty(File dir) {
+        if (dir == null || !dir.isDirectory()) {
+            return;
+        }
+        String[] items = dir.list();
+        if (items != null && items.length == 0 && !dir.delete()) {
+            Logging.LOG.warning("KcuImport: unable to remove empty " + dir);
         }
     }
 
