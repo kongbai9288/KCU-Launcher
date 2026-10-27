@@ -377,6 +377,26 @@ public class ButtonEventData implements Cloneable, Observable {
             return pasteClipboardProperty.get();
         }
 
+        /**
+         * 触发时把按钮文字切到下一套（多字符模式）。
+         *
+         * 只在预置了多套文字时才有实际效果；只有一套时按下不产生任何变化，
+         * 也不提示 —— 提示会让没用过这个功能的玩家困惑。
+         */
+        private final BooleanProperty switchTextProperty = new SimpleBooleanProperty(this, "switchText", false);
+
+        public BooleanProperty switchTextProperty() {
+            return switchTextProperty;
+        }
+
+        public void setSwitchText(boolean switchText) {
+            switchTextProperty.set(switchText);
+        }
+
+        public boolean isSwitchText() {
+            return switchTextProperty.get();
+        }
+
         private final StringProperty outputTextProperty = new SimpleStringProperty(this, "outputText", "");
 
         public StringProperty outputTextProperty() {
@@ -430,6 +450,7 @@ public class ButtonEventData implements Cloneable, Observable {
             inputProperty.addListener(listener);
             quickInputProperty.addListener(listener);
             pasteClipboardProperty.addListener(listener);
+            switchTextProperty.addListener(listener);
             outputTextProperty.addListener(listener);
             outputKeycodesList.addListener(listener);
             bindViewGroupList.addListener(listener);
@@ -462,6 +483,7 @@ public class ButtonEventData implements Cloneable, Observable {
             event.setInput(isInput());
             event.setQuickInput(isQuickInput());
             event.setPasteClipboard(isPasteClipboard());
+            event.setSwitchText(isSwitchText());
             event.setOutputText(getOutputText());
             event.setOutputKeycodes(outputKeycodesList());
             event.setBindViewGroup(bindViewGroupList());
@@ -482,6 +504,7 @@ public class ButtonEventData implements Cloneable, Observable {
                 obj.addProperty("input", src.isInput());
                 obj.addProperty("quickInput", src.isQuickInput());
                 obj.addProperty("pasteClipboard", src.isPasteClipboard());
+                obj.addProperty("switchText", src.isSwitchText());
                 obj.addProperty("outputText", src.getOutputText());
                 JsonArray outputKeycodes = new JsonArray();
                 for (Integer code : src.outputKeycodesList()) {
@@ -513,6 +536,7 @@ public class ButtonEventData implements Cloneable, Observable {
                 event.setInput(Optional.ofNullable(get(obj, "input")).map(JsonElement::getAsBoolean).orElse(false));
                 event.setQuickInput(Optional.ofNullable(get(obj, "quickInput")).map(JsonElement::getAsBoolean).orElse(false));
                 event.setPasteClipboard(Optional.ofNullable(get(obj, "pasteClipboard")).map(JsonElement::getAsBoolean).orElse(false));
+                event.setSwitchText(Optional.ofNullable(get(obj, "switchText")).map(JsonElement::getAsBoolean).orElse(false));
                 event.setOutputText(Optional.ofNullable(get(obj, "outputText")).map(JsonElement::getAsString).orElse(""));
                 ArrayList<Integer> outputKeycodes = new ArrayList<>();
                 for (JsonElement element : Optional.ofNullable(get(obj, "outputKeycodes")).map(JsonElement::getAsJsonArray).orElseGet(JsonArray::new)) {
