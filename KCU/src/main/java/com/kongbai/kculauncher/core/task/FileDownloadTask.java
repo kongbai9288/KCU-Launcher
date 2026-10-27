@@ -241,8 +241,10 @@ public class FileDownloadTask extends FetchTask<Void> {
                 if (integrityCheck != null) {
                     integrityCheck.performCheck(digest);
                 } else if (bmclapiHash != null) {
-                    // 没有显式校验值时以镜像哈希兜底，防止节点切换/重试后落下损坏的文件
-                    String actualHash = digestToString("SHA-1", temp);
+                    // 没有显式校验值时以镜像哈希兜底，防止节点切换/重试后落下损坏的文件。
+                    // 注意必须校验已就位的目标文件：moveFile 是复制后删除源，
+                    // 走到这里时临时文件已被删除，再按临时路径取摘要必然抛文件不存在
+                    String actualHash = digestToString("SHA-1", file.toPath());
                     if (!bmclapiHash.equalsIgnoreCase(actualHash))
                         throw new ChecksumMismatchException("SHA-1", bmclapiHash, actualHash);
                 }
