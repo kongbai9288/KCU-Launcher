@@ -97,6 +97,12 @@ public final class KcuAccountTransfer {
             return NO_PENDING_FILE;
         }
         List<Entry> entries = readEntries(file);
+        if (entries == null) {
+            // 读不出来就一个都不导入，也不改写状态：
+            // 文件由外部工具生成，保留原样等它重新生成后还能完整导入
+            android.util.Log.w("KCU", "Account transfer file is unreadable: " + file);
+            return NO_PENDING_FILE;
+        }
         int added = 0;
         for (Entry entry : entries) {
             if (entry.name == null || entry.name.isEmpty()) {
@@ -132,15 +138,30 @@ public final class KcuAccountTransfer {
         return added;
     }
 
+    /**
+     * 先写临时文件再改名。
+     *
+     * 【为什么不能直接覆盖】
+     * 这个文件位于公共目录，外部迁移工具也会读它。直接以截断方式打开，
+     * 写入中途出问题就会留下半截内容，外部工具读到的就是坏文件，
+     * 而它无从判断这是启动器写坏了还是自己生成的格式不对。
+     * 先写临时文件、写完整再改名，外部工具要么读到旧的完整内容，
+     * 要么读到新的完整内容。
+     */
     private static void write(List<String> names, List<String> uuids, String status) {
+        File file = getFile();
+        File parent = file.getParentFile();
+        if (parent == null) {
+            return;
+        }
+        if (!parent.exists() && !parent.mkdirs()) {
+            return;
+        }
+        File tmp = new File(parent, FILE_NAME + ".tmp");
+        boolean ok = false;
         JsonWriter writer = null;
         try {
-            File file = getFile();
-            File parent = file.getParentFile();
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs();
-            }
-            writer = new JsonWriter(new FileWriter(file, false));
+            writer = new JsonWriter(new FileWriter(tmp, false));
             writer.setIndent("  ");
             writer.beginObject();
             writer.name("schemaVersion").value(SCHEMA_VERSION);
@@ -157,10 +178,16 @@ public final class KcuAccountTransfer {
             writer.endArray();
             writer.endObject();
             writer.flush();
+            ok = true;
         } catch (Throwable ignored) {
             // 写入失败不影响启动
         } finally {
             close(writer);
+        }
+        if (!ok || !tmp.renameTo(file)) {
+            if (!tmp.delete()) {
+                android.util.Log.w("KCU", "unable to remove " + tmp);
+            }
         }
     }
 
@@ -184,6 +211,16 @@ public final class KcuAccountTransfer {
         return "";
     }
 
+    /**
+     * 解析失败时返回 null，而不是已经读到的那部分。
+     *
+     * 【为什么不能用部分结果】
+     * 文件由外部工具生成，中途损坏时按部分结果导入会造成真实的账号丢失：
+     * 导入前几个之后，末尾的导出会把文件重写成当前账号快照，
+     * 源文件里没读到的那部分就再也找不回来了。
+     * 返回 null 让调用方停止导入、也不改写状态，等外部工具重新生成后
+     * 还能完整导入 —— 少导入可以重来，丢了就找不回来。
+     */
     private static List<Entry> readEntries(File file) {
         List<Entry> list = new ArrayList<>();
         JsonReader reader = null;
@@ -216,11 +253,13 @@ public final class KcuAccountTransfer {
                 }
             }
             reader.endObject();
-        } catch (Throwable ignored) {
+            return list;
+        } catch (Throwable e) {
+            android.util.Log.w("KCU", "Failed to parse account transfer file", e);
+            return null;
         } finally {
             close(reader);
         }
-        return list;
     }
 
     private static UUID parseUuid(String value) {
