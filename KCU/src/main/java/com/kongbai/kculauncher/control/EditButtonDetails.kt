@@ -40,7 +40,20 @@ internal class EditButtonDetails(
         setupEvent()
     }
 
-    override fun getView() = data.clone()
+    override fun getView(): ControlButtonData {
+        val view = data.clone()
+        // 多字符模式：输入框里用 | 分隔的多套文字在这里拆成候选列表，
+        // 按钮实际显示第一套，其余由运行时切换事件轮换
+        val raw = view.text ?: ""
+        val parts = raw.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+        if (parts.size > 1) {
+            view.setTexts(parts)
+            view.setText(parts[0])
+        } else {
+            view.setTexts(emptyList())
+        }
+        return view
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun setupInfo() {
@@ -48,7 +61,8 @@ internal class EditButtonDetails(
         val visibility = infoBinding.visibility as KCUSpinner<String>
         val sizeType = infoBinding.sizeType as KCUSpinner<String>
 
-        infoBinding.text.setText(data.text)
+        // 多字符模式：候选文字用 | 分隔显示在同一输入框，保存时再拆开
+        infoBinding.text.setText(if (data.texts.isEmpty()) data.text else data.texts.joinToString("|"))
         data.textProperty().bind(infoBinding.text.stringProperty())
 
         setupVisibilitySpinner(visibility)
@@ -125,6 +139,7 @@ internal class EditButtonDetails(
             input.isChecked = event.isInput
             quickInput.isChecked = event.isQuickInput
             pasteClipboard.isChecked = event.isPasteClipboard
+            switchText.isChecked = event.isSwitchText
             FXUtils.bindBoolean(autoKeep, event.autoKeepProperty())
             FXUtils.bindBoolean(autoClick, event.autoClickProperty())
             FXUtils.bindBoolean(openMenu, event.openMenuProperty())
@@ -133,6 +148,7 @@ internal class EditButtonDetails(
             FXUtils.bindBoolean(input, event.inputProperty())
             FXUtils.bindBoolean(quickInput, event.quickInputProperty())
             FXUtils.bindBoolean(pasteClipboard, event.pasteClipboardProperty())
+            FXUtils.bindBoolean(switchText, event.switchTextProperty())
 
             outputText.setText(event.outputText)
             event.outputTextProperty().bind(outputText.stringProperty())
