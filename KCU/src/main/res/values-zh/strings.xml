@@ -362,6 +362,7 @@
     <string name="edit_button_event_output_text">发送文本</string>
     <string name="edit_button_event_paste_clipboard">改为粘贴剪贴板内容</string>
     <string name="kcu_clipboard_empty">剪贴板是空的</string>
+    <string name="edit_button_event_switch_text">切换按钮文字</string>
     <string name="edit_button_event_keycodes">输出键值</string>
     <string name="edit_button_event_keycodes_keyboard">键盘</string>
     <string name="edit_button_event_keycodes_mouse">鼠标</string>
