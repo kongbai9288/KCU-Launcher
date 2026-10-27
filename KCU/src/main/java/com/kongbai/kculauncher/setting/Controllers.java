@@ -90,7 +90,7 @@ public class Controllers {
                 // 仅对不在内存列表的布局 json 做孤儿清理：列表加载不完整时（初始化竞态/解析失败），
                 // 直接删除会永久丢失用户布局，故改名为 .bak 保留数据；
                 // 其余文件（.tmp 在途临时文件、styles/input 等目录）一律不动
-                if (file.isFile() && file.getName().endsWith(".json") && !fileNames.contains(file.getName())) {
+                if (file.isFile() && file.getName().endsWith(".kcul") && !fileNames.contains(file.getName())) {
                     file.renameTo(new File(file.getParentFile(), file.getName() + ".bak"));
                 }
             }
@@ -283,8 +283,11 @@ public class Controllers {
 
     private static ArrayList<Controller> getControllersFromDisk() {
         ArrayList<Controller> list = new ArrayList<>();
-        List<File> jsons = FileUtils.listFilesByExtension(new File(KCUPath.CONTROLLER_DIR), "json");
-        for (File json : jsons) {
+        // 新格式 .kcul 为主；旧的 .json 仍要扫，否则升级前存过的布局会凭空消失
+        List<File> files = new ArrayList<>();
+        files.addAll(FileUtils.listFilesByExtension(new File(KCUPath.CONTROLLER_DIR), "kcul"));
+        files.addAll(FileUtils.listFilesByExtension(new File(KCUPath.CONTROLLER_DIR), "json"));
+        for (File json : files) {
             if (json.isFile()) {
                 try {
                     // 轻量解析：只读元数据与布局信息，按键数据在使用时按需加载
@@ -298,7 +301,23 @@ public class Controllers {
                         continue;
                     }
                     if (!json.getName().equals(controller.getFileName())) {
-                        controller.renameFile(json.getName(), controller.getFileName());
+                        if (json.getName().endsWith(".json")) {
+                            // 旧格式迁移：先按新格式（含信封）完整重写一份，确认落盘后再动旧文件。
+                            // 顺序不能反 —— 先删旧的后写新的，中途失败就把用户布局弄没了。
+                            controller.saveToDiskSync();
+                            File target = new File(KCUPath.CONTROLLER_DIR, controller.getFileName());
+                            if (!target.isFile()) {
+                                // 没写成就维持原状，下次启动再试，不动用户数据
+                                Logging.LOG.log(Level.WARNING, "Layout migration failed, keep original: " + json.getName());
+                                controller.setFile(json);
+                                list.add(controller);
+                                continue;
+                            }
+                            // 旧文件留作 .bak 而不是直接删除：万一新格式有问题，用户数据还在
+                            json.renameTo(new File(KCUPath.CONTROLLER_DIR, json.getName() + ".bak"));
+                        } else {
+                            controller.renameFile(json.getName(), controller.getFileName());
+                        }
                         // 文件被重命名，源文件引用同步更新（否则按需加载会读取已删除的旧文件）
                         controller.setFile(new File(KCUPath.CONTROLLER_DIR, controller.getFileName()));
                     }
