@@ -356,6 +356,27 @@ public class ButtonEventData implements Cloneable, Observable {
         /**
          * Output text
          */
+        /**
+         * 触发时读取系统剪贴板内容并提交到聊天栏。
+         *
+         * 与 outputText 的区别：outputText 是预先写死在布局里的文本，
+         * 这一项取的是按下那一刻剪贴板里的实际内容，玩家可以先在系统别处复制好，
+         * 进游戏按一下就粘进去。两者同时存在时以剪贴板内容优先。
+         */
+        private final BooleanProperty pasteClipboardProperty = new SimpleBooleanProperty(this, "pasteClipboard", false);
+
+        public BooleanProperty pasteClipboardProperty() {
+            return pasteClipboardProperty;
+        }
+
+        public void setPasteClipboard(boolean pasteClipboard) {
+            pasteClipboardProperty.set(pasteClipboard);
+        }
+
+        public boolean isPasteClipboard() {
+            return pasteClipboardProperty.get();
+        }
+
         private final StringProperty outputTextProperty = new SimpleStringProperty(this, "outputText", "");
 
         public StringProperty outputTextProperty() {
@@ -408,6 +429,7 @@ public class ButtonEventData implements Cloneable, Observable {
             switchMouseModeProperty.addListener(listener);
             inputProperty.addListener(listener);
             quickInputProperty.addListener(listener);
+            pasteClipboardProperty.addListener(listener);
             outputTextProperty.addListener(listener);
             outputKeycodesList.addListener(listener);
             bindViewGroupList.addListener(listener);
@@ -439,6 +461,7 @@ public class ButtonEventData implements Cloneable, Observable {
             event.setSwitchMouseMode(isSwitchMouseMode());
             event.setInput(isInput());
             event.setQuickInput(isQuickInput());
+            event.setPasteClipboard(isPasteClipboard());
             event.setOutputText(getOutputText());
             event.setOutputKeycodes(outputKeycodesList());
             event.setBindViewGroup(bindViewGroupList());
@@ -458,6 +481,7 @@ public class ButtonEventData implements Cloneable, Observable {
                 obj.addProperty("switchMouseMode", src.isSwitchMouseMode());
                 obj.addProperty("input", src.isInput());
                 obj.addProperty("quickInput", src.isQuickInput());
+                obj.addProperty("pasteClipboard", src.isPasteClipboard());
                 obj.addProperty("outputText", src.getOutputText());
                 JsonArray outputKeycodes = new JsonArray();
                 for (Integer code : src.outputKeycodesList()) {
@@ -488,6 +512,7 @@ public class ButtonEventData implements Cloneable, Observable {
                 event.setSwitchMouseMode(Optional.ofNullable(get(obj, "switchMouseMode")).map(JsonElement::getAsBoolean).orElse(false));
                 event.setInput(Optional.ofNullable(get(obj, "input")).map(JsonElement::getAsBoolean).orElse(false));
                 event.setQuickInput(Optional.ofNullable(get(obj, "quickInput")).map(JsonElement::getAsBoolean).orElse(false));
+                event.setPasteClipboard(Optional.ofNullable(get(obj, "pasteClipboard")).map(JsonElement::getAsBoolean).orElse(false));
                 event.setOutputText(Optional.ofNullable(get(obj, "outputText")).map(JsonElement::getAsString).orElse(""));
                 ArrayList<Integer> outputKeycodes = new ArrayList<>();
                 for (JsonElement element : Optional.ofNullable(get(obj, "outputKeycodes")).map(JsonElement::getAsJsonArray).orElseGet(JsonArray::new)) {
