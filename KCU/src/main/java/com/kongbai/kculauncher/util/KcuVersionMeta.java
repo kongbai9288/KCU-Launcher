@@ -2,6 +2,7 @@ package com.kongbai.kculauncher.util;
 
 import android.util.JsonReader;
 import android.util.JsonWriter;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileReader;
@@ -17,6 +18,8 @@ import java.util.zip.ZipFile;
  * 探测到的真实版本、用户选定的运行时都记在这里，避免改动上游版本解析结构。
  */
 public final class KcuVersionMeta {
+
+    private static final String TAG = "KCU";
 
     private static final String FILE = "kcu_meta.json";
 
@@ -76,13 +79,29 @@ public final class KcuVersionMeta {
         return meta;
     }
 
+    /**
+     * 先写临时文件再改名。
+     *
+     * 【为什么不能直接覆盖】
+     * 直接以截断方式打开目标文件，写入中途出问题就会留下半截内容。
+     * 这里的记录包含玩家已经选过的运行时，一旦损坏就会被读成空值，
+     * 表现为：明明选过运行时，下次启动又弹一次选择框，而且没有任何提示，
+     * 看上去像设置自己丢了。先写临时文件、写完整再改名，目标文件要么保持原样，
+     * 要么就是完整的新内容。
+     */
     public static void write(File versionDir, Meta meta) {
+        if (versionDir == null) {
+            return;
+        }
+        if (!versionDir.exists() && !versionDir.mkdirs()) {
+            return;
+        }
+        File target = file(versionDir);
+        File tmp = new File(versionDir, FILE + ".tmp");
+        boolean ok = false;
         JsonWriter writer = null;
         try {
-            if (!versionDir.exists() && !versionDir.mkdirs()) {
-                return;
-            }
-            writer = new JsonWriter(new FileWriter(file(versionDir), false));
+            writer = new JsonWriter(new FileWriter(tmp, false));
             writer.setIndent("  ");
             writer.beginObject();
             writer.name("known").value(meta.known);
@@ -90,9 +109,15 @@ public final class KcuVersionMeta {
             writer.name("java").value(meta.java == null ? "" : meta.java);
             writer.endObject();
             writer.flush();
+            ok = true;
         } catch (Throwable ignored) {
         } finally {
             close(writer);
+        }
+        if (!ok || !tmp.renameTo(target)) {
+            if (!tmp.delete()) {
+                Log.w(TAG, "unable to remove " + tmp);
+            }
         }
     }
 
