@@ -42,6 +42,33 @@ public class TouchCharInput extends androidx.appcompat.widget.AppCompatEditText 
     private CharacterSenderStrategy characterSender;
 
     /**
+     * 上一次已经提交到游戏的有效文本（不含占位空格），用于与当前文本比对差值。
+     *
+     * 【为什么不再按 lengthBefore / lengthAfter 直接发送】
+     * 输入框里始终垫着一段占位空格（TEXT_FILLER），它是为了让部分输入法肯开始工作。
+     * 逐字输入时新字符追加在占位空格之后，按增量发送没有问题；
+     * 但复制或粘贴时，不少输入法会一次性替换掉输入框里的全部内容，
+     * 此时回调给出的是整段文本的替换区间，按原逻辑就会把占位空格
+     * 连同真实内容一起发给游戏，表现就是粘贴出来的内容前面莫名其妙多出空格。
+     *
+     * 这里改为：先剥掉前导空格得到"有效文本"，再与上次已提交的文本比对，
+     * 只补发多出来的部分、只回退少掉的部分。占位空格不参与比对，也就不会被发出去。
+     */
+    private String lastCommitted = "";
+
+    /** 剥掉前导空格；占位空格与玩家自己敲在开头的空格都不参与提交 */
+    private static String stripLeadingSpaces(CharSequence text) {
+        if (text == null) {
+            return "";
+        }
+        int i = 0;
+        while (i < text.length() && text.charAt(i) == ' ') {
+            ++i;
+        }
+        return text.subSequence(i, text.length()).toString();
+    }
+
+    /**
      * We take the new chars, and send them to the game.
      * If less chars are present, remove some.
      * The text is always cleaned up.
@@ -52,14 +79,21 @@ public class TouchCharInput extends androidx.appcompat.widget.AppCompatEditText 
         if (isDoingInternalChanges)
             return;
         if (characterSender != null) {
-            for (int i = 0; i < lengthBefore; ++i) {
-                characterSender.sendBackspace();
+            String effective = stripLeadingSpaces(text);
+
+            int common = 0;
+            int limit = Math.min(lastCommitted.length(), effective.length());
+            while (common < limit && lastCommitted.charAt(common) == effective.charAt(common)) {
+                ++common;
             }
 
-            for (int i = start, count = 0; count < lengthAfter; ++i) {
-                characterSender.sendChar(text.charAt(i));
-                ++count;
+            for (int i = lastCommitted.length(); i > common; --i) {
+                characterSender.sendBackspace();
             }
+            for (int i = common; i < effective.length(); ++i) {
+                characterSender.sendChar(effective.charAt(i));
+            }
+            lastCommitted = effective;
         }
 
         // Reset the keyboard state
@@ -137,6 +171,9 @@ public class TouchCharInput extends androidx.appcompat.widget.AppCompatEditText 
         isDoingInternalChanges = true;
         setText(TEXT_FILLER);
         setSelection(TEXT_FILLER.length());
+        // 输入框被清空后，游戏侧也不再保留上次提交的内容，比对基准必须一起归零，
+        // 否则下次输入会先按旧基准回退，把游戏里已经存在的内容删掉
+        lastCommitted = "";
         isDoingInternalChanges = false;
     }
 
