@@ -1,6 +1,8 @@
 package com.kongbai.kculauncher.control.view;
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -850,7 +852,16 @@ public class ControlButton extends AppCompatButton implements CustomView {
         if (event.isQuickInput()) {
             menu.openQuickInput();
         }
-        if (StringUtils.isNotBlank(event.getOutputText())) {
+        if (event.isPasteClipboard()) {
+            // 粘贴优先于预设文本：玩家临时复制的内容比写死在布局里的更可能是此刻想发的
+            String clipboard = readClipboardText();
+            if (StringUtils.isNotBlank(clipboard)) {
+                GameTextSender.send(menu, clipboard);
+            } else {
+                // 什么都不发也不提示，玩家会以为按钮坏了，因此这里必须给出反馈
+                Toast.makeText(getContext(), R.string.kcu_clipboard_empty, Toast.LENGTH_SHORT).show();
+            }
+        } else if (StringUtils.isNotBlank(event.getOutputText())) {
             GameTextSender.send(menu, event.getOutputText());
         }
         for (String id : event.bindViewGroupList()) {
@@ -858,6 +869,34 @@ public class ControlButton extends AppCompatButton implements CustomView {
                 ControlViewGroup viewGroup = menu.getController().viewGroups().stream().filter(it -> it.getId().equals(id)).findFirst().orElse(null);
                 menu.getViewManager().switchViewGroupVisibility(viewGroup);
             }
+        }
+    }
+
+    /**
+     * 读取系统剪贴板里的纯文本。
+     *
+     * 失败一律返回空而不是抛出：剪贴板在系统版本与设备上限制不一，
+     * 读不到只影响这一个按钮的粘贴，不能让整个按键处理中断。
+     */
+    private static String readClipboardText() {
+        try {
+            Context context = com.kongbai.kculauncher.KCUApp.getAppContext();
+            if (context == null) {
+                return null;
+            }
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard == null || !clipboard.hasPrimaryClip()) {
+                return null;
+            }
+            ClipData data = clipboard.getPrimaryClip();
+            if (data == null || data.getItemCount() <= 0) {
+                return null;
+            }
+            CharSequence text = data.getItemAt(0).getText();
+            return text == null ? null : text.toString();
+        } catch (Throwable e) {
+            android.util.Log.w("KCU", "Failed to read clipboard", e);
+            return null;
         }
     }
 
