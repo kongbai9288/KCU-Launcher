@@ -217,11 +217,13 @@ public class TouchCharInput extends androidx.appcompat.widget.AppCompatEditText 
      *         false 表示当前没有可收起的输入 —— 调用方据此判断这次按下要不要直接干活，
      *         避免玩家在没有输入法的情况下白白多点一次
      */
+    /** 当前是否有正在使用的输入框（输入法很可能正显示） */
+    public static boolean isActiveInputShown() {
+        return sActiveInput != null && sActiveInput.getVisibility() == VISIBLE && sActiveInput.isEnabled();
+    }
+
     public static boolean dismissActiveInput() {
-        if (sActiveInput == null) {
-            return false;
-        }
-        if (sActiveInput.getVisibility() != VISIBLE || !sActiveInput.isEnabled()) {
+        if (!isActiveInputShown()) {
             return false;
         }
         sActiveInput.disable();
