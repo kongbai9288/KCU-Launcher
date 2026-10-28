@@ -84,8 +84,9 @@ public class ControlButtonData implements Cloneable, Observable, CustomControl {
                 if (item != null) texts.add(item);
             }
         }
-        // 候选变化后旧序号可能越界，回落到第一个，避免切出空白文字
-        if (getTextIndex() >= texts.size()) {
+        // 候选变化后旧序号可能越界，回落到第一个，避免切出空白文字。
+        // 下界同样要防：序号是从布局文件读出来的，文件里若是负数就会被当成下标直接用
+        if (getTextIndex() >= texts.size() || getTextIndex() < 0) {
             setTextIndex(0);
             if (!texts.isEmpty()) setText(texts.get(0));
         }
@@ -108,7 +109,13 @@ public class ControlButtonData implements Cloneable, Observable, CustomControl {
         if (texts.size() <= 1) {
             return;
         }
-        int next = (getTextIndex() + 1) % texts.size();
+        int current = getTextIndex();
+        if (current < 0) {
+            // 序号来自布局文件，可能是负数；不先归零的话取模结果仍可能为负，
+            // 拿负数当下标取文字会直接崩掉游戏
+            current = 0;
+        }
+        int next = (current + 1) % texts.size();
         setTextIndex(next);
         setText(texts.get(next));
     }
