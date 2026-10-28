@@ -877,12 +877,15 @@ public class ControlButton extends AppCompatButton implements CustomView {
             } else {
                 // 输入法正弹着：先收起来。第一次只收、不粘贴，并明确告知玩家要再按一次，
                 // 否则按下去只有键盘消失、什么都没发生，玩家会以为按钮坏了
-                dismissSoftInput();
+                boolean dismissed = dismissSoftInput();
                 long now = System.currentTimeMillis();
                 boolean armed = pasteArmedAt > 0 && (now - pasteArmedAt) <= PASTE_ARM_WINDOW_MS;
-                if (armed) {
-                    // 已经收过一次，这回玩家中途又把输入法打开了：
-                    // 他按的是粘贴按钮，收完就立刻粘贴，不让他白按第三次
+                if (armed || !dismissed) {
+                    // armed：已经收过一次，这回玩家中途又把输入法打开了 ——
+                    //   他按的是粘贴按钮，收完就立刻粘贴，不让他白按第三次。
+                    // !dismissed：判断说输入法在、实际却收不掉（状态与真实情况不一致）。
+                    //   此时若只提示"再按一次"，玩家会一直卡在这一步永远粘不上，
+                    //   所以直接粘贴 —— 宁可内容被输入法影响，也不能让按钮彻底不干活
                     GameTextSender.send(menu, clipboard, this::notifyTextDropped);
                     pasteArmedAt = 0;
                 } else {
@@ -911,16 +914,6 @@ public class ControlButton extends AppCompatButton implements CustomView {
 
     private long pasteArmedAt = 0;
 
-    /**
-     * 收起软键盘。SDL 渲染路径下由 SDL 输入框接管，其余走启动器侧输入控件。
-     *
-     * @return true 表示确实收起了输入法
-     */
-    /** 文本没能提交到游戏时告知玩家，避免按下按钮后静默什么都不发生 */
-    private void notifyTextDropped() {
-        Toast.makeText(getContext(), R.string.kcu_text_not_delivered, Toast.LENGTH_SHORT).show();
-    }
-
     /** 输入法当前是否正在显示（SDL 路径看 SDL 编辑键盘，其余看启动器侧输入控件） */
     private boolean isSoftInputShown() {
         if (SdlBridge.getSdlEnabled() && SdlBridge.isSdlRenderActive()) {
@@ -929,6 +922,11 @@ public class ControlButton extends AppCompatButton implements CustomView {
         return TouchCharInput.isActiveInputShown();
     }
 
+    /**
+     * 收起软键盘。SDL 渲染路径下由 SDL 输入框接管，其余走启动器侧输入控件。
+     *
+     * @return true 表示确实收起了输入法
+     */
     private boolean dismissSoftInput() {
         if (SdlBridge.getSdlEnabled() && SdlBridge.isSdlRenderActive()) {
             if (SDLActivity.isSDLEditKeyboardShown()) {
@@ -938,6 +936,17 @@ public class ControlButton extends AppCompatButton implements CustomView {
             return false;
         }
         return TouchCharInput.dismissActiveInput();
+    }
+
+    /** 文本没能提交到游戏时告知玩家，避免按下按钮后静默什么都不发生 */
+    private void notifyTextDropped() {
+        // 提示可能延后触发（等游戏内文本通道就绪），此时按钮所属的界面可能已经结束，
+        // 用应用上下文避免攥着已经失效的界面引用
+        Context app = getContext() == null ? null : getContext().getApplicationContext();
+        if (app == null) {
+            return;
+        }
+        Toast.makeText(app, R.string.kcu_text_not_delivered, Toast.LENGTH_SHORT).show();
     }
 
     /**
