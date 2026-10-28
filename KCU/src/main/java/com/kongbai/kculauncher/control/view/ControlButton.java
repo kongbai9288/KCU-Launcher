@@ -869,11 +869,11 @@ public class ControlButton extends AppCompatButton implements CustomView {
             } else if (!event.isPasteDismissIme()) {
                 // 玩家关掉了"粘贴前收输入法"：按下即粘贴，输入法保持原样，不打断正在输入的人
                 pasteArmedAt = 0;
-                GameTextSender.send(menu, clipboard);
+                GameTextSender.send(menu, clipboard, this::notifyTextDropped);
             } else if (!isSoftInputShown()) {
                 // 输入法没弹着，不会干扰提交，直接粘贴
                 pasteArmedAt = 0;
-                GameTextSender.send(menu, clipboard);
+                GameTextSender.send(menu, clipboard, this::notifyTextDropped);
             } else {
                 // 输入法正弹着：先收起来。第一次只收、不粘贴，并明确告知玩家要再按一次，
                 // 否则按下去只有键盘消失、什么都没发生，玩家会以为按钮坏了
@@ -883,7 +883,7 @@ public class ControlButton extends AppCompatButton implements CustomView {
                 if (armed) {
                     // 已经收过一次，这回玩家中途又把输入法打开了：
                     // 他按的是粘贴按钮，收完就立刻粘贴，不让他白按第三次
-                    GameTextSender.send(menu, clipboard);
+                    GameTextSender.send(menu, clipboard, this::notifyTextDropped);
                     pasteArmedAt = 0;
                 } else {
                     pasteArmedAt = now;
@@ -891,7 +891,7 @@ public class ControlButton extends AppCompatButton implements CustomView {
                 }
             }
         } else if (StringUtils.isNotBlank(event.getOutputText())) {
-            GameTextSender.send(menu, event.getOutputText());
+            GameTextSender.send(menu, event.getOutputText(), this::notifyTextDropped);
         }
         for (String id : event.bindViewGroupList()) {
             if (menu.getController().viewGroups().stream().anyMatch(it -> it.getId().equals(id))) {
@@ -916,6 +916,11 @@ public class ControlButton extends AppCompatButton implements CustomView {
      *
      * @return true 表示确实收起了输入法
      */
+    /** 文本没能提交到游戏时告知玩家，避免按下按钮后静默什么都不发生 */
+    private void notifyTextDropped() {
+        Toast.makeText(getContext(), R.string.kcu_text_not_delivered, Toast.LENGTH_SHORT).show();
+    }
+
     /** 输入法当前是否正在显示（SDL 路径看 SDL 编辑键盘，其余看启动器侧输入控件） */
     private boolean isSoftInputShown() {
         if (SdlBridge.getSdlEnabled() && SdlBridge.isSdlRenderActive()) {
