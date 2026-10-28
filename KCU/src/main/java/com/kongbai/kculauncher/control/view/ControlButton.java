@@ -859,30 +859,35 @@ public class ControlButton extends AppCompatButton implements CustomView {
             getData().switchToNextText();
         }
         if (event.isPasteClipboard()) {
-            // 粘贴分两步走：先收输入法，再按一次才真正粘贴。
-            // 聊天栏刚打开时输入法正弹着，此时直接粘贴，内容会被输入法顶开或吞掉，
-            // 玩家看到的是"点了没反应"，体验割裂 —— 所以第一次按下只负责把输入法收起来。
-            long now = System.currentTimeMillis();
-            boolean armed = pasteArmedAt > 0 && (now - pasteArmedAt) <= PASTE_ARM_WINDOW_MS;
-            boolean doPaste = true;
-            if (!armed) {
-                if (dismissSoftInput()) {
-                    pasteArmedAt = now;
-                    doPaste = false;
-                }
-                // 没有输入法可收就直接粘贴，不让玩家白点一次
-            }
-            if (doPaste) {
+            // 粘贴优先于预设文本：玩家临时复制的内容比写死在布局里的更可能是此刻想发的
+            String clipboard = readClipboardText();
+            if (StringUtils.isBlank(clipboard)) {
+                // 剪贴板空就只提示，绝不收输入法：
+                // 没东西可粘还把人家的输入法收掉纯属打扰，玩家此刻可能正用输入法打字
                 pasteArmedAt = 0;
-                // 粘贴优先于预设文本：玩家临时复制的内容比写死在布局里的更可能是此刻想发的
-                String clipboard = readClipboardText();
-                if (StringUtils.isNotBlank(clipboard)) {
+                Toast.makeText(getContext(), R.string.kcu_clipboard_empty, Toast.LENGTH_SHORT).show();
+            } else if (!event.isPasteDismissIme()) {
+                // 玩家关掉了"粘贴前收输入法"：按下即粘贴，输入法保持原样，不打断正在输入的人
+                pasteArmedAt = 0;
+                GameTextSender.send(menu, clipboard);
+            } else if (!isSoftInputShown()) {
+                // 输入法没弹着，不会干扰提交，直接粘贴
+                pasteArmedAt = 0;
+                GameTextSender.send(menu, clipboard);
+            } else {
+                // 输入法正弹着：先收起来。第一次只收、不粘贴，并明确告知玩家要再按一次，
+                // 否则按下去只有键盘消失、什么都没发生，玩家会以为按钮坏了
+                dismissSoftInput();
+                long now = System.currentTimeMillis();
+                boolean armed = pasteArmedAt > 0 && (now - pasteArmedAt) <= PASTE_ARM_WINDOW_MS;
+                if (armed) {
+                    // 已经收过一次，这回玩家中途又把输入法打开了：
+                    // 他按的是粘贴按钮，收完就立刻粘贴，不让他白按第三次
                     GameTextSender.send(menu, clipboard);
+                    pasteArmedAt = 0;
                 } else {
-                    // 什么都不发也不提示，玩家会以为按钮坏了，因此这里必须给出反馈。
-                    // 剪贴板为空时保留"已准备"状态：玩家复制完再按一次即可粘贴，不必再收一次输入法
                     pasteArmedAt = now;
-                    Toast.makeText(getContext(), R.string.kcu_clipboard_empty, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), R.string.kcu_ime_dismissed, Toast.LENGTH_SHORT).show();
                 }
             }
         } else if (StringUtils.isNotBlank(event.getOutputText())) {
@@ -911,6 +916,14 @@ public class ControlButton extends AppCompatButton implements CustomView {
      *
      * @return true 表示确实收起了输入法
      */
+    /** 输入法当前是否正在显示（SDL 路径看 SDL 编辑键盘，其余看启动器侧输入控件） */
+    private boolean isSoftInputShown() {
+        if (SdlBridge.getSdlEnabled() && SdlBridge.isSdlRenderActive()) {
+            return SDLActivity.isSDLEditKeyboardShown();
+        }
+        return TouchCharInput.isActiveInputShown();
+    }
+
     private boolean dismissSoftInput() {
         if (SdlBridge.getSdlEnabled() && SdlBridge.isSdlRenderActive()) {
             if (SDLActivity.isSDLEditKeyboardShown()) {
