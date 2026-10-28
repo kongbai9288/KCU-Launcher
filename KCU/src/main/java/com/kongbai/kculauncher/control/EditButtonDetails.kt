@@ -140,6 +140,7 @@ internal class EditButtonDetails(
             quickInput.isChecked = event.isQuickInput
             pasteClipboard.isChecked = event.isPasteClipboard
             switchText.isChecked = event.isSwitchText
+            pasteDismissIme.isChecked = event.isPasteDismissIme
             FXUtils.bindBoolean(autoKeep, event.autoKeepProperty())
             FXUtils.bindBoolean(autoClick, event.autoClickProperty())
             FXUtils.bindBoolean(openMenu, event.openMenuProperty())
@@ -149,6 +150,7 @@ internal class EditButtonDetails(
             FXUtils.bindBoolean(quickInput, event.quickInputProperty())
             FXUtils.bindBoolean(pasteClipboard, event.pasteClipboardProperty())
             FXUtils.bindBoolean(switchText, event.switchTextProperty())
+            FXUtils.bindBoolean(pasteDismissIme, event.pasteDismissImeProperty())
 
             outputText.setText(event.outputText)
             event.outputTextProperty().bind(outputText.stringProperty())
