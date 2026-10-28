@@ -412,6 +412,8 @@
     <string name="edit_button_event_paste_clipboard">Paste Clipboard Instead</string>
     <string name="kcu_clipboard_empty">Clipboard is empty</string>
     <string name="edit_button_event_switch_text">Cycle Button Text</string>
+    <string name="edit_button_event_paste_dismiss_ime">Dismiss keyboard before paste</string>
+    <string name="kcu_ime_dismissed">Keyboard dismissed, press again to paste</string>
     <string name="edit_button_event_keycodes">Output Keycodes</string>
     <string name="edit_button_event_keycodes_keyboard">Keyboard</string>
     <string name="edit_button_event_keycodes_mouse">Mouse</string>
