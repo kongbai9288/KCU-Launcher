@@ -236,8 +236,11 @@ class ControllerManagePage(context: Context, id: Int) :
                         output.delete()
                     }
                 }
+                // 空文件或解析不出内容时这里会得到 null，
+                // 直接往下走会在取名称时空指针、被当成未知异常，提示反而不如明确抛出
                 val controller = GsonBuilder().setPrettyPrinting().create()
                     .fromJson(content, Controller::class.java)
+                    ?: throw IOException("empty or invalid layout content")
                 Pair(controller, convertedFromZl2)
             }.thenAcceptAsync(
                 Schedulers.androidUIThread(),
