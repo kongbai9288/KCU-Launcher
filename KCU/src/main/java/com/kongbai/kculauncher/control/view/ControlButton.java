@@ -861,6 +861,14 @@ public class ControlButton extends AppCompatButton implements CustomView {
         if (event.isPasteClipboard()) {
             // 粘贴优先于预设文本：玩家临时复制的内容比写死在布局里的更可能是此刻想发的
             String clipboard = readClipboardText();
+            // 非 SDL 路径是逐字符提交给游戏的，剪贴板里若是一整篇文章，
+            // 会瞬间打出成千上万次字符事件把界面卡死；而游戏聊天栏本身也收不了那么长，
+            // 所以按聊天上限截断 —— 只影响异常长的内容，正常粘贴不受影响
+            boolean truncated = false;
+            if (clipboard != null && clipboard.length() > PASTE_MAX_CHARS) {
+                clipboard = clipboard.substring(0, PASTE_MAX_CHARS);
+                truncated = true;
+            }
             if (StringUtils.isBlank(clipboard)) {
                 // 剪贴板空就只提示，绝不收输入法：
                 // 没东西可粘还把人家的输入法收掉纯属打扰，玩家此刻可能正用输入法打字
@@ -869,11 +877,11 @@ public class ControlButton extends AppCompatButton implements CustomView {
             } else if (!event.isPasteDismissIme()) {
                 // 玩家关掉了"粘贴前收输入法"：按下即粘贴，输入法保持原样，不打断正在输入的人
                 pasteArmedAt = 0;
-                GameTextSender.send(menu, clipboard, this::notifyTextDropped);
+                sendPasted(menu, clipboard, truncated);
             } else if (!isSoftInputShown()) {
                 // 输入法没弹着，不会干扰提交，直接粘贴
                 pasteArmedAt = 0;
-                GameTextSender.send(menu, clipboard, this::notifyTextDropped);
+                sendPasted(menu, clipboard, truncated);
             } else {
                 // 输入法正弹着：先收起来。第一次只收、不粘贴，并明确告知玩家要再按一次，
                 // 否则按下去只有键盘消失、什么都没发生，玩家会以为按钮坏了
@@ -886,7 +894,7 @@ public class ControlButton extends AppCompatButton implements CustomView {
                     // !dismissed：判断说输入法在、实际却收不掉（状态与真实情况不一致）。
                     //   此时若只提示"再按一次"，玩家会一直卡在这一步永远粘不上，
                     //   所以直接粘贴 —— 宁可内容被输入法影响，也不能让按钮彻底不干活
-                    GameTextSender.send(menu, clipboard, this::notifyTextDropped);
+                    sendPasted(menu, clipboard, truncated);
                     pasteArmedAt = 0;
                 } else {
                     pasteArmedAt = now;
@@ -912,6 +920,9 @@ public class ControlButton extends AppCompatButton implements CustomView {
      */
     private static final long PASTE_ARM_WINDOW_MS = 10 * 60 * 1000L;
 
+    /** 单次粘贴的字符上限，与游戏聊天栏自身的上限一致 */
+    private static final int PASTE_MAX_CHARS = 256;
+
     private long pasteArmedAt = 0;
 
     /** 输入法当前是否正在显示（SDL 路径看 SDL 编辑键盘，其余看启动器侧输入控件） */
@@ -936,6 +947,18 @@ public class ControlButton extends AppCompatButton implements CustomView {
             return false;
         }
         return TouchCharInput.dismissActiveInput();
+    }
+
+    /** 提交粘贴内容；若内容被截断过，同时告知玩家 */
+    private void sendPasted(GameMenu menu, String text, boolean truncated) {
+        GameTextSender.send(menu, text, this::notifyTextDropped);
+        if (truncated) {
+            // 不说明的话，玩家会发现粘进去的内容莫名少了一截，却不知道为什么
+            Context app = getContext() == null ? null : getContext().getApplicationContext();
+            if (app != null) {
+                Toast.makeText(app, app.getString(R.string.kcu_paste_truncated, PASTE_MAX_CHARS), Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     /** 文本没能提交到游戏时告知玩家，避免按下按钮后静默什么都不发生 */
