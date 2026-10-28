@@ -397,6 +397,27 @@ public class ButtonEventData implements Cloneable, Observable {
             return switchTextProperty.get();
         }
 
+        /**
+         * 粘贴前是否先收起输入法。
+         *
+         * 聊天栏开着时输入法正弹着，直接粘贴内容容易被输入法顶开或吞掉，
+         * 所以默认先收一次。但有些玩家此刻正是想用输入法打字，
+         * 强行收掉会打断他 —— 关掉这一项就不再收输入法，按下即粘贴。
+         */
+        private final BooleanProperty pasteDismissImeProperty = new SimpleBooleanProperty(this, "pasteDismissIme", true);
+
+        public BooleanProperty pasteDismissImeProperty() {
+            return pasteDismissImeProperty;
+        }
+
+        public void setPasteDismissIme(boolean pasteDismissIme) {
+            pasteDismissImeProperty.set(pasteDismissIme);
+        }
+
+        public boolean isPasteDismissIme() {
+            return pasteDismissImeProperty.get();
+        }
+
         private final StringProperty outputTextProperty = new SimpleStringProperty(this, "outputText", "");
 
         public StringProperty outputTextProperty() {
@@ -451,6 +472,7 @@ public class ButtonEventData implements Cloneable, Observable {
             quickInputProperty.addListener(listener);
             pasteClipboardProperty.addListener(listener);
             switchTextProperty.addListener(listener);
+            pasteDismissImeProperty.addListener(listener);
             outputTextProperty.addListener(listener);
             outputKeycodesList.addListener(listener);
             bindViewGroupList.addListener(listener);
@@ -484,6 +506,7 @@ public class ButtonEventData implements Cloneable, Observable {
             event.setQuickInput(isQuickInput());
             event.setPasteClipboard(isPasteClipboard());
             event.setSwitchText(isSwitchText());
+            event.setPasteDismissIme(isPasteDismissIme());
             event.setOutputText(getOutputText());
             event.setOutputKeycodes(outputKeycodesList());
             event.setBindViewGroup(bindViewGroupList());
@@ -505,6 +528,7 @@ public class ButtonEventData implements Cloneable, Observable {
                 obj.addProperty("quickInput", src.isQuickInput());
                 obj.addProperty("pasteClipboard", src.isPasteClipboard());
                 obj.addProperty("switchText", src.isSwitchText());
+                obj.addProperty("pasteDismissIme", src.isPasteDismissIme());
                 obj.addProperty("outputText", src.getOutputText());
                 JsonArray outputKeycodes = new JsonArray();
                 for (Integer code : src.outputKeycodesList()) {
@@ -537,6 +561,8 @@ public class ButtonEventData implements Cloneable, Observable {
                 event.setQuickInput(Optional.ofNullable(get(obj, "quickInput")).map(JsonElement::getAsBoolean).orElse(false));
                 event.setPasteClipboard(Optional.ofNullable(get(obj, "pasteClipboard")).map(JsonElement::getAsBoolean).orElse(false));
                 event.setSwitchText(Optional.ofNullable(get(obj, "switchText")).map(JsonElement::getAsBoolean).orElse(false));
+                // 旧布局没有这一项，默认收输入法，与加这项之前的行为一致
+                event.setPasteDismissIme(Optional.ofNullable(get(obj, "pasteDismissIme")).map(JsonElement::getAsBoolean).orElse(true));
                 event.setOutputText(Optional.ofNullable(get(obj, "outputText")).map(JsonElement::getAsString).orElse(""));
                 ArrayList<Integer> outputKeycodes = new ArrayList<>();
                 for (JsonElement element : Optional.ofNullable(get(obj, "outputKeycodes")).map(JsonElement::getAsJsonArray).orElseGet(JsonArray::new)) {
