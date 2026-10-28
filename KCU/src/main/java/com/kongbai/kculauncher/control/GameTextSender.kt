@@ -16,7 +16,7 @@ import org.libsdl.app.SDLActivity
  */
 object GameTextSender {
 
-    private const val TAG = "FCL"
+    private const val TAG = "KCU"
     private const val CHAT_OPEN_DELAY_MS = 150L
     private const val CHANNEL_WAIT_TIMEOUT_MS = 1000L
     private const val CHANNEL_POLL_INTERVAL_MS = 16L
@@ -28,6 +28,10 @@ object GameTextSender {
     fun send(menu: GameMenu, text: String, onDropped: Runnable? = null) {
         if (menu.cursorMode == KCUBridge.CursorEnabled) {
             commitText(menu, text)
+            return
+        }
+        // 非光标模式下要先按 T 打开聊天栏；空文本没有意义，直接不动作
+        if (text.isEmpty()) {
             return
         }
         menu.input.sendBoundKeyEvent(
