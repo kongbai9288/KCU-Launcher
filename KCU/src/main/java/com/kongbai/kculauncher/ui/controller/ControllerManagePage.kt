@@ -206,7 +206,9 @@ class ControllerManagePage(context: Context, id: Int) :
     private fun importController() {
         MainActivity.getInstance().fileLauncher.launchSingleSelection(
             null,
-            arrayListOf(".json")
+            // 既收上游/ZL2 的 .json，也收本启动器导出的 .kcul：
+            // 自己导出的布局导不回来是死路，玩家之间也没法互相分享
+            arrayListOf(".json", ".kcul")
         ) { files ->
             if (files == null) return@launchSingleSelection
             // 导入含拷贝/ZL2 转换/解析等耗时步骤，弹进度框提示，结束时在 whenComplete 关闭
@@ -214,6 +216,8 @@ class ControllerManagePage(context: Context, id: Int) :
             // 拷贝/ZL2 识别转换/完整解析都在后台执行，回调本身在主线程，大文件导入不能阻塞主线程（ANR）
             Task.supplyAsync {
                 var content = FileUtils.readText(files[0].toFile(activity, File(KCUPath.CACHE_DIR)))
+                // .kcul 是包了信封的格式，先取出里面真正的布局内容再解析
+                content = Controller.unwrapText(content)
                 // 导入时自动识别 ZalithLauncher2 布局，先转换为 KCU 格式再导入
                 var convertedFromZl2 = false
                 if (LayoutConverter.isZl2Layout(content)) {
@@ -246,6 +250,12 @@ class ControllerManagePage(context: Context, id: Int) :
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {
+                        // 导入的 id 可能与本机已有布局相同，而文件名是按 id 生成的，
+                        // 相同就写同一个文件 —— 等于用别人的布局覆盖掉玩家自己的，
+                        // 所以先换一个不重复的 id
+                        if (Controllers.findControllerById(controller.id) != null) {
+                            controller.setId(Controller.generateRandomId())
+                        }
                         addController(controller)
                         if (convertedFromZl2) {
                             Toast.makeText(
