@@ -172,6 +172,14 @@ public class Controllers {
                 boolean exist = controllers.stream().anyMatch(it -> it.getId().equals(controller.getId()));
                 if (!exist) {
                     controller.saveToDiskSync();
+                    // 写盘失败被吞在了保存方法内部，这里必须自己确认文件真的在磁盘上。
+                    // 不确认就记为"已处理"的话，这一套只进了内存列表、磁盘上没有，
+                    // 下次启动扫不到它、补齐又因名字已记录而跳过 —— 玩家永远拿不到这套布局
+                    File saved = new File(KCUPath.CONTROLLER_DIR, controller.getFileName());
+                    if (!saved.isFile()) {
+                        Logging.LOG.log(Level.WARNING, "Preset not persisted, retry next launch: " + name);
+                        continue;
+                    }
                     controllers.add(controller);
                 }
                 added.add(name);
@@ -252,9 +260,12 @@ public class Controllers {
             return;
         }
         applied.addAll(added);
+        // 先写临时文件再整体替换：直接截断写的话中途出问题会留下半截名单，
+        // 下次读到的名单不全，已落盘的预设会被反复重试
+        File tmp = new File(KCUPath.CONTROLLER_DIR, ".kcu_presets.tmp");
         try {
             java.io.BufferedWriter writer = new java.io.BufferedWriter(
-                    new java.io.OutputStreamWriter(new java.io.FileOutputStream(marker, false), "UTF-8"));
+                    new java.io.OutputStreamWriter(new java.io.FileOutputStream(tmp, false), "UTF-8"));
             try {
                 for (String name : applied) {
                     writer.write(name);
@@ -263,8 +274,12 @@ public class Controllers {
             } finally {
                 writer.close();
             }
+            if (!tmp.renameTo(marker)) {
+                tmp.delete();
+            }
         } catch (Throwable ignored) {
             // 标记没写成功下次会重试；预设已在内存列表里，本次仍可用
+            tmp.delete();
         }
     }
 
