@@ -211,6 +211,24 @@ public class TouchCharInput extends androidx.appcompat.widget.AppCompatEditText 
     }
 
     /**
+     * 收起当前正在使用的输入框（关掉软键盘）。
+     *
+     * @return true 表示确实收起了一个正在使用的输入框；
+     *         false 表示当前没有可收起的输入 —— 调用方据此判断这次按下要不要直接干活，
+     *         避免玩家在没有输入法的情况下白白多点一次
+     */
+    public static boolean dismissActiveInput() {
+        if (sActiveInput == null) {
+            return false;
+        }
+        if (sActiveInput.getVisibility() != VISIBLE || !sActiveInput.isEnabled()) {
+            return false;
+        }
+        sActiveInput.disable();
+        return true;
+    }
+
+    /**
      * Send the enter key.
      */
     private void sendEnter() {
