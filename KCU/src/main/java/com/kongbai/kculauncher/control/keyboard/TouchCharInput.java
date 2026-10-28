@@ -226,6 +226,16 @@ public class TouchCharInput extends androidx.appcompat.widget.AppCompatEditText 
         if (!isActiveInputShown()) {
             return false;
         }
+        // 必须显式通知输入法收起：只把输入框隐藏（disable）并不可靠，
+        // 键盘可能仍留在屏幕上 —— 上游切换键盘状态走的就是显式隐藏这一步
+        try {
+            InputMethodManager imm = (InputMethodManager) sActiveInput.getContext().getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(sActiveInput.getWindowToken(), 0);
+            }
+        } catch (Exception ignored) {
+            // 收键盘失败不阻断后续：输入框仍会被禁用，粘贴照常进行
+        }
         sActiveInput.disable();
         return true;
     }
