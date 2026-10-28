@@ -633,8 +633,10 @@ public class Controller implements Cloneable, Observable {
      *
      * 兼容旧文件是必须的：升级前用户已经存过布局，读不出来就等于把他的按键配置弄丢。
      */
-    private static String unwrap(File file) throws IOException {
-        String text = FileUtils.readText(file);
+    /**
+     * 取出信封内的布局内容；旧格式（未包装）原样返回。另供导入路径复用。
+     */
+    public static String unwrapText(String text) {
         if (text == null || text.isEmpty()) {
             return "";
         }
@@ -652,9 +654,13 @@ public class Controller implements Cloneable, Observable {
                 }
             }
         } catch (Exception e) {
-            Logging.LOG.log(Level.WARNING, "Failed to unwrap layout envelope: " + file.getName(), e);
+            Logging.LOG.log(Level.WARNING, "Failed to unwrap layout envelope", e);
         }
         return text;
+    }
+
+    private static String unwrap(File file) throws IOException {
+        return unwrapText(FileUtils.readText(file));
     }
 
     // synchronized 与 saveToDisk/saveToDiskSync 互斥，避免两路写并发时 .tmp 被对方移走
