@@ -365,6 +365,7 @@
     <string name="edit_button_event_switch_text">切换按钮文字</string>
     <string name="edit_button_event_paste_dismiss_ime">粘贴前收起输入法</string>
     <string name="kcu_ime_dismissed">输入法已收起，再按一次即粘贴</string>
+    <string name="kcu_text_not_delivered">文本未能提交到游戏</string>
     <string name="edit_button_event_keycodes">输出键值</string>
     <string name="edit_button_event_keycodes_keyboard">键盘</string>
     <string name="edit_button_event_keycodes_mouse">鼠标</string>
