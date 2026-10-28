@@ -15,6 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import org.libsdl.app.SDLActivity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatButton;
@@ -42,6 +43,8 @@ import com.kongbai.kculauncher.core.fakefx.beans.property.SimpleBooleanProperty;
 import com.kongbai.kculauncher.core.fakefx.beans.property.SimpleObjectProperty;
 import com.kongbai.kculauncher.core.task.Schedulers;
 import com.kongbai.kculauncher.core.util.StringUtils;
+import com.kongbai.kculauncher.control.keyboard.TouchCharInput;
+import com.kongbai.kculauncher.game.sdl.SdlBridge;
 import com.kongbai.kculauncher.library.component.theme.ThemeEngine;
 import com.kongbai.kculauncher.library.util.ConvertUtils;
 
@@ -856,13 +859,31 @@ public class ControlButton extends AppCompatButton implements CustomView {
             getData().switchToNextText();
         }
         if (event.isPasteClipboard()) {
-            // 粘贴优先于预设文本：玩家临时复制的内容比写死在布局里的更可能是此刻想发的
-            String clipboard = readClipboardText();
-            if (StringUtils.isNotBlank(clipboard)) {
-                GameTextSender.send(menu, clipboard);
-            } else {
-                // 什么都不发也不提示，玩家会以为按钮坏了，因此这里必须给出反馈
-                Toast.makeText(getContext(), R.string.kcu_clipboard_empty, Toast.LENGTH_SHORT).show();
+            // 粘贴分两步走：先收输入法，再按一次才真正粘贴。
+            // 聊天栏刚打开时输入法正弹着，此时直接粘贴，内容会被输入法顶开或吞掉，
+            // 玩家看到的是"点了没反应"，体验割裂 —— 所以第一次按下只负责把输入法收起来。
+            long now = System.currentTimeMillis();
+            boolean armed = pasteArmedAt > 0 && (now - pasteArmedAt) <= PASTE_ARM_WINDOW_MS;
+            boolean doPaste = true;
+            if (!armed) {
+                if (dismissSoftInput()) {
+                    pasteArmedAt = now;
+                    doPaste = false;
+                }
+                // 没有输入法可收就直接粘贴，不让玩家白点一次
+            }
+            if (doPaste) {
+                pasteArmedAt = 0;
+                // 粘贴优先于预设文本：玩家临时复制的内容比写死在布局里的更可能是此刻想发的
+                String clipboard = readClipboardText();
+                if (StringUtils.isNotBlank(clipboard)) {
+                    GameTextSender.send(menu, clipboard);
+                } else {
+                    // 什么都不发也不提示，玩家会以为按钮坏了，因此这里必须给出反馈。
+                    // 剪贴板为空时保留"已准备"状态：玩家复制完再按一次即可粘贴，不必再收一次输入法
+                    pasteArmedAt = now;
+                    Toast.makeText(getContext(), R.string.kcu_clipboard_empty, Toast.LENGTH_SHORT).show();
+                }
             }
         } else if (StringUtils.isNotBlank(event.getOutputText())) {
             GameTextSender.send(menu, event.getOutputText());
@@ -873,6 +894,32 @@ public class ControlButton extends AppCompatButton implements CustomView {
                 menu.getViewManager().switchViewGroupVisibility(viewGroup);
             }
         }
+    }
+
+    /**
+     * 粘贴按钮的"已收起输入法"状态时间戳。
+     *
+     * 0 表示未准备（下一次按下要先收输入法）；超过窗口（10 分钟）自动视为未准备，
+     * 避免玩家隔了很久回来按一下只收了个键盘、以为按钮坏了。
+     */
+    private static final long PASTE_ARM_WINDOW_MS = 10 * 60 * 1000L;
+
+    private long pasteArmedAt = 0;
+
+    /**
+     * 收起软键盘。SDL 渲染路径下由 SDL 输入框接管，其余走启动器侧输入控件。
+     *
+     * @return true 表示确实收起了输入法
+     */
+    private boolean dismissSoftInput() {
+        if (SdlBridge.getSdlEnabled() && SdlBridge.isSdlRenderActive()) {
+            if (SDLActivity.isSDLEditKeyboardShown()) {
+                SDLActivity.disableSDLEditKeyboard();
+                return true;
+            }
+            return false;
+        }
+        return TouchCharInput.dismissActiveInput();
     }
 
     /**
