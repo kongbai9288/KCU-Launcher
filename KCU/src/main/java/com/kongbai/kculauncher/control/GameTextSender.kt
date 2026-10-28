@@ -25,7 +25,7 @@ object GameTextSender {
 
     @JvmStatic
     @JvmOverloads
-    fun send(menu: GameMenu, text: String, onDropped: (() -> Unit)? = null) {
+    fun send(menu: GameMenu, text: String, onDropped: Runnable? = null) {
         if (menu.cursorMode == KCUBridge.CursorEnabled) {
             commitText(menu, text)
             return
@@ -62,7 +62,7 @@ object GameTextSender {
      * 待文本可提交后执行：SDL 渲染路径轮询 native 通道激活状态，GLFW 路径按固定延时等聊天栏打开。
      * 判定用 native 真实状态，Java 侧激活镜像受软键盘 hint 影响可能缺失
      */
-    private fun whenTextInputReady(action: () -> Unit, onDropped: (() -> Unit)? = null) {
+    private fun whenTextInputReady(action: () -> Unit, onDropped: Runnable? = null) {
         if (!isSdlRenderActive()) {
             handler.postDelayed(action, CHAT_OPEN_DELAY_MS)
             return
@@ -78,7 +78,7 @@ object GameTextSender {
                     Log.w(TAG, "native text input channel not active after " + CHANNEL_WAIT_TIMEOUT_MS + "ms, text dropped")
                     // 文本被丢弃必须让调用方知道：按下按钮却静默什么都不发生，
                     // 玩家只会以为按钮坏了
-                    onDropped?.invoke()
+                    onDropped?.run()
                     return
                 }
                 waited += CHANNEL_POLL_INTERVAL_MS
