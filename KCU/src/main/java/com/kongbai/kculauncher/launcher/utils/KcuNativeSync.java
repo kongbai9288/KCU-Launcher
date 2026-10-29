@@ -193,20 +193,34 @@ public final class KcuNativeSync {
         return lines;
     }
 
+    /**
+     * 整份重写记录文件。
+     *
+     * 先写临时文件再改名：这份记录决定运行时里哪些库该留、哪些该清。
+     * 直接截断写若中途出问题留下半截内容，下次同步会按不完整的名单处理文件。
+     * 原子替换下要么新名单要么旧名单，不会是不完整的中间状态。
+     */
     private static void writeLines(File file, List<String> lines) {
+        File tmp = new File(file.getParentFile(), file.getName() + ".tmp");
         OutputStream out = null;
         try {
-            file.setWritable(true);
             StringBuilder sb = new StringBuilder();
             for (String line : lines) {
                 sb.append(line).append('\n');
             }
-            out = new FileOutputStream(file, false);
+            out = new FileOutputStream(tmp, false);
             out.write(sb.toString().getBytes(StandardCharsets.UTF_8));
             out.flush();
         } catch (Throwable ignored) {
         } finally {
             close(out);
+        }
+        if (tmp.isFile()) {
+            // 目标文件可能带只读属性（同步时会对已有文件加写保护），先放开再替换
+            file.setWritable(true);
+            if (!tmp.renameTo(file)) {
+                tmp.delete();
+            }
         }
     }
 
