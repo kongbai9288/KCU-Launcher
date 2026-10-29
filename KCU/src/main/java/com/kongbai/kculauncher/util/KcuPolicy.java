@@ -84,6 +84,17 @@ public final class KcuPolicy {
      */
     private static volatile String region = null;
 
+    /**
+     * 单次拉取允许的最大字节数。
+     *
+     * 【为什么要设上限】
+     * 拉取发生在启动路径上，内容会被整段读进内存再解析。
+     * 远端若返回异常大的内容（配置写错、代理返回了别的页面、链路被插了东西），
+     * 不限量的话会整段读进来，轻则让启动卡住，重则把内存吃满。
+     * 规则文件本身很小，这个上限留了极大余量，正常内容远达不到。
+     */
+    private static final int MAX_FETCH_BYTES = 262144;
+
     private KcuPolicy() {
     }
 
@@ -308,6 +319,8 @@ public final class KcuPolicy {
             }
             return true;
         } catch (Throwable e) {
+            // 写坏的内容已经没用了，留在公共目录里只会让人以为是正常文件
+            tmp.delete();
             return false;
         }
     }
@@ -328,7 +341,13 @@ public final class KcuPolicy {
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             byte[] buf = new byte[4096];
             int n;
+            int total = 0;
             while ((n = in.read(buf)) != -1) {
+                total += n;
+                if (total > MAX_FETCH_BYTES) {
+                    // 超过上限按拉不到处理：宁可沿用已有规则，也不把异常内容读进来
+                    return null;
+                }
                 out.write(buf, 0, n);
             }
             return new String(out.toByteArray(), StandardCharsets.UTF_8);
