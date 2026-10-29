@@ -17,9 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 /**
  * 远程策略：决定某个功能在当前地区是否可用。
  *
@@ -106,18 +103,6 @@ public final class KcuPolicy {
         } catch (Throwable ignored) {
         }
         prepared = true;
-    }
-
-    /** 在后台线程准备一次；重复调用无副作用 */
-    public static void prepareAsync() {
-        ExecutorService worker = Executors.newSingleThreadExecutor();
-        worker.execute(() -> {
-            try {
-                prepare();
-            } finally {
-                worker.shutdownNow();
-            }
-        });
     }
 
     /** 规则是否已就绪 */
@@ -446,14 +431,4 @@ public final class KcuPolicy {
         return block;
     }
 
-    /** 把当前规则导出为 JSON 文本，便于排查实际生效的内容 */
-    public static String dump() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("updatedAt=").append(readUpdatedAt(readFile(getCacheFile())));
-        sb.append(" region=");
-        String region = KcuRegion.detect();
-        sb.append(region == null || region.isEmpty() ? "unknown" : region);
-        sb.append(" blocks=").append(blocks.size());
-        return sb.toString();
-    }
 }
