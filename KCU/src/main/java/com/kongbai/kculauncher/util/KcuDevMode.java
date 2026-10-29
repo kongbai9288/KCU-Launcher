@@ -40,17 +40,25 @@ public final class KcuDevMode {
     /**
      * 网络参照站点：用于确认"网络真的通着"，而不只是这一个接口有回应。
      *
-     * 【为什么国内与海外各放两组】
+     * 【为什么用专门的连通性检测点，而不是普通网站首页】
+     * 这类检测点是各系统厂商专门部署、只用来回答"网络通不通"的地址，
+     * 固定返回 204 且不带任何正文：只要状态码不对，就能立刻判定链路上有人插了东西。
+     * 普通网站首页会返回大段内容、可能跳转、也可能因地区或风控返回不同页面，
+     * 用它来判断连通性既不干净也不稳定。
+     *
+     * 【为什么国内与海外各放三组】
      * 判据是"只要有一个站点回应就算网络正常"，因此站点必须覆盖两种网络环境：
-     * 只放海外站点的话，国内用户（GitHub 还能访问，但海外站点普遍不通）会被
+     * 只放海外站点的话，国内用户（该接口还能访问，但海外站点普遍不通）会被
      * 判成可疑，等于把真正的主人锁在门外；只放国内站点则海外用户遭遇同样问题。
-     * 两边各放两组，任一边通着就放行。
+     * 两边各放三组，任一边通着就放行。
      */
     private static final String[] NET_PROBES = {
-            "https://www.baidu.com",                  // 国内
-            "https://www.qq.com",                     // 国内
-            "https://connectivitycheck.android.com",  // 海外
-            "https://www.cloudflare.com"              // 海外
+            "https://connect.rom.miui.com/generate_204",                       // 小米 国内
+            "https://connectivitycheck.platform.hicloud.com/generate_204",      // 华为 国内
+            "https://connect.qq.com/generate_204",                              // 腾讯 国内
+            "https://cp.cloudflare.com/generate_204",                           // Cloudflare 海外
+            "https://captive.apple.com/generate_204",                           // Apple 海外
+            "https://connectivitycheck.gstatic.com/generate_204"                // Google 海外
     };
     private static final int PROBE_TIMEOUT_MS = 6000;
 
@@ -322,7 +330,8 @@ public final class KcuDevMode {
     /**
      * 单个参照站点是否给出了明确回应。
      *
-     * 只认 200 与 204：抓包工具可能返回伪造的错误页或跳转，
+     * 只认 200 与 204：204 正是连通性检测点的标准回答（无正文），
+     * 200 用于兼容少数返回正文的检测点。抓包工具可能返回伪造的错误页或跳转，
      * 只有明确的成功状态才说明这一路请求确实到达了对方。
      * 不读取响应内容 —— 只需要知道有没有回应，读内容既慢又无必要。
      */
