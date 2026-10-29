@@ -67,7 +67,7 @@ public final class KcuDevUnlockDialog {
                 }
                 final boolean result = owner;
                 final Throwable error = failure;
-                new Handler(context.getMainLooper()).post(() -> {
+                Runnable deliver = () -> {
                     primary.setEnabled(true);
                     try {
                         if (error == null && result && KcuDevMode.grant()) {
@@ -84,7 +84,13 @@ public final class KcuDevUnlockDialog {
                     } finally {
                         worker.shutdownNow();
                     }
-                });
+                };
+                // 投递失败时投递体永远不会执行，其中的关闭调用也就永远不会发生。
+                // 每次点击都会新建一个单线程池，其线程是非守护线程，
+                // 不回收就会一直挂着并随重试次数累积
+                if (!new Handler(context.getMainLooper()).post(deliver)) {
+                    worker.shutdownNow();
+                }
             });
         });
     }
