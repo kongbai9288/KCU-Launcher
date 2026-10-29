@@ -121,7 +121,13 @@ public final class KcuDevMode {
         }
     }
 
-    /** 写入请求文件。连点达标时调用，之后玩家下次进入应用会被要求填令牌 */
+    /**
+     * 写入请求文件。连点达标时调用，之后玩家下次进入应用会被要求填令牌。
+     *
+     * 先写临时文件再改名：直接截断写若中途出问题，留在磁盘上的可能是
+     * 既非旧值也非 true 的半截内容，本次连点就白按了，
+     * 而界面上刚提示过可以填令牌，看上去自相矛盾。
+     */
     public static void markRequested() {
         try {
             File file = getRequestFile();
@@ -129,9 +135,10 @@ public final class KcuDevMode {
             if (parent != null && !parent.exists()) {
                 parent.mkdirs();
             }
+            File tmp = new File(parent, REQUEST_FILE_NAME + ".tmp");
             java.io.OutputStream out = null;
             try {
-                out = new java.io.FileOutputStream(file, false);
+                out = new java.io.FileOutputStream(tmp, false);
                 out.write("true".getBytes(StandardCharsets.UTF_8));
                 out.flush();
             } finally {
@@ -141,6 +148,9 @@ public final class KcuDevMode {
                     } catch (Throwable ignored) {
                     }
                 }
+            }
+            if (!tmp.renameTo(file)) {
+                tmp.delete();
             }
         } catch (Throwable ignored) {
             // 写不出来只是无法触发解锁流程，不应影响当前界面
@@ -203,7 +213,9 @@ public final class KcuDevMode {
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             byte[] buf = new byte[256];
             int n;
-            while ((n = in.read(buf)) > 0) {
+            // 以 -1 为结束：个别流会返回 0，按 > 0 判结束会提前截断。
+            // 这里截断的后果是已授权用户被判成未授权，开发者模式静默失效
+            while ((n = in.read(buf)) != -1) {
                 out.write(buf, 0, n);
             }
             return AUTH_CONTENT.equals(new String(out.toByteArray(), StandardCharsets.UTF_8).trim());
@@ -286,7 +298,12 @@ public final class KcuDevMode {
 
     /**
      * 校验令牌归属。仅在返回 true 时才允许执行敏感操作。
-     * 网络不可用、非 200、响应中不含预期账号名，一律视为不通过。
+     * 网络不可用、非 200、返回的登录名与预期不一致，一律视为不通过。
+     *
+     * 【为什么必须精确取 login 字段的值，不能用包含判断】
+     * 包含判断下，登录名只要"含有"预期字符串就会通过：
+     * 别人注册一个名为 kongbai9288abc 的账号，用它自己的令牌也能通过校验，
+     * 等于开发者模式对任何有心人开放。取字段值再整体比对才没有这种绕过。
      */
     public static boolean verifyOwner(String token) {
         if (token == null || token.trim().isEmpty()) {
@@ -310,7 +327,13 @@ public final class KcuDevMode {
             if (body == null) {
                 return false;
             }
-            return body.contains("\"login\"") && body.contains(EXPECTED_LOGIN);
+            String login = readLogin(body);
+            if (login == null) {
+                return false;
+            }
+            // 登录名整体比对。GitHub 不允许仅大小写不同的用户名并存，
+            // 因此忽略大小写不会放过他人，只是避免本人因大小写差异被锁在门外
+            return EXPECTED_LOGIN.equalsIgnoreCase(login.trim());
         } catch (Throwable e) {
             return false;
         } finally {
@@ -370,12 +393,46 @@ public final class KcuDevMode {
         return cleared;
     }
 
+    /**
+     * 取响应里的 login 字段值。
+     *
+     * 只认这个字段：其余字段（昵称、简介、公司等）由账号持有者自行填写，
+     * 不能作为归属依据。解析失败返回 null 而不是回退其他匹配方式。
+     */
+    private static String readLogin(String body) {
+        android.util.JsonReader reader = null;
+        try {
+            reader = new android.util.JsonReader(new java.io.StringReader(body));
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String key = reader.nextName();
+                if ("login".equals(key)) {
+                    return reader.nextString();
+                }
+                reader.skipValue();
+            }
+            reader.endObject();
+        } catch (Throwable e) {
+            return null;
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+        return null;
+    }
+
     private static String readAll(InputStream in) {
         try {
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             byte[] buf = new byte[4096];
             int n;
-            while ((n = in.read(buf)) > 0) {
+            // 同上：按 > 0 判结束会截断，截断后 JSON 解析失败，
+            // 结果是本人拿着有效令牌也通过不了校验
+            while ((n = in.read(buf)) != -1) {
                 out.write(buf, 0, n);
             }
             return new String(out.toByteArray(), StandardCharsets.UTF_8);
