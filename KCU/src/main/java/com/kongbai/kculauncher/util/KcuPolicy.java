@@ -73,6 +73,17 @@ public final class KcuPolicy {
     private static volatile List<Block> blocks = new ArrayList<>();
     private static volatile boolean prepared = false;
 
+    /**
+     * 已经探测到的地区；未探测到时为 null。
+     *
+     * 【为什么要把地区单独存一份，而不是判定时再去取】
+     * 地区判定是网络操作。若判定时才去取，那么调用方在界面线程上判断时，
+     * 一旦此前没探测成功，就会在界面线程上发起网络请求 —— 这在多数系统上
+     * 会直接失败，也可能拖住界面。判定必须只使用已经准备好的值，
+     * 探测这件事只允许在后台准备阶段发生。
+     */
+    private static volatile String region = null;
+
     private KcuPolicy() {
     }
 
@@ -98,11 +109,18 @@ public final class KcuPolicy {
             syncRules();
         } catch (Throwable ignored) {
         }
+        String found = null;
         try {
-            KcuRegion.detect();
+            found = KcuRegion.detect();
         } catch (Throwable ignored) {
         }
-        prepared = true;
+        if (found != null && !found.isEmpty()) {
+            region = found;
+            // 只有真正拿到地区才算准备好：
+            // 拿不到地区时规则无法生效，此时若标记为已准备，
+            // 后续就不会再重试，限制功能会在整个进程内一直失效
+            prepared = true;
+        }
     }
 
     /** 规则是否已就绪 */
@@ -120,8 +138,9 @@ public final class KcuPolicy {
         if (feature == null || feature.isEmpty()) {
             return false;
         }
-        String region = KcuRegion.detect();
-        boolean unknown = region == null || region.isEmpty();
+        // 只使用准备阶段探测到的地区，这里绝不发起网络请求
+        String here = region;
+        boolean unknown = here == null || here.isEmpty();
         for (Block block : blocks) {
             if (!feature.equals(block.feature)) {
                 continue;
@@ -136,7 +155,7 @@ public final class KcuPolicy {
                 return block.blockOnUnknown;
             }
             for (String one : block.regions) {
-                if (one != null && one.trim().equalsIgnoreCase(region)) {
+                if (one != null && one.trim().equalsIgnoreCase(here)) {
                     return true;
                 }
             }
