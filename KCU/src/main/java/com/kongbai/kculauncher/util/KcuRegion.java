@@ -62,6 +62,12 @@ public final class KcuRegion {
      *
      * 结果在进程内缓存：同一进程内多次判断不需要重复发起请求。
      * 这是网络操作，调用方应自行确保不在主线程直接调用。
+     *
+     * 【为什么只缓存成功的结果】
+     * 若把"没判出来"也当成结果缓存，那么一次失败的判定会把未知状态固定下来：
+     * 后续即便网络恢复、即便在正确的线程上重新判定，拿到的仍是上一次的空值，
+     * 功能会一直表现得像是判定不出来。失败的判定必须允许重试，只有真正
+     * 拿到有效结果才值得缓存下来复用。
      */
     public static String detect() {
         String v = cached;
@@ -69,7 +75,9 @@ public final class KcuRegion {
             return v;
         }
         String result = detectOnce();
-        cached = result;
+        if (result != null && !result.isEmpty()) {
+            cached = result;
+        }
         return result;
     }
 
