@@ -13,6 +13,7 @@ import com.kongbai.kculauncher.R;
 import com.kongbai.kculauncher.core.util.Logging;
 import com.kongbai.kculauncher.library.browser.SelectedFile;
 import com.kongbai.kculauncher.setting.Profiles;
+import com.kongbai.kculauncher.util.KcuPolicy;
 import com.kongbai.kculauncher.util.KcuUi;
 import com.kongbai.kculauncher.util.KcuVersionCatalog;
 import com.kongbai.kculauncher.util.KcuVersionMeta;
@@ -71,7 +72,45 @@ public class KcuImportActivity extends Activity {
         scroll.addView(root);
         setContentView(scroll);
 
-        loadCatalog();
+        startWithPolicyCheck();
+    }
+
+    /**
+     * 先确认这个功能在当前地区是否可用，再决定显示什么。
+     *
+     * 规则来自可随时更新的远端，因此这里不能只看本地写死的内容。
+     * 已经准备过就直接判断；没准备过就在后台准备一次再判断 ——
+     * 准备期间显示"检查中"而不是直接放行，否则规则会在这一瞬间被绕过。
+     */
+    private void startWithPolicyCheck() {
+        KcuPolicy.loadCached();
+        if (KcuPolicy.isBlocked(KcuPolicy.FEATURE_DOWNLOAD)) {
+            showBlocked();
+            return;
+        }
+        if (KcuPolicy.isPrepared()) {
+            loadCatalog();
+            return;
+        }
+        setStatus(getString(R.string.kcu_policy_checking));
+        worker.execute(() -> {
+            KcuPolicy.prepare();
+            runOnUiThread(() -> {
+                if (KcuPolicy.isBlocked(KcuPolicy.FEATURE_DOWNLOAD)) {
+                    showBlocked();
+                } else {
+                    loadCatalog();
+                }
+            });
+        });
+    }
+
+    /** 被限制时显示的页面：只说明原因，不提供任何继续使用的入口 */
+    private void showBlocked() {
+        card.removeAllViews();
+        card.addView(KcuUi.header(this, "!", KcuPolicy.titleFor(this, KcuPolicy.FEATURE_DOWNLOAD)));
+        card.addView(KcuUi.gap(this, 12));
+        card.addView(KcuUi.body(this, KcuPolicy.bodyFor(this, KcuPolicy.FEATURE_DOWNLOAD)));
     }
 
     private void loadCatalog() {
@@ -520,6 +559,10 @@ public class KcuImportActivity extends Activity {
     }
 
     private void setStatus(String text) {
+        // 界面被替换成限制页后 status 已失效，此时不应再写入
+        if (status == null) {
+            return;
+        }
         runOnUiThread(() -> {
             if (status != null) {
                 status.setText(text);
