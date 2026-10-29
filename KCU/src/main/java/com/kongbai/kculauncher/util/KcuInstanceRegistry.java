@@ -68,6 +68,22 @@ public final class KcuInstanceRegistry {
          * 变了就重新扫，避免为了省一次扫描而永远漏掉后来拷进来的存档。
          */
         public long savesFingerprint = -1;
+
+        /**
+         * 这批存档是否真的被扫过一次且与本账号一致。
+         *
+         * 【为什么光有指纹不够】
+         * 指纹只说明"存档还是上次那批"，不说明"那批被验证过"。
+         * 新建实例时若目录里本来就有存档（例如导入已有实例、或实例目录
+         * 指向一个早就有世界的文件夹），登记时记下的就是这批外来存档的指纹，
+         * 于是"归属是本启动器"且"指纹没变"双双成立 —— 扫描被永久跳过，
+         * 而那批存档的身份从未被检查过。玩家表现为背包进度全空且毫无提示，
+         * 正是本功能要发现的那种情况，反倒被自己的优化藏起来了。
+         *
+         * 缺省为 false：读不到这个字段就按"没验证过"处理，
+         * 代价是多扫一次，方向是安全的。
+         */
+        public boolean savesVerified = false;
     }
 
     /** 读取全部条目；失败返回空表 */
@@ -110,6 +126,8 @@ public final class KcuInstanceRegistry {
                                 entry.version = reader.nextString();
                             } else if ("savesFingerprint".equals(field)) {
                                 entry.savesFingerprint = reader.nextLong();
+                            } else if ("savesVerified".equals(field)) {
+                                entry.savesVerified = reader.nextBoolean();
                             } else {
                                 reader.skipValue();
                             }
@@ -194,8 +212,12 @@ public final class KcuInstanceRegistry {
         }
         entry.lastSeen = System.currentTimeMillis();
         // 新建时实例内还没有存档，指纹记为"空"。之后玩家拷入存档会改变指纹，
-        // 从而重新触发扫描 —— 这正是只认实例归属会漏掉的场景
+        // 从而重新触发扫描 —— 这正是只认实例归属会漏掉的场景。
+        // 但目录里本来就有存档时（导入已有实例等），记下的会是那批外来存档的指纹，
+        // 因此这里一律标为"尚未验证"：归属只说明谁建的目录，
+        // 不代表里面的存档已经过检查，必须实打实扫过一次才算数
         entry.savesFingerprint = computeSavesFingerprint(dir);
+        entry.savesVerified = false;
         if (version != null) {
             entry.version = version;
         }
@@ -251,7 +273,12 @@ public final class KcuInstanceRegistry {
     /**
      * 该实例的存档状态是否已确认过、可以跳过扫描。
      *
-     * 两个条件缺一不可：实例确由本启动器创建，且存档指纹与上次确认时一致。
+     * 三个条件缺一不可：实例确由本启动器创建、这批存档确实被扫过一次且一致、
+     * 且存档指纹与上次确认时一致。
+     *
+     * "确实扫过"这一条不能省：只比对指纹的话，新建实例时若目录里本来就有
+     * 外来存档，登记下来的就是那批外来存档的指纹，于是条件全部成立而扫描
+     * 从未发生 —— 优化反而把要发现的问题藏了起来。
      */
     public static boolean isSavesKnown(String dir) {
         if (dir == null || dir.isEmpty()) {
@@ -260,6 +287,9 @@ public final class KcuInstanceRegistry {
         Map<String, Entry> map = readAll();
         Entry entry = map.get(dir);
         if (entry == null || !OWNER_KCU.equals(entry.owner)) {
+            return false;
+        }
+        if (!entry.savesVerified) {
             return false;
         }
         return entry.savesFingerprint == computeSavesFingerprint(dir);
@@ -291,6 +321,7 @@ public final class KcuInstanceRegistry {
         }
         entry.owner = OWNER_KCU;
         entry.savesFingerprint = computeSavesFingerprint(dir);
+        entry.savesVerified = true;
         entry.lastSeen = System.currentTimeMillis();
         map.put(dir, entry);
         write(map);
@@ -351,6 +382,7 @@ public final class KcuInstanceRegistry {
                 writer.name("version").value(one.getValue().version == null
                         ? "" : one.getValue().version);
                 writer.name("savesFingerprint").value(one.getValue().savesFingerprint);
+                writer.name("savesVerified").value(one.getValue().savesVerified);
                 writer.endObject();
             }
             writer.endObject();
