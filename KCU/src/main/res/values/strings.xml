@@ -1731,4 +1731,7 @@
     <string name="kcu_license_empty">许可清单暂不可用</string>
     <string name="kcu_license_text_empty">未内置该协议的全文，请查看官方页面。</string>
     <string name="kcu_license_open_official">查看官方页面</string>
+    <string name="kcu_policy_blocked_title">This feature is disabled in your region</string>
+    <string name="kcu_policy_blocked_body">This feature is not available in the region where the current network is located. It may be enabled again later.</string>
+    <string name="kcu_policy_checking">Checking availability\u2026</string>
 </resources>
