@@ -42,9 +42,11 @@ public final class KcuDevMode {
      *
      * 【为什么用专门的连通性检测点，而不是普通网站首页】
      * 这类检测点是各系统厂商专门部署、只用来回答"网络通不通"的地址，
-     * 固定返回 204 且不带任何正文：只要状态码不对，就能立刻判定链路上有人插了东西。
+     * 多数固定返回 204 且不带任何正文：只要状态码不对，就能立刻判定链路上有人插了东西。
      * 普通网站首页会返回大段内容、可能跳转、也可能因地区或风控返回不同页面，
      * 用它来判断连通性既不干净也不稳定。
+     * 少数厂商的检测点返回 200 并带一小段固定正文（例如苹果用的是 html 页），
+     * 因此下方判定同时接受 200 与 204。
      *
      * 【为什么国内与海外各放三组】
      * 判据是"只要有一个站点回应就算网络正常"，因此站点必须覆盖两种网络环境：
@@ -57,7 +59,7 @@ public final class KcuDevMode {
             "https://connectivitycheck.platform.hicloud.com/generate_204",      // 华为 国内
             "https://connect.qq.com/generate_204",                              // 腾讯 国内
             "https://cp.cloudflare.com/generate_204",                           // Cloudflare 海外
-            "https://captive.apple.com/generate_204",                           // Apple 海外
+            "https://captive.apple.com/hotspot-detect.html",                    // Apple 海外
             "https://connectivitycheck.gstatic.com/generate_204"                // Google 海外
     };
     private static final int PROBE_TIMEOUT_MS = 6000;
