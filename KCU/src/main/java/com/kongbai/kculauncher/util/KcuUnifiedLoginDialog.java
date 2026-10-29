@@ -68,11 +68,10 @@ public final class KcuUnifiedLoginDialog {
         }
 
         void start() {
-            buildInput(null);
+            buildInput(null, null, null);
             dialog.show();
         }
 
-        /** 阶段一：填写名称 */
         /**
          * 阶段一：填写名称。
          *
@@ -80,8 +79,12 @@ public final class KcuUnifiedLoginDialog {
          *   不能靠调用方先 appendStatus 再 buildInput 来显示：
          *   buildInput 会 removeAllViews，刚加的提示会被立刻清掉且引用置空，
          *   玩家点确认后界面重绘却看不到任何原因，表现为"点了没反应"。
+         * @param presetName 重新绘制时要回填的名称，可为 null。
+         *   重绘会新建输入框，不回填的话玩家刚打的名字就没了，
+         *   为了改一个标识错误要连名字一起重打一遍。
+         * @param presetUuid 同 presetName，回填自定义标识原文
          */
-        private void buildInput(CharSequence notice) {
+        private void buildInput(CharSequence notice, String presetName, String presetUuid) {
             card.removeAllViews();
             statusView = null;
             card.addView(KcuUi.header(context, "\u2261", context.getString(R.string.kcu_login_title)));
@@ -92,6 +95,10 @@ public final class KcuUnifiedLoginDialog {
             final android.widget.EditText edit =
                     KcuUi.field(context, context.getString(R.string.kcu_login_name_hint));
             edit.setSingleLine(true);
+            if (presetName != null && !presetName.isEmpty()) {
+                edit.setText(presetName);
+                edit.setSelection(presetName.length());
+            }
             card.addView(edit);
             card.addView(KcuUi.gap(context, 14));
 
@@ -101,6 +108,10 @@ public final class KcuUnifiedLoginDialog {
             final android.widget.EditText uuidEdit =
                     KcuUi.field(context, context.getString(R.string.kcu_login_uuid_field));
             uuidEdit.setSingleLine(true);
+            if (presetUuid != null && !presetUuid.isEmpty()) {
+                uuidEdit.setText(presetUuid);
+                uuidEdit.setSelection(presetUuid.length());
+            }
             card.addView(uuidEdit);
             card.addView(KcuUi.gap(context, 18));
             if (notice != null) {
@@ -128,8 +139,10 @@ public final class KcuUnifiedLoginDialog {
                 if (!TextUtils.isEmpty(rawUuid.trim())) {
                     customUuid = KcuUuid.parse(rawUuid);
                     if (customUuid == null) {
-                        // 必须把原因带进重绘，否则界面刷新后玩家看不到任何提示
-                        buildInput(context.getString(R.string.kcu_login_uuid_invalid));
+                        // 必须把原因带进重绘，否则界面刷新后玩家看不到任何提示。
+                        // 同时回填刚才填的两项：重绘会新建输入框，
+                        // 不回填的话玩家为了改一个标识错误要把名字也重打一遍
+                        buildInput(context.getString(R.string.kcu_login_uuid_invalid), name, rawUuid);
                         return;
                     }
                 }
