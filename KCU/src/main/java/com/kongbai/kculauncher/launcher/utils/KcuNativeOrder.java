@@ -113,16 +113,22 @@ public final class KcuNativeOrder {
         return name.indexOf('/') < 0 && name.indexOf('\\') < 0;
     }
 
-    /** 生成默认模板：列出运行时目录当前已有的 .so，enabled 为 false */
+    /**
+     * 生成默认模板：列出运行时目录当前已有的 .so，enabled 为 false。
+     *
+     * 先写临时文件再改名：这份配置在启动路径上被读取，直接截断写若中途出问题
+     * 会留下半截内容，解析失败后按配置可能直接终止启动。原子替换下要么新要么旧。
+     */
     private static void writeTemplate(File file) {
         JsonWriter writer = null;
+        File tmp = new File(file.getParentFile(), file.getName() + ".tmp");
         try {
             File dir = file.getParentFile();
             if (dir != null && !dir.exists() && !dir.mkdirs()) {
                 return;
             }
             List<String> names = listRuntimeLibs();
-            writer = new JsonWriter(new FileWriter(file, false));
+            writer = new JsonWriter(new FileWriter(tmp, false));
             writer.setIndent("  ");
             writer.beginObject();
             writer.name("enabled").value(false);
@@ -145,6 +151,12 @@ public final class KcuNativeOrder {
                     writer.close();
                 } catch (Throwable ignored) {
                 }
+            }
+        }
+        // 只有确实写完整了才替换；写失败时旧文件原样保留
+        if (tmp.isFile()) {
+            if (!tmp.renameTo(file)) {
+                tmp.delete();
             }
         }
     }
