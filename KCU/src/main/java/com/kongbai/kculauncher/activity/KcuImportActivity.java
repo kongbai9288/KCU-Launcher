@@ -84,25 +84,25 @@ public class KcuImportActivity extends Activity {
      */
     private void startWithPolicyCheck() {
         KcuPolicy.loadCached();
-        if (KcuPolicy.isBlocked(KcuPolicy.FEATURE_DOWNLOAD)) {
-            showBlocked();
-            return;
-        }
         if (KcuPolicy.isPrepared()) {
-            loadCatalog();
+            decide();
             return;
         }
+        // 未就绪时必须先在后台完成准备再判断，不能在界面线程直接判断：
+        // 判断要用到地区，地区判定是网络操作，在界面线程上必然失败
         setStatus(getString(R.string.kcu_policy_checking));
         worker.execute(() -> {
             KcuPolicy.prepare();
-            runOnUiThread(() -> {
-                if (KcuPolicy.isBlocked(KcuPolicy.FEATURE_DOWNLOAD)) {
-                    showBlocked();
-                } else {
-                    loadCatalog();
-                }
-            });
+            runOnUiThread(this::decide);
         });
+    }
+
+    private void decide() {
+        if (KcuPolicy.isBlocked(KcuPolicy.FEATURE_DOWNLOAD)) {
+            showBlocked();
+        } else {
+            loadCatalog();
+        }
     }
 
     /** 被限制时显示的页面：只说明原因，不提供任何继续使用的入口 */
