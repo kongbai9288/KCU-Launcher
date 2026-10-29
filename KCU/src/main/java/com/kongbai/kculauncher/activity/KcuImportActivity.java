@@ -222,7 +222,9 @@ public class KcuImportActivity extends Activity {
         Uri uri = data.getData();
         // 从文件名推导 id：玩家不需要知道 id 是什么
         String id = deriveId(uri);
-        if (id == null || id.isEmpty()) {
+        // 文件名可能含引号、路径分隔符等不适合当标识的字符：
+        // 拿去拼 JSON 会拼出非法内容，拿去当目录名会写到目录之外
+        if (id == null || id.isEmpty() || !isSafeId(id)) {
             setStatus(getString(R.string.kcu_import_need_id));
             return;
         }
@@ -293,7 +295,11 @@ public class KcuImportActivity extends Activity {
         OutputStream out = null;
         try {
             out = new FileOutputStream(tmp, false);
-            String json = "{\n  \"id\": \"" + id + "\",\n  \"jar\": \"" + id + "\"\n}\n";
+            // id 来自玩家选的文件名，可能带引号或反斜杠；直接拼进 JSON 会拼出非法内容，
+            // 解析失败后这个版本不会出现在列表里，而 jar 已经就位，
+            // 玩家看到"已写入"却找不到版本。这里必须按 JSON 字符串规则转义
+            String safe = jsonEscape(id);
+            String json = "{\n  \"id\": \"" + safe + "\",\n  \"jar\": \"" + safe + "\"\n}\n";
             out.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             out.flush();
             ok = true;
@@ -308,6 +314,66 @@ public class KcuImportActivity extends Activity {
         if (ok && !tmp.renameTo(file) && !tmp.delete()) {
             Logging.LOG.warning("KcuImport: unable to delete " + tmp);
         }
+    }
+
+    /** 按 JSON 字符串规则转义：引号、反斜杠与控制字符都必须转义 */
+    private static String jsonEscape(String value) {
+        if (value == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(value.length() + 8);
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '"':
+                    sb.append("\\\"");
+                    break;
+                case '\\':
+                    sb.append("\\\\");
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                case '\t':
+                    sb.append("\\t");
+                    break;
+                default:
+                    if (c < 0x20) {
+                        sb.append(String.format("\\u%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 版本标识的字符集限制。
+     *
+     * 标识会被用作目录名，也会被拼进版本 JSON。文件名里允许出现的字符远多于
+     * 这里允许的范围，包含引号会破坏 JSON，包含路径分隔符会让文件写到目录之外。
+     * 因此只放行版本号实际用到的那几种字符。
+     */
+    private static boolean isSafeId(String id) {
+        if (id == null || id.isEmpty()) {
+            return false;
+        }
+        if (id.contains("..")) {
+            return false;
+        }
+        for (int i = 0; i < id.length(); i++) {
+            char c = id.charAt(i);
+            boolean ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                    || c == '.' || c == '_' || c == '-' || c == '+';
+            if (!ok) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private File targetFile(String id) {
