@@ -15,6 +15,12 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 开发者模式。
@@ -30,6 +36,23 @@ public final class KcuDevMode {
     private static final String EXPECTED_LOGIN = "kongbai9288";
     private static final String API_USER = "https://api.github.com/user";
     private static final int TIMEOUT_MS = 15000;
+
+    /**
+     * 网络参照站点：用于确认"网络真的通着"，而不只是这一个接口有回应。
+     *
+     * 【为什么国内与海外各放两组】
+     * 判据是"只要有一个站点回应就算网络正常"，因此站点必须覆盖两种网络环境：
+     * 只放海外站点的话，国内用户（GitHub 还能访问，但海外站点普遍不通）会被
+     * 判成可疑，等于把真正的主人锁在门外；只放国内站点则海外用户遭遇同样问题。
+     * 两边各放两组，任一边通着就放行。
+     */
+    private static final String[] NET_PROBES = {
+            "https://www.baidu.com",                  // 国内
+            "https://www.qq.com",                     // 国内
+            "https://connectivitycheck.android.com",  // 海外
+            "https://www.cloudflare.com"              // 海外
+    };
+    private static final int PROBE_TIMEOUT_MS = 6000;
 
     /** 请求开启的文件名：外部把内容改成 true 即表示"我要开开发者模式" */
     private static final String REQUEST_FILE_NAME = "dev_request";
@@ -297,6 +320,82 @@ public final class KcuDevMode {
     }
 
     /**
+     * 单个参照站点是否给出了明确回应。
+     *
+     * 只认 200 与 204：抓包工具可能返回伪造的错误页或跳转，
+     * 只有明确的成功状态才说明这一路请求确实到达了对方。
+     * 不读取响应内容 —— 只需要知道有没有回应，读内容既慢又无必要。
+     */
+    private static boolean reachable(String address) {
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) new URL(address).openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(PROBE_TIMEOUT_MS);
+            conn.setReadTimeout(PROBE_TIMEOUT_MS);
+            conn.setInstanceFollowRedirects(true);
+            int code = conn.getResponseCode();
+            return code == 200 || code == 204;
+        } catch (Throwable e) {
+            return false;
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
+    }
+
+    /**
+     * 网络是否看起来是真的通着。
+     *
+     * 【为什么需要这一步】
+     * 抓包改包类工具通常先接管全部流量并拦下所有请求，再由使用者挑出要放行的那几个。
+     * 这种情况下会出现一种很不寻常的组合：目标接口有回应，而同一时刻其它任何站点
+     * 都没有回应。真实网络不会这样 —— 能访问到该接口，就说明链路是通的，
+     * 参照站点不该集体沉默。出现这种组合时，目标接口的回应极可能是本地伪造的。
+     *
+     * 【为什么不要求多数站点回应】
+     * 只要求至少一个：区域网络差异是常态而非异常，海外站点在国内不通、
+     * 国内站点在海外也可能不通。要求多数会把大量正常环境判成可疑，
+     * 而这一步的目的是拦住"全部沉默"这种极端情况，不是做严格的网络体检。
+     *
+     * 【为什么探测本身失败时返回 true】
+     * 探测机制自身出故障（线程池建不起来等）时不能据此拒绝 ——
+     * 那会把真正的主人锁在门外，而真正的网络不通已经在令牌请求上体现过了。
+     * 这里是旁路的补充确认，不是主要判据。
+     */
+    public static boolean networkLooksReal() {
+        final String[] targets = NET_PROBES;
+        ExecutorService pool = null;
+        try {
+            pool = Executors.newFixedThreadPool(targets.length);
+            List<Future<Boolean>> futures = new ArrayList<>(targets.length);
+            for (String address : targets) {
+                futures.add(pool.submit(() -> reachable(address)));
+            }
+            int ok = 0;
+            for (Future<Boolean> one : futures) {
+                try {
+                    if (Boolean.TRUE.equals(
+                            one.get(PROBE_TIMEOUT_MS + 2000L, TimeUnit.MILLISECONDS))) {
+                        ok++;
+                    }
+                } catch (Throwable ignored) {
+                    // 单个站点取不到结果按没回应处理
+                }
+            }
+            return ok >= 1;
+        } catch (Throwable e) {
+            return true;
+        } finally {
+            // 这些线程不是守护线程，不关闭就会一直挂着并随重试次数累积
+            if (pool != null) {
+                pool.shutdownNow();
+            }
+        }
+    }
+
+    /**
      * 校验令牌归属。仅在返回 true 时才允许执行敏感操作。
      * 网络不可用、非 200、返回的登录名与预期不一致，一律视为不通过。
      *
@@ -333,7 +432,18 @@ public final class KcuDevMode {
             }
             // 登录名整体比对。GitHub 不允许仅大小写不同的用户名并存，
             // 因此忽略大小写不会放过他人，只是避免本人因大小写差异被锁在门外
-            return EXPECTED_LOGIN.equalsIgnoreCase(login.trim());
+            if (!EXPECTED_LOGIN.equalsIgnoreCase(login.trim())) {
+                return false;
+            }
+            // 令牌本身没问题，再确认一下网络是不是真的通着。
+            // 只对"令牌看起来有效"这一种少见情况做这一步：
+            // 令牌填错时直接返回，不必让正常玩家多等这几秒
+            if (!networkLooksReal()) {
+                android.util.Log.w("KCU",
+                        "Dev unlock rejected: token valid but no network probe answered");
+                return false;
+            }
+            return true;
         } catch (Throwable e) {
             return false;
         } finally {
