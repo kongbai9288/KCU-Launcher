@@ -55,9 +55,19 @@ public final class KcuAgeGate {
         }
     }
 
+    /**
+     * 记录声明。
+     *
+     * 【为什么用同步写入而不是异步】
+     * 这个值决定应用能不能继续用，而声明完成后紧接着就会跳回启动页：
+     * 若只用异步写入，那一瞬间进程被终止的话声明就没落盘，
+     * 下次启动又会被要求重新声明一次 —— 玩家只会觉得"我明明选过了"。
+     * 异步写入只保证内存里立刻可见，不保证已经写到文件，
+     * 这里要的正是后者。文件很小，同步写入的开销可以接受。
+     */
     public static void declare(int age) {
         try {
-            prefs().edit().putInt(KEY_AGE, age).putBoolean(KEY_PROMPTED, true).apply();
+            prefs().edit().putInt(KEY_AGE, age).putBoolean(KEY_PROMPTED, true).commit();
         } catch (Throwable ignored) {
         }
     }
