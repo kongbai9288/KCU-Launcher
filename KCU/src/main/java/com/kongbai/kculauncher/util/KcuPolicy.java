@@ -1,7 +1,9 @@
 package com.kongbai.kculauncher.util;
 
+import android.content.Context;
 import android.util.JsonReader;
 
+import com.kongbai.kculauncher.KCUApp;
 import com.kongbai.kculauncher.R;
 import com.kongbai.kculauncher.launcher.utils.KCUPath;
 
@@ -249,14 +251,62 @@ public final class KcuPolicy {
         // 下次启动又会重新拉一遍
         if (writeCache(rules)) {
             blocks = parsed;
+            // 同步一份到公共目录供查看；这份只写不读，不参与任何判断
+            writeSharedCopy(rules);
         }
     }
 
+    /**
+     * 真正生效的规则文件：位于私有目录。
+     *
+     * 【为什么生效的内容必须在私有目录】
+     * 公共目录任何应用都能读写，放在那里等于把开关交给了别人：
+     * 别的程序改一下文件就能让限制失效，玩家也会误以为改那个文件有用。
+     * 真正生效的内容只认私有目录这一份，公共目录不参与任何判断。
+     */
     private static File getCacheFile() {
         try {
-            return new File(KCUPath.KCU_SHARED_ROOT, CACHE_NAME);
+            Context context = KCUApp.getAppContext();
+            if (context == null) {
+                return null;
+            }
+            return new File(context.getFilesDir(), CACHE_NAME);
         } catch (Throwable e) {
             return null;
+        }
+    }
+
+    /**
+     * 公共目录下的展示副本。
+     *
+     * 【为什么还要写一份到公共目录】
+     * 只是为了让人能直接看到当前实际生效的规则内容，方便核对与排查。
+     * 这份只写不读：本软件的任何判断都不会去看它，
+     * 改它也不会影响任何行为，避免被当成可改配置的口子。
+     */
+    private static void writeSharedCopy(String content) {
+        try {
+            File shared = new File(KCUPath.KCU_SHARED_ROOT, CACHE_NAME);
+            File parent = shared.getParentFile();
+            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                return;
+            }
+            File tmp = new File(parent, CACHE_NAME + ".shared.tmp");
+            OutputStream out = new FileOutputStream(tmp, false);
+            try {
+                out.write(content.getBytes(StandardCharsets.UTF_8));
+                out.flush();
+            } finally {
+                try {
+                    out.close();
+                } catch (Throwable ignored) {
+                }
+            }
+            if (!tmp.renameTo(shared)) {
+                tmp.delete();
+            }
+        } catch (Throwable ignored) {
+            // 展示副本写不出去不影响功能，静默即可
         }
     }
 
