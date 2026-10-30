@@ -190,6 +190,9 @@ public final class KcuPolicy {
         if (feature == null || feature.isEmpty()) {
             return false;
         }
+        if (exempt()) {
+            return false;
+        }
         // 只使用准备阶段探测到的地区，这里绝不发起网络请求
         String here = region;
         boolean unknown = here == null || here.isEmpty();
@@ -242,6 +245,30 @@ public final class KcuPolicy {
     }
 
     /**
+     * 已经验明身份的人不受任何限制。
+     *
+     * 【为什么要有这个豁免】
+     * 远程配置的目的是在情况变化时能及时止损，
+     * 但它同时也会挡住需要排查问题的人 ——
+     * 一旦下发停止，连开发者自己都进不去，问题也就无从查起。
+     * 因此已验明身份的人一律放行，保证任何时候都还有人能进来处理。
+     *
+     * 【为什么放在这里统一判断，而不是每个调用点各判一次】
+     * 分散判断迟早会漏掉某一处。功能限制、强制更新、强制停止
+     * 三类判断都经过这里，只要这一处不漏，就不会出现
+     * "开发者也被挡住"的情况。
+     */
+    private static boolean exempt() {
+        try {
+            return KcuDevMode.isEnabled();
+        } catch (Throwable e) {
+            // 判断本身出错时按不豁免处理：
+            // 豁免是例外，出错时保持常规判断更安全
+            return false;
+        }
+    }
+
+    /**
      * 当前是否要求强制更新。
      *
      * 【为什么版本取不到时不要求更新】
@@ -250,6 +277,9 @@ public final class KcuPolicy {
      * 版本为空时直接不生效，规则里的强措施只在能确认时才执行。
      */
     public static ForceUpdate forceUpdate() {
+        if (exempt()) {
+            return null;
+        }
         String version = KcuTarget.currentVersion();
         if (version.isEmpty()) {
             return null;
@@ -269,6 +299,9 @@ public final class KcuPolicy {
 
     /** 当前是否要求强制停止 */
     public static Shutdown shutdown() {
+        if (exempt()) {
+            return null;
+        }
         for (Rule rule : applicable()) {
             if (rule.shutdown != null) {
                 return rule.shutdown;
