@@ -70,6 +70,8 @@ public final class KcuDevMode {
     private static final String AUTH_FILE_NAME = ".kcu_dev_authorized";
     /** 授权标记的内容：只作存在性之外的第二道校验，避免空白文件被当作已授权 */
     private static final String AUTH_CONTENT = "kcu.dev.authorized.v1";
+    /** 许可标识单独存放，不并入授权标记，理由见 {@link #setGrantId(String)} */
+    private static final String GRANT_ID_FILE_NAME = ".kcu_dev_grant_id";
     /** 触发所需的连点次数 */
     public static final int UNLOCK_TAPS = 5;
 
@@ -280,6 +282,82 @@ public final class KcuDevMode {
     /** 清除缓存，下次调用重新读取文件 */
     public static void refresh() {
         cached = null;
+    }
+
+    /**
+     * 记下本次授权用的是哪一条许可，供日后判断是否已被收回。
+     *
+     * 【为什么单独放一个文件，而不是把标识写进授权标记里】
+     * 授权标记的内容是固定值，已开启过的人（包括已经开启的本人）都靠它识别。
+     * 一旦改变写法，判断就会因为"内容对不上"而把人判成未授权 ——
+     * 那等于把已经开着的人一并关掉，而且他自己也未必知道是怎么关的。
+     * 所以这里另开一个文件，读不到只是"没有可收回的信息"，
+     * 对既有授权没有任何影响。
+     */
+    public static void setGrantId(String id) {
+        Context ctx = appContext;
+        if (ctx == null || id == null || id.isEmpty()) {
+            return;
+        }
+        java.io.OutputStream out = null;
+        try {
+            out = ctx.openFileOutput(GRANT_ID_FILE_NAME, Context.MODE_PRIVATE);
+            out.write(id.getBytes(StandardCharsets.UTF_8));
+            out.flush();
+        } catch (Throwable ignored) {
+            // 记不下就记不下：它只用于日后收回，不影响本次已经完成的授权
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+    }
+
+    /** 取本次授权用的许可标识；没有返回空串 */
+    public static String grantId() {
+        Context ctx = appContext;
+        if (ctx == null) {
+            return "";
+        }
+        InputStream in = null;
+        try {
+            in = ctx.openFileInput(GRANT_ID_FILE_NAME);
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[256];
+            int n;
+            while ((n = in.read(buf)) != -1) {
+                out.write(buf, 0, n);
+            }
+            return new String(out.toByteArray(), StandardCharsets.UTF_8).trim();
+        } catch (Throwable e) {
+            return "";
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+    }
+
+    /** 收回本次授权：清掉标记与标识，并让缓存失效 */
+    public static void revokeGrant() {
+        Context ctx = appContext;
+        if (ctx != null) {
+            try {
+                ctx.deleteFile(AUTH_FILE_NAME);
+            } catch (Throwable ignored) {
+            }
+            try {
+                ctx.deleteFile(GRANT_ID_FILE_NAME);
+            } catch (Throwable ignored) {
+            }
+        }
+        refresh();
     }
 
     /** 本次进程是否已提示过解锁。提示过就不再重复弹，避免锁死启动流程 */
