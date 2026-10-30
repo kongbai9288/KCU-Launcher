@@ -689,7 +689,7 @@
     <string name="kcu_dev_unlock_ok">Developer options enabled</string>
     <string name="kcu_dev_unlock_checking">Verifying…</string>
     <string name="kcu_dev_unlock_confirm">Verify</string>
-    <string name="kcu_dev_unlock_note">The token is only used to verify account ownership. It is not stored</string>
+    <string name="kcu_dev_unlock_note">Two ways: your own token, or a key issued to you. Fill in either. Keys are checked on device, so no network is needed.</string>
     <string name="kcu_dev_unlock_hint">Personal access token</string>
     <string name="kcu_dev_unlock_body">Developer options are restricted. Enter a personal access token to confirm ownership</string>
     <string name="kcu_dev_unlock_title">Developer options</string>
@@ -1770,4 +1770,5 @@
     <string name="kcu_gate_org">KCU Studios on GitHub</string>
     <string name="kcu_gate_dev">kongbai9288 on GitHub</string>
     <string name="kcu_gate_open_failed">Cannot open the page</string>
+    <string name="kcu_dev_unlock_key_hint">Key (fill either one)</string>
 </resources>
