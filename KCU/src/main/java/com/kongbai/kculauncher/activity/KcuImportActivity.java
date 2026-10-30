@@ -211,8 +211,13 @@ public class KcuImportActivity extends Activity {
     }
 
     private void loadCatalog() {
+        // 必须把玩家选的源带进去：
+        // 不带的话固定按镜像优先去取，切换源就只是把按钮高亮挪了个位置，
+        // 取回来的还是同一个列表。玩家正是想在镜像不通时改用官方，
+        // 那时发现自己换了个寂寞，而界面上没有任何迹象
+        final KcuVersionCatalog.Source source = KcuDownloadPrefs.source();
         worker.execute(() -> {
-            List<KcuVersionCatalog.Entry> list = KcuVersionCatalog.fetch();
+            List<KcuVersionCatalog.Entry> list = KcuVersionCatalog.fetch(source);
             runOnUiThread(() -> {
                 if (list == null || list.isEmpty()) {
                     setStatus(getString(R.string.kcu_import_catalog_failed));
