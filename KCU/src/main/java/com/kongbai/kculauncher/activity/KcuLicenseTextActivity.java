@@ -74,7 +74,9 @@ public class KcuLicenseTextActivity extends Activity {
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             byte[] buffer = new byte[8192];
             int len;
-            while ((len = in.read(buffer)) > 0) out.write(buffer, 0, len);
+            // 以 -1 为结束，理由同清单页：
+            // 截断后这里会显示一篇被砍掉一半的许可全文，而看不出是被截断的
+            while ((len = in.read(buffer)) != -1) out.write(buffer, 0, len);
             return new String(out.toByteArray(), StandardCharsets.UTF_8);
         } catch (Throwable e) {
             return null;
