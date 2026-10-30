@@ -29,11 +29,33 @@ public final class KcuVersionCatalog {
 
     private static final String TAG = "KCU";
 
-    /** 镜像优先，官方兜底 */
-    private static final String[] MANIFEST_URLS = {
-            "https://bmclapi2.bangbang93.com/mc/game/version_manifest_v2.json",
-            "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
-    };
+    /** 下载源：玩家可切换，选中的源先试，失败再试另一个 */
+    public enum Source {
+        /** 镜像：国内直连快 */
+        MIRROR,
+        /** 官方：内容最新 */
+        OFFICIAL
+    }
+
+    private static final String MIRROR_MANIFEST =
+            "https://bmclapi2.bangbang93.com/mc/game/version_manifest_v2.json";
+    private static final String OFFICIAL_MANIFEST =
+            "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
+
+    /**
+     * 按所选源排出尝试顺序。
+     *
+     * 【为什么选了源还要兜底另一个】
+     * 玩家选镜像是为了快，选官方是为了新，但两边的可用性都会变。
+     * 只认选中的那个，一旦它临时不可用就直接失败，玩家只能干等；
+     * 兜底另一个至少能把列表取回来，代价只是可能慢一点或稍旧一点。
+     */
+    private static String[] orderOf(Source source) {
+        if (source == Source.OFFICIAL) {
+            return new String[]{OFFICIAL_MANIFEST, MIRROR_MANIFEST};
+        }
+        return new String[]{MIRROR_MANIFEST, OFFICIAL_MANIFEST};
+    }
 
     private static final int TIMEOUT_MS = 15000;
     private static final int MAX_BYTES = 8 * 1024 * 1024;
@@ -63,7 +85,15 @@ public final class KcuVersionCatalog {
      * 清单按时间倒序，最新的在最前。
      */
     public static List<Entry> fetch() {
-        for (String address : MANIFEST_URLS) {
+        return fetch(Source.MIRROR);
+    }
+
+    /**
+     * 按指定下载源取回版本清单。
+     * 全部地址都失败时返回 null，由调用方提示。
+     */
+    public static List<Entry> fetch(Source source) {
+        for (String address : orderOf(source)) {
             String body = get(address);
             if (body == null || body.isEmpty()) {
                 Log.w(TAG, "Version manifest unavailable: " + address);
