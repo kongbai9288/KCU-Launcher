@@ -1587,4 +1587,7 @@
     <string name="kcu_policy_checking">正在检查可用性…</string>
     <string name="kcu_policy_blocked_title">该功能暂不可用</string>
     <string name="kcu_policy_blocked_body">根据当前设置，此功能暂不提供服务。</string>
+    <string name="kcu_net_none">既没有连接 WiFi，也没有可用的移动数据。请连接网络后再使用此功能。</string>
+    <string name="kcu_net_kind_wifi">当前网络：WiFi</string>
+    <string name="kcu_net_kind_mobile">当前网络：移动数据</string>
 </resources>
