@@ -17,9 +17,7 @@
  */
 package com.kongbai.kculauncher.core.download.forge;
 
-import static com.kongbai.kculauncher.core.util.Lang.mapOf;
 import static com.kongbai.kculauncher.core.util.Logging.LOG;
-import static com.kongbai.kculauncher.core.util.Pair.pair;
 
 import com.google.gson.JsonParseException;
 import com.kongbai.kculauncher.core.download.ComponentVersionList;
@@ -37,7 +35,9 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 
@@ -103,13 +103,18 @@ public final class ForgeBMCLVersionList extends ComponentVersionList<ForgeRemote
                                     String fileName2 = "forge-" + classifier + "-" + lookupVersion + "-" + file.getCategory() + "." + file.getFormat();
                                     urls.add("https://files.minecraftforge.net/maven/net/minecraftforge/forge/" + classifier + "/" + fileName1);
                                     urls.add("https://files.minecraftforge.net/maven/net/minecraftforge/forge/" + classifier + "-" + lookupVersion + "/" + fileName2);
-                                    urls.add(NetworkUtils.withQuery("https://bmclapi2.bangbang93.com/forge/download", mapOf(
-                                            pair("mcversion", version.getGameVersion()),
-                                            pair("version", version.getVersion()),
-                                            pair("branch", branch),
-                                            pair("category", file.getCategory()),
-                                            pair("format", file.getFormat())
-                                    )));
+                                    // 这里不用 mapOf(pair(...))：
+                                    // 那套写法要用类型推断才能对上 Map<String, String>，
+                                    // 推断在部分编译环境下会失败并直接中断编译。
+                                    // 显式构造没有任何推断环节，结果也完全一致。
+                                    // 用能保持顺序的 Map，是为了让拼出来的地址与原来逐字符相同
+                                    Map<String, String> query = new LinkedHashMap<>();
+                                    query.put("mcversion", version.getGameVersion());
+                                    query.put("version", version.getVersion());
+                                    query.put("branch", branch);
+                                    query.put("category", file.getCategory());
+                                    query.put("format", file.getFormat());
+                                    urls.add(NetworkUtils.withQuery("https://bmclapi2.bangbang93.com/forge/download", query));
                                 }
 
                             if (urls.isEmpty())
