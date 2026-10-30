@@ -27,7 +27,9 @@ import com.kongbai.kculauncher.databinding.ActivitySplashBinding
 import com.kongbai.kculauncher.fragment.EulaFragment
 import com.kongbai.kculauncher.fragment.RuntimeFragment
 import com.kongbai.kculauncher.setting.ConfigHolder
+import com.kongbai.kculauncher.activity.KcuGateActivity
 import com.kongbai.kculauncher.util.KcuAgeGate
+import com.kongbai.kculauncher.util.KcuPolicy
 import com.kongbai.kculauncher.util.KcuDevMode
 import com.kongbai.kculauncher.util.KcuManifest
 import com.kongbai.kculauncher.util.KcuAccountTransfer
@@ -75,6 +77,23 @@ class SplashActivity : KCUActivity() {
         ImageUtil.loadInto(
             binding.background, ThemeEngine.getInstance().getTheme().getBackground(this)
         )
+        // 先看本地缓存里有没有停止或更新的要求：
+        // 这两项是强措施，必须在任何常规界面出现之前就挡住。
+        // 这里只读本地缓存，不发网络请求，因此不会卡住启动。
+        KcuPolicy.loadCached()
+        if (KcuPolicy.shutdown() != null) {
+            startActivity(KcuGateActivity.stopped(this))
+            finish()
+            return
+        }
+        if (KcuPolicy.forceUpdate() != null) {
+            startActivity(KcuGateActivity.update(this))
+            finish()
+            return
+        }
+        // 本地没有时后台再取一次远端：
+        // 规则可能刚更新，不能只靠缓存放过一次
+        preparePolicy()
         if (KcuAgeGate.isBlocked()) {
             setContentView(KcuDevMode.buildBlockedView(this))
             return
@@ -99,6 +118,36 @@ class SplashActivity : KCUActivity() {
                 create().show()
             }
         }
+    }
+
+    /**
+     * 后台取一次远端规则，拿到停止或更新要求时立刻转到对应页面。
+     *
+     * 【为什么放在后台】
+     * 取规则要联网，在界面线程上必然失败，也会拖住启动。
+     *
+     * 【为什么拿到结果要跳转而不是等下次启动】
+     * 停止与更新是即时措施，只在下次启动生效的话，
+     * 本次运行仍会照常使用，措施形同虚设。
+     */
+    private fun preparePolicy() {
+        Thread {
+            try {
+                KcuPolicy.prepare()
+            } catch (e: Throwable) {
+                return@Thread
+            }
+            val stopped = KcuPolicy.shutdown() != null
+            val needUpdate = KcuPolicy.forceUpdate() != null
+            if (!stopped && !needUpdate) return@Thread
+            runOnUiThread {
+                startActivity(
+                    if (stopped) KcuGateActivity.stopped(this)
+                    else KcuGateActivity.update(this)
+                )
+                finish()
+            }
+        }.start()
     }
 
     private fun checkPermission() {
