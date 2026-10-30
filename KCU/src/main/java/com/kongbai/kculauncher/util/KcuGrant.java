@@ -2,10 +2,6 @@ package com.kongbai.kculauncher.util;
 
 import android.util.Base64;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -61,8 +57,16 @@ public final class KcuGrant {
                     + "CR01BE9RshekTHprZtWrT3PuEsGxPIzx9BZo3aeWWzHlWoOEs9c8lGwjnQ==",
     };
 
-    /** 载荷里的算法标记，决定用哪一个公钥；新增公钥时递增 */
-    private static final String ALGO_PREFIX = "K1";
+    /**
+     * 载荷里的算法标记，决定用哪一个公钥；新增公钥时递增。
+     *
+     * 【为什么不能写死成只认 K1】
+     * 上面的数组允许放多个，用途是将来更换签发凭据时新旧并存过渡。
+     * 若判定处写死只认 K1，那么后来加进去的第二个、第三个永远进不来 ——
+     * 真到需要更换时，加了却没生效，而且看不出是这里挡住的。
+     * 所以判定改为：认得出编号，且对应下标确实存在公钥。
+     */
+    private static final String ALGO_PREFIX = "K";
 
     /** 吊销列表地址；文件名刻意不起眼 */
     private static final String REVOKED_URL =
@@ -97,7 +101,11 @@ public final class KcuGrant {
      * 保持上一次的结果是最稳妥的：有新的收回信息才更新，否则维持原状。
      */
     public static void refresh() {
-        String body = fetch(REVOKED_URL);
+        // 走镜像而不是直接取：
+        // 直接地址在国内并非总能连通，而这份清单的作用是收回权限，
+        // 取不到就等于收回失效 —— 且是静默失效，看不出任何迹象。
+        // 镜像清单没加载过时，它会退回直连，不会比现在更差
+        String body = KcuMirror.fetch(REVOKED_URL);
         if (body == null) {
             return;
         }
@@ -154,7 +162,7 @@ public final class KcuGrant {
         String expiry = parts[3];
         String signature = parts[4];
 
-        if (!ALGO_PREFIX.equals(algo)) {
+        if (!algoSupported(algo)) {
             return false;
         }
         if (id.isEmpty() || nonce.isEmpty() || signature.isEmpty()) {
@@ -192,7 +200,12 @@ public final class KcuGrant {
             return null;
         }
         String[] parts = text.split("\\.");
-        if (parts.length != 5 || !ALGO_PREFIX.equals(parts[0])) {
+        if (parts.length != 5 || !algoSupported(parts[0])) {
+            return null;
+        }
+        // 标识会写进文件与日志，这里必须同样限制字符集：
+        // 签名只能证明内容没被改过，不能证明它写进日志后不会伪造出一条记录
+        if (!isPlain(parts[1]) || !isPlain(parts[2])) {
             return null;
         }
         String payload = parts[0] + "." + parts[1] + "." + parts[2] + "." + parts[3];
@@ -249,14 +262,22 @@ public final class KcuGrant {
         }
     }
 
+    /** 标记是否可用：认得出编号，且对应下标确实有公钥 */
+    private static boolean algoSupported(String algo) {
+        int index = keyIndex(algo);
+        return index >= 0 && index < TRUSTED_KEYS.length;
+    }
+
     /** "K1" 对应第一个，"K2" 对应第二个；认不出来返回 -1 */
     private static int keyIndex(String algo) {
-        if (algo == null || algo.length() < 2 || algo.charAt(0) != 'K') {
+        if (algo == null || !algo.startsWith(ALGO_PREFIX)) {
             return -1;
         }
         try {
-            int n = Integer.parseInt(algo.substring(1));
-            return n <= 0 ? -1 : n - 1;
+            // 编号从 1 起，下标从 0 起；不是正整数一律不认，
+            // 免得 "K0""K-1" 这类写法算出负数下标
+            int n = Integer.parseInt(algo.substring(ALGO_PREFIX.length()));
+            return n - 1;
         } catch (Throwable e) {
             return -1;
         }
@@ -377,47 +398,4 @@ public final class KcuGrant {
         }
     }
 
-    private static String fetch(String address) {
-        HttpURLConnection conn = null;
-        InputStream in = null;
-        try {
-            conn = (HttpURLConnection) new URL(address).openConnection();
-            conn.setConnectTimeout(TIMEOUT_MS);
-            conn.setReadTimeout(TIMEOUT_MS);
-            conn.setInstanceFollowRedirects(true);
-            conn.setRequestMethod("GET");
-            if (conn.getResponseCode() != 200) {
-                return null;
-            }
-            in = conn.getInputStream();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buf = new byte[4096];
-            int total = 0;
-            int n;
-            // 用 != -1 判结束：个别流会返回 0，按 > 0 判会提前结束导致内容被截断
-            while ((n = in.read(buf)) != -1) {
-                total += n;
-                if (total > MAX_LIST_BYTES) {
-                    return null;
-                }
-                out.write(buf, 0, n);
-            }
-            return new String(out.toByteArray(), StandardCharsets.UTF_8);
-        } catch (Throwable e) {
-            return null;
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Throwable ignored) {
-                }
-            }
-            if (conn != null) {
-                try {
-                    conn.disconnect();
-                } catch (Throwable ignored) {
-                }
-            }
-        }
-    }
 }
