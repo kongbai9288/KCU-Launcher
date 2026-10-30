@@ -30,6 +30,7 @@ import com.kongbai.kculauncher.setting.ConfigHolder
 import com.kongbai.kculauncher.activity.KcuGateActivity
 import com.kongbai.kculauncher.util.KcuAgeGate
 import com.kongbai.kculauncher.util.KcuPolicy
+import com.kongbai.kculauncher.util.KcuGrant
 import com.kongbai.kculauncher.util.KcuDevMode
 import com.kongbai.kculauncher.util.KcuManifest
 import com.kongbai.kculauncher.util.KcuAccountTransfer
@@ -134,6 +135,7 @@ class SplashActivity : KCUActivity() {
         Thread {
             try {
                 KcuPolicy.prepare()
+                KcuGrant.refresh()
             } catch (e: Throwable) {
                 return@Thread
             }
