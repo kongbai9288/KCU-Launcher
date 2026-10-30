@@ -7,45 +7,112 @@ import android.net.NetworkInfo;
 import com.kongbai.kculauncher.KCUApp;
 
 /**
- * 设备联网状态判断。
+ * 设备联网状态判断：直接读手机自身的网络状态，不发任何请求去探测。
  *
- * 【为什么先判联网再发请求】
- * 没网时发起请求有两种坏结果：一是请求要等到超时才失败，界面长时间转圈，
- * 玩家以为功能坏了；二是部分系统会立刻抛出无法连接，若没有兜底会直接崩。
- * 先本地判一次，没网就立刻告诉玩家，既不发无效请求，也不用等超时。
+ * 【为什么是读状态而不是发请求探测】
+ * 发请求探测既要多等一次超时，又会在没网时白白产生一次失败请求；
+ * 而系统在连接变化时就已经维护好状态，直接读既快又不产生任何流量。
+ * 这里全程只做本地查询，不发一个包。
  *
- * 【为什么判不出来按"有网"处理】
- * 这个判断是本地操作，正常情况下很可靠。真判不出来时若按"没网"处理，
- * 会把网络正常的用户挡在门外 —— 误伤的代价远大于多发一次请求，
- * 而请求本身有超时兜底，不会无限等下去。
+ * 【判定口径：既没有可用的移动数据，也没有连上的 WiFi，才算没网】
+ * 两种通道分别检查，只有两条路都不可用时才判为没网。
+ * 任何一条通着就认为能上网，避免把只开着流量、或只连着 WiFi 的用户误判成没网。
+ *
+ * 【为什么判断本身失败时按"有网"处理】
+ * 真判不出来时若按"没网"处理，会把网络正常的用户挡在门外 ——
+ * 误伤的代价远大于多发一次请求，而请求本身有超时兜底，不会无限等下去。
  */
 public final class KcuNetwork {
+
+    /** 网络类型，用于给出更明确的提示 */
+    public enum Kind {
+        /** 两条路都不可用 */
+        NONE,
+        WIFI,
+        MOBILE,
+        /** 其他通道（以太网、蓝牙共享等），能连上就算可用 */
+        OTHER
+    }
 
     private KcuNetwork() {
     }
 
-    /**
-     * 当前是否联网。
-     *
-     * 只有在明确判断出"没有可用网络"时才返回 false；
-     * 判断本身失败时返回 true，交由后续请求的超时兜底，避免误伤。
-     */
-    public static boolean isOnline() {
+    private static ConnectivityManager manager() {
         try {
             Context context = KCUApp.getAppContext();
             if (context == null) {
-                return true;
+                return null;
             }
             Object service = context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (!(service instanceof ConnectivityManager)) {
-                return true;
-            }
-            ConnectivityManager manager = (ConnectivityManager) service;
-            NetworkInfo info = manager.getActiveNetworkInfo();
-            // 没有活动网络，或网络存在但没连上，都算没网
+            return service instanceof ConnectivityManager ? (ConnectivityManager) service : null;
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
+    /** 某类网络是否已连上；查不到按"没连上"处理 */
+    private static boolean connectedOf(ConnectivityManager manager, int type) {
+        try {
+            NetworkInfo info = manager.getNetworkInfo(type);
             return info != null && info.isConnected();
         } catch (Throwable e) {
-            return true;
+            return false;
         }
+    }
+
+    /** 是否连上了 WiFi */
+    public static boolean isWifiConnected() {
+        ConnectivityManager manager = manager();
+        if (manager == null) {
+            return false;
+        }
+        return connectedOf(manager, ConnectivityManager.TYPE_WIFI);
+    }
+
+    /** 是否连上了移动数据 */
+    public static boolean isMobileConnected() {
+        ConnectivityManager manager = manager();
+        if (manager == null) {
+            return false;
+        }
+        return connectedOf(manager, ConnectivityManager.TYPE_MOBILE);
+    }
+
+    /**
+     * 当前网络类型。
+     *
+     * 判断本身失败时返回 OTHER 而不是 NONE：
+     * 判不出来就当没网会把正常用户挡在门外，代价更大。
+     */
+    public static Kind kind() {
+        try {
+            if (isWifiConnected()) {
+                return Kind.WIFI;
+            }
+            if (isMobileConnected()) {
+                return Kind.MOBILE;
+            }
+            ConnectivityManager manager = manager();
+            if (manager == null) {
+                // 查不到状态，不敢判成没网
+                return Kind.OTHER;
+            }
+            NetworkInfo active = manager.getActiveNetworkInfo();
+            if (active != null && active.isConnected()) {
+                return Kind.OTHER;
+            }
+            return Kind.NONE;
+        } catch (Throwable e) {
+            return Kind.OTHER;
+        }
+    }
+
+    /**
+     * 当前是否联网：移动数据与 WiFi 两条路只要有一条通着就算有网。
+     *
+     * 只有在两条路都明确不可用时才返回 false。
+     */
+    public static boolean isOnline() {
+        return kind() != Kind.NONE;
     }
 }
