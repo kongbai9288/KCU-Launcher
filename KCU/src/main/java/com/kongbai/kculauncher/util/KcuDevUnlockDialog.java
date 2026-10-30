@@ -33,7 +33,7 @@ public final class KcuDevUnlockDialog {
                 .title(context.getString(R.string.kcu_dev_unlock_title))
                 .body(context.getString(R.string.kcu_dev_unlock_body))
                 .field(context.getString(R.string.kcu_dev_unlock_hint), "\u2022")
-                .field(context.getString(R.string.kcu_dev_unlock_key_hint), null)
+                .field(context.getString(R.string.kcu_dev_unlock_key_hint), "\u2022")
                 .hint(context.getString(R.string.kcu_dev_unlock_note))
                 // 不自动关闭：要等网络校验结果回来再决定去留
                 .primaryStay(context.getString(R.string.kcu_dev_unlock_confirm), null)
@@ -61,6 +61,7 @@ public final class KcuDevUnlockDialog {
                 // post 永不执行 —— 按钮保持禁用、对话框不关闭、没有任何提示，
                 // 玩家只能靠返回键退出，表现为点了校验后彻底没反应
                 boolean owner = false;
+                String grantedId = null;
                 Throwable failure = null;
                 try {
                     if (!key.isEmpty()) {
@@ -75,7 +76,8 @@ public final class KcuDevUnlockDialog {
                         if (owner) {
                             // 只有验证通过之后，里面的标识才是可信的，
                             // 这时才允许把它写进记录
-                            android.util.Log.i("KCU", "Dev unlock by grant: " + KcuGrant.idOf(key));
+                            grantedId = KcuGrant.idOf(key);
+                            android.util.Log.i("KCU", "Dev unlock by grant: " + grantedId);
                         }
                     } else {
                         owner = KcuDevMode.verifyOwner(token);
@@ -84,11 +86,17 @@ public final class KcuDevUnlockDialog {
                     failure = e;
                 }
                 final boolean result = owner;
+                final String usedId = grantedId;
                 final Throwable error = failure;
                 Runnable deliver = () -> {
                     primary.setEnabled(true);
                     try {
                         if (error == null && result && KcuDevMode.grant()) {
+                            // 记下用的是哪一条，日后若被收回才能对上号。
+                            // 令牌途径没有标识，也就无从收回，不影响本人
+                            if (usedId != null && !usedId.isEmpty()) {
+                                KcuDevMode.setGrantId(usedId);
+                            }
                             KcuDevMode.refresh();
                             Toast.makeText(context, R.string.kcu_dev_unlock_ok, Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
