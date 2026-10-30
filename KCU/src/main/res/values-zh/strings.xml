@@ -1590,4 +1590,17 @@
     <string name="kcu_net_none">既没有连接 WiFi，也没有可用的移动数据。请连接网络后再使用此功能。</string>
     <string name="kcu_net_kind_wifi">当前网络：WiFi</string>
     <string name="kcu_net_kind_mobile">当前网络：移动数据</string>
+    <string name="kcu_gate_stopped_title">本应用已暂停服务</string>
+    <string name="kcu_gate_stopped_body">对不起，本应用无法正常使用。这往往是因为我们有可能违反了法律法规，或者是本软件出现了其他特殊的情况。为了大家的体验，本应用强行暂停。你可以选择导出数据，或者查看我们的 GitHub 相关页面了解情况。</string>
+    <string name="kcu_gate_update_title">需要更新</string>
+    <string name="kcu_gate_update_body">当前版本已无法使用，请获取新版本后继续。</string>
+    <string name="kcu_gate_get_update">获取新版本</string>
+    <string name="kcu_gate_export">导出数据</string>
+    <string name="kcu_gate_exporting">正在导出…</string>
+    <string name="kcu_gate_export_done">已导出到</string>
+    <string name="kcu_gate_export_failed">导出失败</string>
+    <string name="kcu_gate_links">了解更多</string>
+    <string name="kcu_gate_org">GitHub 上的 KCU Studios</string>
+    <string name="kcu_gate_dev">GitHub 上的 kongbai9288</string>
+    <string name="kcu_gate_open_failed">无法打开页面</string>
 </resources>
