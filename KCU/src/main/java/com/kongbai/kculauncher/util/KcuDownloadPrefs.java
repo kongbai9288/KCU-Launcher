@@ -63,13 +63,20 @@ public final class KcuDownloadPrefs {
         return KcuVersionCatalog.Source.MIRROR;
     }
 
-    /** 记住下载源 */
+    /**
+     * 记住下载源。
+     *
+     * 【为什么这里也要同步写入】
+     * 与免责确认同理：玩家刚切完源，若此时进程被终止，异步写入还没落盘，
+     * 下次启动又变回原来的源，而界面上刚提示过"已切换"。
+     * 这种"明明改了却没生效"且没有任何提示的情况，正是最容易被当成软件有问题的。
+     */
     public static void setSource(KcuVersionCatalog.Source source) {
         try {
             String value = source == KcuVersionCatalog.Source.OFFICIAL
                     ? KcuVersionCatalog.Source.OFFICIAL.name()
                     : KcuVersionCatalog.Source.MIRROR.name();
-            prefs().edit().putString(KEY_SOURCE, value).apply();
+            prefs().edit().putString(KEY_SOURCE, value).commit();
         } catch (Throwable ignored) {
         }
     }
