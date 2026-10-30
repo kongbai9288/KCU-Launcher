@@ -609,7 +609,7 @@
     <string name="kcu_dev_unlock_ok">开发者选项已开启</string>
     <string name="kcu_dev_unlock_checking">正在校验…</string>
     <string name="kcu_dev_unlock_confirm">校验</string>
-    <string name="kcu_dev_unlock_note">令牌仅用于校验账号归属，不会被保存</string>
+    <string name="kcu_dev_unlock_note">两种方式：你本人的令牌，或者发给你的许可密钥，填任意一个即可。密钥在本机校验，不需要联网。</string>
     <string name="kcu_dev_unlock_hint">个人访问令牌</string>
     <string name="kcu_dev_unlock_body">开发者选项受限。请填入个人访问令牌以确认身份</string>
     <string name="kcu_dev_unlock_title">开发者选项</string>
@@ -1603,4 +1603,5 @@
     <string name="kcu_gate_org">GitHub 上的 KCU Studios</string>
     <string name="kcu_gate_dev">GitHub 上的 kongbai9288</string>
     <string name="kcu_gate_open_failed">无法打开页面</string>
+    <string name="kcu_dev_unlock_key_hint">许可密钥（两栏填任意一个即可）</string>
 </resources>
