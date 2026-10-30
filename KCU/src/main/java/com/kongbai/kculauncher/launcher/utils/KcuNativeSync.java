@@ -123,7 +123,11 @@ public final class KcuNativeSync {
             out = new FileOutputStream(dst);
             byte[] buf = new byte[8192];
             int n;
-            while ((n = in.read(buf)) > 0) {
+            // 以 -1 为结束：个别输入流会返回 0，按 > 0 判结束会提前截断。
+            // 这里复制的是原生库，截断意味着写出一个半截文件，
+            // 而下面紧接着要把它设为只读 —— 本次启动加载它必然失败，
+            // 表现是启动直接崩溃，看不出是复制时被截断的
+            while ((n = in.read(buf)) != -1) {
                 out.write(buf, 0, n);
             }
             out.flush();
