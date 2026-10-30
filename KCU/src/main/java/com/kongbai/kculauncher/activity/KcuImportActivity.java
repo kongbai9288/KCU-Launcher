@@ -122,12 +122,21 @@ public class KcuImportActivity extends Activity {
         });
     }
 
-    /** 没网时的页面：明确说明原因，不提供任何需要联网的入口 */
+    /**
+     * 没网时的页面：说明是哪种情况没网，不提供任何需要联网的入口。
+     *
+     * 【为什么分开说 WiFi 与移动数据】
+     * 只说一句"没连接网络"，玩家不知道该去开哪一个：
+     * 有人是忘了开 WiFi，有人是流量被禁用了。
+     * 把两条路都点出来，玩家一眼就知道该去做什么。
+     */
     private void showOffline() {
         card.removeAllViews();
         card.addView(KcuUi.header(this, "!", getString(R.string.kcu_net_offline_title)));
         card.addView(KcuUi.gap(this, 12));
         card.addView(KcuUi.body(this, getString(R.string.kcu_net_offline)));
+        card.addView(KcuUi.gap(this, 8));
+        card.addView(KcuUi.body(this, getString(R.string.kcu_net_none)));
         card.addView(KcuUi.gap(this, 18));
         android.widget.Button retry = KcuUi.primaryButton(this, getString(R.string.kcu_import_loading));
         retry.setOnClickListener(v -> {
@@ -135,6 +144,18 @@ public class KcuImportActivity extends Activity {
             startWithPolicyCheck();
         });
         card.addView(retry);
+    }
+
+    /** 当前网络类型的一句话说明，用于让联网提示更具体 */
+    private String networkKindText() {
+        KcuNetwork.Kind kind = KcuNetwork.kind();
+        if (kind == KcuNetwork.Kind.WIFI) {
+            return getString(R.string.kcu_net_kind_wifi);
+        }
+        if (kind == KcuNetwork.Kind.MOBILE) {
+            return getString(R.string.kcu_net_kind_mobile);
+        }
+        return "";
     }
 
     /**
