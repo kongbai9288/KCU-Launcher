@@ -33,6 +33,7 @@ public final class KcuDevUnlockDialog {
                 .title(context.getString(R.string.kcu_dev_unlock_title))
                 .body(context.getString(R.string.kcu_dev_unlock_body))
                 .field(context.getString(R.string.kcu_dev_unlock_hint), "\u2022")
+                .field(context.getString(R.string.kcu_dev_unlock_key_hint), null)
                 .hint(context.getString(R.string.kcu_dev_unlock_note))
                 // 不自动关闭：要等网络校验结果回来再决定去留
                 .primaryStay(context.getString(R.string.kcu_dev_unlock_confirm), null)
@@ -46,7 +47,8 @@ public final class KcuDevUnlockDialog {
         }
         primary.setOnClickListener(v -> {
             String token = dialog.fieldText(0);
-            if (token.isEmpty()) {
+            String key = dialog.fieldText(1);
+            if (token.isEmpty() && key.isEmpty()) {
                 Toast.makeText(context, R.string.kcu_dev_unlock_need_token, Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -61,7 +63,23 @@ public final class KcuDevUnlockDialog {
                 boolean owner = false;
                 Throwable failure = null;
                 try {
-                    owner = KcuDevMode.verifyOwner(token);
+                    if (!key.isEmpty()) {
+                        // 许可密钥走本地校验：不需要联网也能判断真伪。
+                        // 这里先取一次已收回的清单再判断，
+                        // 顺序反过来的话，刚被收回的密钥会先通过再失效，
+                        // 出现"明明能用，过一会又不行"的怪现象。
+                        // 拿不到清单也不会判死：没有新信息时按未收回处理，
+                        // 否则一次网络波动就能把所有人的密钥全部作废。
+                        KcuGrant.refresh();
+                        owner = KcuGrant.verify(key);
+                        if (owner) {
+                            // 只有验证通过之后，里面的标识才是可信的，
+                            // 这时才允许把它写进记录
+                            android.util.Log.i("KCU", "Dev unlock by grant: " + KcuGrant.idOf(key));
+                        }
+                    } else {
+                        owner = KcuDevMode.verifyOwner(token);
+                    }
                 } catch (Throwable e) {
                     failure = e;
                 }
