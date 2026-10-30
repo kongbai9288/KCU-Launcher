@@ -72,10 +72,22 @@ public final class KcuAgeGate {
         }
     }
 
-    /** 清除声明 */
+    /**
+     * 清除声明。
+     *
+     * 【为什么这里也必须同步写入，不能用异步】
+     * 上面 declare 已经写明理由：这个值决定应用能不能继续用。reset 反过来，
+     * 它决定应用能不能"重新能用"，方向不同但性质完全一样。
+     * 清除发生在玩家选了不符合要求的年龄之后，紧接着就要重画选择界面。
+     * 若这一瞬间进程被终止而清除尚未落盘，下次启动时声明仍在、且仍不符合要求，
+     * 于是直接进入不可用的页面 —— 而那个页面没有任何重选入口。
+     * 一次误触就再也没有自救的办法，只能清除应用数据或重装，
+     * 所有设置和账号会一起丢掉，后果与一次误触完全不成比例。
+     * 异步写入只保证内存里立刻可见，不保证已经写到文件，这里要的正是后者。
+     */
     public static void reset() {
         try {
-            prefs().edit().remove(KEY_AGE).remove(KEY_PROMPTED).apply();
+            prefs().edit().remove(KEY_AGE).remove(KEY_PROMPTED).commit();
         } catch (Throwable ignored) {
         }
     }
