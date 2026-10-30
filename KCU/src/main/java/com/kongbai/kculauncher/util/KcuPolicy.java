@@ -11,9 +11,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
+
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -69,10 +68,11 @@ public final class KcuPolicy {
      * 限制是例外而非常态，正常情况下这些限制都不该出现。
      */
     private static final String FALLBACK =
-            "{\"updatedAt\":0,\"blocks\":[{\"feature\":\"download\",\"regions\":[\"CN\"],"
-                    + "\"unknown\":\"allow\"}]}";
+            "{\"updatedAt\":0,\"rules\":[{\"version\":\"*\",\"client\":\"*\","
+                    + "\"features\":[{\"feature\":\"download\",\"regions\":[\"CN\"],"
+                    + "\"unknown\":\"allow\"}]}]}";
 
-    private static volatile List<Block> blocks = new ArrayList<>();
+    private static volatile List<Rule> rules = new ArrayList<>();
     private static volatile boolean prepared = false;
 
     /**
@@ -100,7 +100,7 @@ public final class KcuPolicy {
     private KcuPolicy() {
     }
 
-    /** 一条限制规则 */
+    /** 一条功能限制 */
     private static final class Block {
         String feature = "";
         List<String> regions = new ArrayList<>();
@@ -108,6 +108,39 @@ public final class KcuPolicy {
         boolean blockOnUnknown = false;
         String title = "";
         String body = "";
+    }
+
+    /** 强制更新：低于指定版本就要求更新，不更新则不可用 */
+    public static final class ForceUpdate {
+        /** 最低可用版本；低于此版本被挡住 */
+        public String minVersion = "";
+        public String title = "";
+        public String body = "";
+        /** 更新页地址；留空时只提示不给跳转 */
+        public String url = "";
+    }
+
+    /** 强制停止：整个应用不可用 */
+    public static final class Shutdown {
+        public String title = "";
+        public String body = "";
+        /** 是否提供导出数据的入口 */
+        public boolean allowExport = true;
+    }
+
+    /**
+     * 一组规则，只在版本与客户端都匹配时生效。
+     *
+     * 【为什么按组而不是每条单独写版本】
+     * 同一件事往往同时涉及多个功能限制、更新要求和停止要求，
+     * 分组写一次版本与客户端即可，不必每条重复，也不容易写漏。
+     */
+    private static final class Rule {
+        String version = "";
+        String client = "";
+        List<Block> blocks = new ArrayList<>();
+        ForceUpdate forceUpdate = null;
+        Shutdown shutdown = null;
     }
 
     /**
@@ -118,6 +151,12 @@ public final class KcuPolicy {
      * 因此不会因为没有准备好而误伤任何功能。
      */
     public static void prepare() {
+        try {
+            // 先取镜像清单，后续拉取才能走镜像：
+            // 清单取不到不影响后续，会自动退回直连
+            KcuMirror.load();
+        } catch (Throwable ignored) {
+        }
         try {
             syncRules();
         } catch (Throwable ignored) {
@@ -154,26 +193,88 @@ public final class KcuPolicy {
         // 只使用准备阶段探测到的地区，这里绝不发起网络请求
         String here = region;
         boolean unknown = here == null || here.isEmpty();
-        for (Block block : blocks) {
-            if (!feature.equals(block.feature)) {
-                continue;
-            }
-            // 地区列表为空 = 全部地区
-            if (block.regions.isEmpty()) {
-                return true;
-            }
-            if (unknown) {
-                // 判定不出地区时按规则自身的取向处理，默认不限制：
-                // 猜错的代价（正常用户用不了）比放过的大
-                return block.blockOnUnknown;
-            }
-            for (String one : block.regions) {
-                if (one != null && one.trim().equalsIgnoreCase(here)) {
+        for (Rule rule : applicable()) {
+            for (Block block : rule.blocks) {
+                if (!feature.equals(block.feature)) {
+                    continue;
+                }
+                // 地区列表为空 = 全部地区
+                if (block.regions.isEmpty()) {
                     return true;
+                }
+                if (unknown) {
+                    // 判定不出地区时按规则自身的取向处理，默认不限制：
+                    // 猜错的代价（正常用户用不了）比放过的大
+                    return block.blockOnUnknown;
+                }
+                for (String one : block.regions) {
+                    if (one != null && one.trim().equalsIgnoreCase(here)) {
+                        return true;
+                    }
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * 当前适用的规则组。
+     *
+     * 【为什么匹配不上时当作不适用】
+     * 规则写错、版本取不到、客户端识别不了，这些情况如果当成"适用"，
+     * 就会把停止和更新这类强措施套到所有人头上，后果不可收拾。
+     * 当成不适用最多是这条规则没生效，是安全的那一侧。
+     */
+    private static List<Rule> applicable() {
+        List<Rule> out = new ArrayList<>();
+        String version = KcuTarget.currentVersion();
+        String client = KcuTarget.currentClient();
+        for (Rule rule : rules) {
+            if (!KcuTarget.versionMatches(rule.version, version)) {
+                continue;
+            }
+            if (!KcuTarget.clientMatches(rule.client)) {
+                continue;
+            }
+            out.add(rule);
+        }
+        return out;
+    }
+
+    /**
+     * 当前是否要求强制更新。
+     *
+     * 【为什么版本取不到时不要求更新】
+     * 版本取不到意味着无法判断该不该更新，此时要求更新会把所有
+     * 拿不到版本信息的人一视同仁地挡住，属于误伤。
+     * 版本为空时直接不生效，规则里的强措施只在能确认时才执行。
+     */
+    public static ForceUpdate forceUpdate() {
+        String version = KcuTarget.currentVersion();
+        if (version.isEmpty()) {
+            return null;
+        }
+        for (Rule rule : applicable()) {
+            ForceUpdate force = rule.forceUpdate;
+            if (force == null || force.minVersion.isEmpty()) {
+                continue;
+            }
+            // 当前版本低于最低可用版本才要求更新
+            if (KcuTarget.compareVersions(version, force.minVersion) < 0) {
+                return force;
+            }
+        }
+        return null;
+    }
+
+    /** 当前是否要求强制停止 */
+    public static Shutdown shutdown() {
+        for (Rule rule : applicable()) {
+            if (rule.shutdown != null) {
+                return rule.shutdown;
+            }
+        }
+        return null;
     }
 
     /** 被限制时显示的标题；规则没写则回退到内置文案 */
@@ -198,9 +299,11 @@ public final class KcuPolicy {
         if (feature == null) {
             return null;
         }
-        for (Block block : blocks) {
-            if (feature.equals(block.feature)) {
-                return block;
+        for (Rule rule : applicable()) {
+            for (Block block : rule.blocks) {
+                if (feature.equals(block.feature)) {
+                    return block;
+                }
             }
         }
         return null;
@@ -208,19 +311,19 @@ public final class KcuPolicy {
 
     /** 首次使用或缓存为空时载入：优先本地缓存，其次内置默认 */
     public static void loadCached() {
-        if (!blocks.isEmpty()) {
+        if (!rules.isEmpty()) {
             return;
         }
         File file = getCacheFile();
         if (file != null && file.isFile()) {
-            List<Block> parsed = parse(readFile(file));
+            List<Rule> parsed = parse(readFile(file));
             if (parsed != null) {
-                blocks = parsed;
+                rules = parsed;
                 return;
             }
         }
-        List<Block> parsed = parse(FALLBACK);
-        blocks = parsed != null ? parsed : new ArrayList<>();
+        List<Rule> parsed = parse(FALLBACK);
+        rules = parsed != null ? parsed : new ArrayList<>();
     }
 
     private static void syncRules() {
@@ -239,20 +342,20 @@ public final class KcuPolicy {
         if (local > 0 && remote <= local) {
             return;
         }
-        String rules = fetch(RULES_URL);
-        if (rules == null || rules.trim().isEmpty()) {
+        String body = fetch(RULES_URL);
+        if (body == null || body.trim().isEmpty()) {
             return;
         }
-        List<Block> parsed = parse(rules);
+        List<Rule> parsed = parse(body);
         if (parsed == null) {
             return;
         }
         // 先落盘成功再替换内存：否则进程内认为已生效、磁盘上却没有，
         // 下次启动又会重新拉一遍
-        if (writeCache(rules)) {
-            blocks = parsed;
+        if (writeCache(body)) {
+            rules = parsed;
             // 同步一份到公共目录供查看；这份只写不读，不参与任何判断
-            writeSharedCopy(rules);
+            writeSharedCopy(body);
         }
     }
 
@@ -375,45 +478,19 @@ public final class KcuPolicy {
         }
     }
 
+    /**
+     * 取远端内容，优先走镜像。
+     *
+     * 【为什么要优先走镜像】
+     * 直连境外代码托管在国内经常超时。规则拉取发生在启动路径上，
+     * 卡在一个连不上的地址会把启动拖住。镜像通常更快也更稳。
+     *
+     * 【为什么原始地址仍要保留】
+     * 所有镜像都不通时，直连还有机会成功。因此镜像只是"先试试"的选项，
+     * 不是唯一途径 —— 展开候选地址时原始地址始终排在最后兜底。
+     */
     private static String fetch(String address) {
-        HttpURLConnection conn = null;
-        InputStream in = null;
-        try {
-            conn = (HttpURLConnection) new URL(address).openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(TIMEOUT_MS);
-            conn.setReadTimeout(TIMEOUT_MS);
-            conn.setInstanceFollowRedirects(true);
-            if (conn.getResponseCode() != 200) {
-                return null;
-            }
-            in = conn.getInputStream();
-            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
-            byte[] buf = new byte[4096];
-            int n;
-            int total = 0;
-            while ((n = in.read(buf)) != -1) {
-                total += n;
-                if (total > MAX_FETCH_BYTES) {
-                    // 超过上限按拉不到处理：宁可沿用已有规则，也不把异常内容读进来
-                    return null;
-                }
-                out.write(buf, 0, n);
-            }
-            return new String(out.toByteArray(), StandardCharsets.UTF_8);
-        } catch (Throwable e) {
-            return null;
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (Throwable ignored) {
-                }
-            }
-            if (conn != null) {
-                conn.disconnect();
-            }
-        }
+        return KcuMirror.fetch(address);
     }
 
     private static long readUpdatedAt(String json) {
@@ -445,26 +522,48 @@ public final class KcuPolicy {
         return 0;
     }
 
-    private static List<Block> parse(String json) {
+    /**
+     * 解析规则文件。
+     *
+     * 支持两种写法：
+     * 顶层 rules 数组（每条带 version 与 client），
+     * 以及早期写法顶层 blocks 数组（不带限定，对所有版本与客户端生效）。
+     * 保留旧写法是为了让已经存在的缓存文件仍可被读懂，不至于整个失效。
+     */
+    private static List<Rule> parse(String json) {
         if (json == null || json.trim().isEmpty()) {
             return null;
         }
-        List<Block> list = new ArrayList<>();
+        List<Rule> list = new ArrayList<>();
         JsonReader reader = null;
         try {
             reader = new JsonReader(new java.io.StringReader(json));
             reader.beginObject();
             while (reader.hasNext()) {
                 String key = reader.nextName();
-                if ("blocks".equals(key)) {
+                if ("rules".equals(key)) {
+                    reader.beginArray();
+                    while (reader.hasNext()) {
+                        Rule rule = readRule(reader);
+                        if (rule != null) {
+                            list.add(rule);
+                        }
+                    }
+                    reader.endArray();
+                } else if ("blocks".equals(key)) {
+                    // 早期写法：装进一条不限定的规则里
+                    Rule legacy = new Rule();
                     reader.beginArray();
                     while (reader.hasNext()) {
                         Block block = readBlock(reader);
                         if (block != null) {
-                            list.add(block);
+                            legacy.blocks.add(block);
                         }
                     }
                     reader.endArray();
+                    if (!legacy.blocks.isEmpty()) {
+                        list.add(legacy);
+                    }
                 } else {
                     reader.skipValue();
                 }
@@ -484,6 +583,80 @@ public final class KcuPolicy {
                 }
             }
         }
+    }
+
+    private static Rule readRule(JsonReader reader) throws Exception {
+        Rule rule = new Rule();
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String key = reader.nextName();
+            if ("version".equals(key)) {
+                rule.version = reader.nextString();
+            } else if ("client".equals(key)) {
+                rule.client = reader.nextString();
+            } else if ("forceUpdate".equals(key)) {
+                rule.forceUpdate = readForceUpdate(reader);
+            } else if ("shutdown".equals(key)) {
+                rule.shutdown = readShutdown(reader);
+            } else if ("features".equals(key) || "blocks".equals(key)) {
+                reader.beginArray();
+                while (reader.hasNext()) {
+                    Block block = readBlock(reader);
+                    if (block != null) {
+                        rule.blocks.add(block);
+                    }
+                }
+                reader.endArray();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
+        // 一条规则里什么都没写就没有存在意义
+        if (rule.blocks.isEmpty() && rule.forceUpdate == null && rule.shutdown == null) {
+            return null;
+        }
+        return rule;
+    }
+
+    private static ForceUpdate readForceUpdate(JsonReader reader) throws Exception {
+        ForceUpdate force = new ForceUpdate();
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String key = reader.nextName();
+            if ("minVersion".equals(key) || "min".equals(key)) {
+                force.minVersion = reader.nextString();
+            } else if ("title".equals(key)) {
+                force.title = reader.nextString();
+            } else if ("body".equals(key)) {
+                force.body = reader.nextString();
+            } else if ("url".equals(key)) {
+                force.url = reader.nextString();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
+        return force;
+    }
+
+    private static Shutdown readShutdown(JsonReader reader) throws Exception {
+        Shutdown shutdown = new Shutdown();
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String key = reader.nextName();
+            if ("title".equals(key)) {
+                shutdown.title = reader.nextString();
+            } else if ("body".equals(key)) {
+                shutdown.body = reader.nextString();
+            } else if ("export".equals(key)) {
+                shutdown.allowExport = reader.nextBoolean();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
+        return shutdown;
     }
 
     private static Block readBlock(JsonReader reader) throws Exception {
