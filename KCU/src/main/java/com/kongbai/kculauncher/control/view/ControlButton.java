@@ -873,7 +873,16 @@ public class ControlButton extends AppCompatButton implements CustomView {
                 // 剪贴板空就只提示，绝不收输入法：
                 // 没东西可粘还把人家的输入法收掉纯属打扰，玩家此刻可能正用输入法打字
                 pasteArmedAt = 0;
-                Toast.makeText(getContext(), R.string.kcu_clipboard_empty, Toast.LENGTH_SHORT).show();
+                // 剪贴板空时退回按钮上写好的文字：
+                // 这个开关一旦打开，只要剪贴板是空的，按钮上写的字就一条都发不出去，
+                // 而玩家看到的只有"剪贴板为空"，不会知道按钮上那行字也跟着作废了 ——
+                // 他会以为是自己没配好。粘贴优先指的是"有东西可粘时优先用粘贴的内容"，
+                // 没有可粘的内容时退回预设文本，与这条规则并不冲突
+                if (StringUtils.isNotBlank(event.getOutputText())) {
+                    GameTextSender.send(menu, event.getOutputText(), this::notifyTextDropped);
+                } else {
+                    Toast.makeText(getContext(), R.string.kcu_clipboard_empty, Toast.LENGTH_SHORT).show();
+                }
             } else if (!event.isPasteDismissIme()) {
                 // 玩家关掉了"粘贴前收输入法"：按下即粘贴，输入法保持原样，不打断正在输入的人
                 pasteArmedAt = 0;
