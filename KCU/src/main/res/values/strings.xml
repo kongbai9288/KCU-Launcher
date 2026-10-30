@@ -1754,4 +1754,7 @@
     <string name="kcu_policy_checking">正在检查可用性…</string>
     <string name="kcu_policy_blocked_title">Feature unavailable</string>
     <string name="kcu_policy_blocked_body">This feature is not available under current settings.</string>
+    <string name="kcu_net_none">Neither Wi-Fi nor mobile data is available. Please connect to a network before using this feature.</string>
+    <string name="kcu_net_kind_wifi">Current network: Wi-Fi</string>
+    <string name="kcu_net_kind_mobile">Current network: Mobile data</string>
 </resources>
