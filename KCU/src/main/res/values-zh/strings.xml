@@ -1585,4 +1585,6 @@
     <string name="kcu_dl_start">开始下载</string>
     <string name="kcu_dl_target">保存为</string>
     <string name="kcu_policy_checking">正在检查可用性…</string>
+    <string name="kcu_policy_blocked_title">该功能暂不可用</string>
+    <string name="kcu_policy_blocked_body">根据当前设置，此功能暂不提供服务。</string>
 </resources>
