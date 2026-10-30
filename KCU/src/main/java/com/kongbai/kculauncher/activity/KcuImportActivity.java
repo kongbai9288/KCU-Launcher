@@ -16,6 +16,11 @@ import com.kongbai.kculauncher.setting.Profiles;
 import com.kongbai.kculauncher.util.KcuPolicy;
 import com.kongbai.kculauncher.util.KcuUi;
 import com.kongbai.kculauncher.util.KcuVersionCatalog;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import com.kongbai.kculauncher.util.KcuUrlFormat;
+import com.kongbai.kculauncher.util.KcuDownloadPrefs;
+import com.kongbai.kculauncher.util.KcuNetwork;
 import com.kongbai.kculauncher.util.KcuVersionMeta;
 
 import java.io.File;
@@ -52,6 +57,13 @@ public class KcuImportActivity extends Activity {
     private List<KcuVersionCatalog.Entry> catalog;
     private boolean showSnapshots = false;
 
+    /** 格式链接下载：当前用途，false=版本 true=模组 */
+    private boolean customForMod = false;
+    private LinearLayout placeholderBox;
+    private TextView previewText;
+    private android.widget.EditText formatEdit;
+    private android.widget.EditText nameEdit;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,14 +88,27 @@ public class KcuImportActivity extends Activity {
     }
 
     /**
-     * 先确认这个功能在当前地区是否可用，再决定显示什么。
+     * 进入流程：先判可用性与联网，都不发无效请求。
      *
-     * 规则来自可随时更新的远端，因此这里不能只看本地写死的内容。
-     * 已经准备过就直接判断；没准备过就在后台准备一次再判断 ——
-     * 准备期间显示"检查中"而不是直接放行，否则规则会在这一瞬间被绕过。
+     * 【为什么联网检查要放在最前面】
+     * 后面的每一步都要发起网络请求。没网时若照常发起，
+     * 请求要么等超时才失败、要么直接抛错，界面长时间没有结果，
+     * 玩家只会以为功能坏了。先本地判一次，没网就立刻说明，一步请求都不发。
+     *
+     * 【为什么没网时仍要看一眼本地缓存的规则】
+     * 限制是必须生效的，不能因为断网就放行。缓存里若有限制就照常挡住，
+     * 只有在缓存没有限制时，才把"没网"作为进不去的原因告诉玩家。
      */
     private void startWithPolicyCheck() {
         KcuPolicy.loadCached();
+        if (!KcuNetwork.isOnline()) {
+            if (KcuPolicy.isBlocked(KcuPolicy.FEATURE_DOWNLOAD)) {
+                showBlocked();
+            } else {
+                showOffline();
+            }
+            return;
+        }
         if (KcuPolicy.isPrepared()) {
             decide();
             return;
@@ -97,12 +122,63 @@ public class KcuImportActivity extends Activity {
         });
     }
 
+    /** 没网时的页面：明确说明原因，不提供任何需要联网的入口 */
+    private void showOffline() {
+        card.removeAllViews();
+        card.addView(KcuUi.header(this, "!", getString(R.string.kcu_net_offline_title)));
+        card.addView(KcuUi.gap(this, 12));
+        card.addView(KcuUi.body(this, getString(R.string.kcu_net_offline)));
+        card.addView(KcuUi.gap(this, 18));
+        android.widget.Button retry = KcuUi.primaryButton(this, getString(R.string.kcu_import_loading));
+        retry.setOnClickListener(v -> {
+            // 重新走一遍：联网状态随时可变，这里只重判，不做任何网络请求
+            startWithPolicyCheck();
+        });
+        card.addView(retry);
+    }
+
+    /**
+     * 首次进入下载功能时的使用须知。
+     *
+     * 【为什么必须先看这个】
+     * 这个功能本质上是在下载外部内容，玩家需要清楚后果由谁承担。
+     * 只在第一次进入时提示，之后记住不再打扰。
+     */
+    private void showDisclaimer() {
+        card.removeAllViews();
+        card.addView(KcuUi.header(this, "!", getString(R.string.kcu_disclaimer_title)));
+        card.addView(KcuUi.gap(this, 12));
+        card.addView(KcuUi.body(this, getString(R.string.kcu_disclaimer_body)));
+        card.addView(KcuUi.gap(this, 18));
+
+        android.widget.Button agree = KcuUi.primaryButton(this, getString(R.string.kcu_disclaimer_agree));
+        agree.setOnClickListener(v -> {
+            KcuDownloadPrefs.markNoticed();
+            loadCatalog();
+        });
+        card.addView(agree);
+        card.addView(KcuUi.gap(this, 10));
+
+        android.widget.Button decline = KcuUi.secondaryButton(this, getString(R.string.kcu_disclaimer_cancel));
+        decline.setOnClickListener(v -> finish());
+        card.addView(decline);
+    }
+
     private void decide() {
         if (KcuPolicy.isBlocked(KcuPolicy.FEATURE_DOWNLOAD)) {
             showBlocked();
-        } else {
-            loadCatalog();
+            return;
         }
+        // 没网时不再往下走：后面的清单与下载都需要联网
+        if (!KcuNetwork.isOnline()) {
+            showOffline();
+            return;
+        }
+        if (!KcuDownloadPrefs.isNoticed()) {
+            showDisclaimer();
+            return;
+        }
+        loadCatalog();
     }
 
     /** 被限制时显示的页面：只说明原因，不提供任何继续使用的入口 */
@@ -120,6 +196,8 @@ public class KcuImportActivity extends Activity {
                 if (list == null || list.isEmpty()) {
                     setStatus(getString(R.string.kcu_import_catalog_failed));
                     addLocalPick();
+                    // 清单取不到时工具区仍可用：格式链接不依赖清单
+                    addTools();
                     return;
                 }
                 catalog = list;
@@ -179,6 +257,292 @@ public class KcuImportActivity extends Activity {
 
         card.addView(KcuUi.gap(this, 18));
         addLocalPick();
+        addTools();
+    }
+
+    /**
+     * 下载源切换与格式链接下载。
+     *
+     * 【为什么切换源后要重新取清单】
+     * 两个源的内容与可用性都不同，只改标记而不重取，
+     * 玩家会看到上一个源的列表，以为切换没生效。
+     */
+    private void addTools() {
+        card.addView(KcuUi.gap(this, 20));
+
+        card.addView(KcuUi.title(this, getString(R.string.kcu_source_title)));
+        card.addView(KcuUi.gap(this, 8));
+
+        KcuVersionCatalog.Source current = KcuDownloadPrefs.source();
+        android.widget.Button mirror = current == KcuVersionCatalog.Source.MIRROR
+                ? KcuUi.primaryButton(this, getString(R.string.kcu_source_mirror))
+                : KcuUi.secondaryButton(this, getString(R.string.kcu_source_mirror));
+        mirror.setOnClickListener(v -> {
+            KcuDownloadPrefs.setSource(KcuVersionCatalog.Source.MIRROR);
+            Toast.makeText(this, R.string.kcu_source_switched, Toast.LENGTH_SHORT).show();
+            loadCatalog();
+        });
+        card.addView(mirror);
+        card.addView(KcuUi.gap(this, 8));
+
+        android.widget.Button official = current == KcuVersionCatalog.Source.OFFICIAL
+                ? KcuUi.primaryButton(this, getString(R.string.kcu_source_official))
+                : KcuUi.secondaryButton(this, getString(R.string.kcu_source_official));
+        official.setOnClickListener(v -> {
+            KcuDownloadPrefs.setSource(KcuVersionCatalog.Source.OFFICIAL);
+            Toast.makeText(this, R.string.kcu_source_switched, Toast.LENGTH_SHORT).show();
+            loadCatalog();
+        });
+        card.addView(official);
+
+        card.addView(KcuUi.gap(this, 20));
+        card.addView(KcuUi.title(this, getString(R.string.kcu_dl_custom)));
+        card.addView(KcuUi.gap(this, 8));
+        card.addView(KcuUi.hint(this, getString(R.string.kcu_format_hint)));
+        card.addView(KcuUi.gap(this, 8));
+
+        formatEdit = KcuUi.field(this, getString(R.string.kcu_format_hint));
+        formatEdit.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable editable) {
+                rebuildPlaceholders();
+            }
+        });
+        card.addView(formatEdit);
+        card.addView(KcuUi.gap(this, 8));
+
+        placeholderBox = new LinearLayout(this);
+        placeholderBox.setOrientation(LinearLayout.VERTICAL);
+        card.addView(placeholderBox);
+
+        previewText = KcuUi.hint(this, "");
+        card.addView(previewText);
+        card.addView(KcuUi.gap(this, 10));
+
+        // 用途：版本还是模组，决定保存到哪个目录
+        LinearLayout kindRow = new LinearLayout(this);
+        kindRow.setOrientation(LinearLayout.HORIZONTAL);
+        // 选中态用文字前缀标记，不改动按钮外观：
+        // 重建整个工具区会清掉已填的占位符，改背景又需要新的绘制资源，
+        // 用前缀最省事且不会丢内容
+        final android.widget.Button asVersion = KcuUi.secondaryButton(this, markOf(false) + getString(R.string.kcu_dl_version));
+        final android.widget.Button asMod = KcuUi.secondaryButton(this, markOf(true) + getString(R.string.kcu_dl_mod));
+        asVersion.setOnClickListener(v -> {
+            customForMod = false;
+            asVersion.setText(markOf(false) + getString(R.string.kcu_dl_version));
+            asMod.setText(markOf(true) + getString(R.string.kcu_dl_mod));
+        });
+        asMod.setOnClickListener(v -> {
+            customForMod = true;
+            asVersion.setText(markOf(false) + getString(R.string.kcu_dl_version));
+            asMod.setText(markOf(true) + getString(R.string.kcu_dl_mod));
+        });
+        kindRow.addView(asVersion);
+        kindRow.addView(KcuUi.gap(this, 8));
+        kindRow.addView(asMod);
+        card.addView(kindRow);
+        card.addView(KcuUi.gap(this, 8));
+
+        nameEdit = KcuUi.field(this, getString(R.string.kcu_dl_target));
+        card.addView(nameEdit);
+        card.addView(KcuUi.gap(this, 10));
+
+        android.widget.Button start = KcuUi.primaryButton(this, getString(R.string.kcu_dl_start));
+        start.setOnClickListener(v -> startCustomDownload());
+        card.addView(start);
+
+        rebuildPlaceholders();
+    }
+
+    /** 选中标记：当前用途前面加一个勾，未选中的留空保持对齐 */
+    private String markOf(boolean forMod) {
+        return customForMod == forMod ? "✓ " : "　　";
+    }
+
+    /**
+     * 按当前格式重建占位符输入框。
+     *
+     * 已填过的值要保留：玩家改动格式时若把已填内容清空，
+     * 等于让他重新填一遍，格式一复杂就很难用。
+     */
+    private void rebuildPlaceholders() {
+        if (placeholderBox == null) {
+            return;
+        }
+        java.util.Map<String, String> kept = new LinkedHashMap<>();
+        for (int i = 0; i < placeholderBox.getChildCount(); i++) {
+            android.view.View child = placeholderBox.getChildAt(i);
+            Object tag = child.getTag();
+            if (tag instanceof String && child instanceof LinearLayout) {
+                android.widget.EditText edit = KcuUi.editOf((LinearLayout) child);
+                if (edit != null) {
+                    kept.put((String) tag, edit.getText().toString());
+                }
+            }
+        }
+        placeholderBox.removeAllViews();
+        String format = formatEdit == null ? "" : formatEdit.getText().toString();
+        List<String> names = KcuUrlFormat.placeholders(format);
+        if (names.isEmpty()) {
+            return;
+        }
+        for (String name : names) {
+            LinearLayout row = KcuUi.fieldRow(this, name, "§");
+            row.setTag(name);
+            android.widget.EditText edit = KcuUi.editOf(row);
+            if (edit != null) {
+                String old = kept.get(name);
+                if (old != null) {
+                    edit.setText(old);
+                }
+                edit.addTextChangedListener(new android.text.TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void afterTextChanged(android.text.Editable editable) {
+                        updatePreview();
+                    }
+                });
+            }
+            placeholderBox.addView(row);
+        }
+        updatePreview();
+    }
+
+    private void updatePreview() {
+        if (previewText == null || formatEdit == null) {
+            return;
+        }
+        String format = formatEdit.getText().toString();
+        if (format.trim().isEmpty()) {
+            previewText.setText("");
+            return;
+        }
+        previewText.setText(getString(R.string.kcu_format_preview) + " " + KcuUrlFormat.apply(format, collectValues()));
+    }
+
+    private java.util.Map<String, String> collectValues() {
+        java.util.Map<String, String> values = new LinkedHashMap<>();
+        if (placeholderBox == null) {
+            return values;
+        }
+        for (int i = 0; i < placeholderBox.getChildCount(); i++) {
+            android.view.View child = placeholderBox.getChildAt(i);
+            Object tag = child.getTag();
+            if (tag instanceof String && child instanceof LinearLayout) {
+                android.widget.EditText edit = KcuUi.editOf((LinearLayout) child);
+                if (edit != null) {
+                    values.put((String) tag, edit.getText().toString().trim());
+                }
+            }
+        }
+        return values;
+    }
+
+    /**
+     * 按格式链接下载。
+     *
+     * 【为什么没填完的占位符要拦下来】
+     * 未替换的占位符留在地址里，请求多半会失败或取回错误内容，
+     * 而玩家看不出是地址错了还是网络问题。先明确说是哪一处没填。
+     */
+    private void startCustomDownload() {
+        if (!KcuNetwork.isOnline()) {
+            setStatus(getString(R.string.kcu_net_offline));
+            return;
+        }
+        String format = formatEdit == null ? "" : formatEdit.getText().toString().trim();
+        if (format.isEmpty()) {
+            setStatus(getString(R.string.kcu_format_empty));
+            return;
+        }
+        List<String> names = KcuUrlFormat.placeholders(format);
+        if (names.isEmpty()) {
+            // 没有占位符就是一条完整地址，按原样使用
+            startCustomWithUrl(format);
+            return;
+        }
+        java.util.Map<String, String> values = collectValues();
+        StringBuilder missing = new StringBuilder();
+        for (String name : names) {
+            String value = values.get(name);
+            if (value == null || value.isEmpty()) {
+                if (missing.length() > 0) {
+                    missing.append("、");
+                }
+                missing.append("§").append(name).append("§");
+            }
+        }
+        if (missing.length() > 0) {
+            setStatus(getString(R.string.kcu_format_need) + " " + missing);
+            return;
+        }
+        startCustomWithUrl(KcuUrlFormat.apply(format, values));
+    }
+
+    private void startCustomWithUrl(String url) {
+        String name = nameEdit == null ? "" : nameEdit.getText().toString().trim();
+        if (name.isEmpty()) {
+            // 没填文件名时从地址末段取，取不到再提示
+            int slash = url.lastIndexOf('/');
+            name = slash >= 0 ? url.substring(slash + 1) : "";
+            name = name.trim();
+        }
+        if (name.isEmpty()) {
+            setStatus(getString(R.string.kcu_dl_target));
+            return;
+        }
+        final String finalName = name;
+        setStatus(getString(R.string.kcu_import_downloading));
+        worker.execute(() -> {
+            File target = customTarget(finalName, customForMod);
+            if (target == null) {
+                setStatus(getString(R.string.kcu_import_no_dir));
+                return;
+            }
+            boolean ok = download(url, target);
+            if (!ok) {
+                removeIfEmpty(target.getParentFile());
+            }
+            setStatus(ok
+                    ? getString(R.string.kcu_import_done) + " " + target.getAbsolutePath()
+                    : getString(R.string.kcu_import_failed));
+        });
+    }
+
+    /** 格式链接的保存位置：版本进 versions/<名>/，模组进 mods/ */
+    private File customTarget(String name, boolean forMod) {
+        try {
+            File gameDir = Profiles.getSelectedProfile().getGameDir();
+            if (forMod) {
+                File dir = new File(gameDir, "mods");
+                if (!dir.exists() && !dir.mkdirs()) {
+                    return null;
+                }
+                return new File(dir, name);
+            }
+            File dir = new File(gameDir, "versions/" + name);
+            if (!dir.exists() && !dir.mkdirs()) {
+                return null;
+            }
+            return new File(dir, name + ".jar");
+        } catch (Throwable e) {
+            return null;
+        }
     }
 
     private boolean hasSnapshots() {
@@ -214,6 +578,11 @@ public class KcuImportActivity extends Activity {
 
     /** 选中版本：先取该版本 json 里的 client 地址，再下载 jar */
     private void startDownload(KcuVersionCatalog.Entry entry) {
+        // 下载前先判联网：没网时不发请求，直接说明原因，免得干等超时
+        if (!KcuNetwork.isOnline()) {
+            setStatus(getString(R.string.kcu_net_offline));
+            return;
+        }
         setStatus(getString(R.string.kcu_import_resolving));
         worker.execute(() -> {
             String jarUrl = KcuVersionCatalog.fetchClientJarUrl(entry.url);
