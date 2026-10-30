@@ -63,7 +63,6 @@ public final class KcuGrant {
 
     /** 载荷里的算法标记，决定用哪一个公钥；新增公钥时递增 */
     private static final String ALGO_PREFIX = "K1";
-    private static final int KEY_INDEX_ZERO = 0;
 
     /** 吊销列表地址；文件名刻意不起眼 */
     private static final String REVOKED_URL =
@@ -108,6 +107,19 @@ public final class KcuGrant {
         }
         revoked = parsed;
         listLoaded = true;
+        // 已经开着的也要一并处理：
+        // 只收回"本次授权用的那一条"，而且只在确实拿到新清单时才做。
+        // 拿不到清单说明没有新信息，此时保持原状 ——
+        // 否则一次网络波动就会把人误关掉，那比晚一点收回要糟得多
+        try {
+            String used = KcuDevMode.grantId();
+            if (!used.isEmpty() && isRevoked(used)) {
+                android.util.Log.i("KCU", "Grant revoked: " + used);
+                KcuDevMode.revokeGrant();
+            }
+        } catch (Throwable ignored) {
+            // 收回失败不影响其它逻辑；下次启动仍会再试
+        }
     }
 
     /** 清单是否取到过；取不到时按"没有收回任何一条"处理 */
@@ -158,7 +170,7 @@ public final class KcuGrant {
         // 这里用原样切分出来的载荷，而不是重新拼一个串 ——
         // 重新拼接哪怕只是顺序或空格不同，签名就对不上
         String payload = algo + "." + id + "." + nonce + "." + expiry;
-        if (!signatureValid(payload, signature)) {
+        if (!signatureValid(algo, payload, signature)) {
             // 验证未通过，此刻内容不可信，不写日志
             return false;
         }
@@ -184,7 +196,7 @@ public final class KcuGrant {
             return null;
         }
         String payload = parts[0] + "." + parts[1] + "." + parts[2] + "." + parts[3];
-        if (!signatureValid(payload, parts[4])) {
+        if (!signatureValid(parts[0], payload, parts[4])) {
             return null;
         }
         return parts[1];
@@ -195,9 +207,9 @@ public final class KcuGrant {
      *
      * 只使用内置公钥，全部运算在本地完成。
      */
-    private static boolean signatureValid(String payload, String signature) {
+    private static boolean signatureValid(String algo, String payload, String signature) {
         try {
-            PublicKey key = trustedKey();
+            PublicKey key = trustedKey(algo);
             if (key == null) {
                 return false;
             }
@@ -215,17 +227,38 @@ public final class KcuGrant {
         }
     }
 
-    /** 取当前使用的公钥；取不到时返回 null，而不是退化成"放行" */
-    private static PublicKey trustedKey() {
+    /**
+     * 按载荷里的算法标记取对应的公钥；取不到时返回 null，而不是退化成"放行"。
+     *
+     * 【为什么按标记取，而不是固定取第一个】
+     * 数组里允许有多个，是为了将来更换签发凭据时平滑过渡。
+     * 若固定取第一个，后面加进去的永远用不上，数组就成了摆设，
+     * 真到需要更换时反而会因为"明明加了却没生效"而误判。
+     */
+    private static PublicKey trustedKey(String algo) {
+        int index = keyIndex(algo);
+        if (index < 0 || index >= TRUSTED_KEYS.length) {
+            return null;
+        }
         try {
-            if (KEY_INDEX_ZERO >= TRUSTED_KEYS.length) {
-                return null;
-            }
-            byte[] der = Base64.decode(TRUSTED_KEYS[KEY_INDEX_ZERO], Base64.DEFAULT);
+            byte[] der = Base64.decode(TRUSTED_KEYS[index], Base64.DEFAULT);
             X509EncodedKeySpec spec = new X509EncodedKeySpec(der);
             return KeyFactory.getInstance("EC").generatePublic(spec);
         } catch (Throwable e) {
             return null;
+        }
+    }
+
+    /** "K1" 对应第一个，"K2" 对应第二个；认不出来返回 -1 */
+    private static int keyIndex(String algo) {
+        if (algo == null || algo.length() < 2 || algo.charAt(0) != 'K') {
+            return -1;
+        }
+        try {
+            int n = Integer.parseInt(algo.substring(1));
+            return n <= 0 ? -1 : n - 1;
+        } catch (Throwable e) {
+            return -1;
         }
     }
 
@@ -237,11 +270,18 @@ public final class KcuGrant {
      * 理论上可据此逐位试探。这里改用等时比较，消除这个差异。
      */
     private static boolean isRevoked(String id) {
+        if (id == null || id.isEmpty()) {
+            return false;
+        }
+        // 清单里的条目已统一成小写，这里也必须同样处理：
+        // 签发时若用了大写，两边写法不一致就会比不上，
+        // 结果是"明明已经收回，对方照样能用"，而且看不出任何迹象
+        String target = id.toLowerCase(Locale.ROOT);
         for (String one : revoked) {
             if (one == null || one.isEmpty()) {
                 continue;
             }
-            if (constantTimeEquals(one, id)) {
+            if (constantTimeEquals(one, target)) {
                 return true;
             }
         }
