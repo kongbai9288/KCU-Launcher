@@ -59,7 +59,10 @@ public class KcuLicenseActivity extends Activity {
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             byte[] buffer = new byte[8192];
             int len;
-            while ((len = in.read(buffer)) > 0) out.write(buffer, 0, len);
+            // 以 -1 为结束：个别输入流会返回 0，按 > 0 判结束会提前截断内容。
+            // 截断后解析不出合法内容，页面会显示"清单为空"，
+            // 而文件明明就在安装包里，看起来像是项目没写许可信息
+            while ((len = in.read(buffer)) != -1) out.write(buffer, 0, len);
             return new JSONArray(new String(out.toByteArray(), StandardCharsets.UTF_8));
         } catch (Throwable e) {
             return null;
