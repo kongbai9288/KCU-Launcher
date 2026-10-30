@@ -1757,4 +1757,17 @@
     <string name="kcu_net_none">Neither Wi-Fi nor mobile data is available. Please connect to a network before using this feature.</string>
     <string name="kcu_net_kind_wifi">Current network: Wi-Fi</string>
     <string name="kcu_net_kind_mobile">Current network: Mobile data</string>
+    <string name="kcu_gate_stopped_title">Service suspended</string>
+    <string name="kcu_gate_stopped_body">Sorry — this app has been forcibly suspended. This usually means we may have violated applicable laws or regulations, or that something else out of the ordinary has happened. To protect everyone, the app is now paused. You can export your data, or visit our GitHub pages for more information.</string>
+    <string name="kcu_gate_update_title">Update required</string>
+    <string name="kcu_gate_update_body">This version can no longer be used. Please get the new version to continue.</string>
+    <string name="kcu_gate_get_update">Get the new version</string>
+    <string name="kcu_gate_export">Export data</string>
+    <string name="kcu_gate_exporting">Exporting…</string>
+    <string name="kcu_gate_export_done">Exported to</string>
+    <string name="kcu_gate_export_failed">Export failed</string>
+    <string name="kcu_gate_links">More information</string>
+    <string name="kcu_gate_org">KCU Studios on GitHub</string>
+    <string name="kcu_gate_dev">kongbai9288 on GitHub</string>
+    <string name="kcu_gate_open_failed">Cannot open the page</string>
 </resources>
