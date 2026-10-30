@@ -1752,4 +1752,6 @@
     <string name="kcu_dl_start">开始下载</string>
     <string name="kcu_dl_target">保存为</string>
     <string name="kcu_policy_checking">正在检查可用性…</string>
+    <string name="kcu_policy_blocked_title">Feature unavailable</string>
+    <string name="kcu_policy_blocked_body">This feature is not available under current settings.</string>
 </resources>
