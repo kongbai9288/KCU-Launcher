@@ -30,7 +30,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
-        android:name=".KCUApp"
+        android:name=".FCLApp"
         android:allowBackup="true"
         android:allowNativeHeapPointerTagging="false"
         android:appCategory="game"
@@ -81,6 +81,12 @@
 
         <activity
             android:name=".activity.KcuAgeActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation|uiMode"
+            android:exported="false"
+            android:screenOrientation="sensorLandscape" />
+
+        <activity
+            android:name=".activity.KcuGateActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation|uiMode"
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
@@ -148,27 +154,27 @@
             android:process=":crash"
             android:screenOrientation="sensor" />
         <activity
-            android:name="com.kongbai.kculauncher.library.browser.FileBrowserActivity"
+            android:name="com.tungsten.fcllibrary.browser.FileBrowserActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation|uiMode"
             android:screenOrientation="sensorLandscape" />
         <activity
-            android:name="com.kongbai.kculauncher.library.crash.CrashReportActivity"
+            android:name="com.tungsten.fcllibrary.crash.CrashReportActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation|uiMode"
             android:screenOrientation="sensor" />
 
         <service
-            android:name="com.kongbai.kculauncher.core.download.ProcessService"
+            android:name="com.tungsten.fclcore.download.ProcessService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync"
             android:process=":jvm" />
         <service
-            android:name="com.kongbai.kculauncher.mio.download.DownloadService"
+            android:name="com.mio.download.DownloadService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
         <service
-            android:name="com.kongbai.kculauncher.mio.service.GameService"
+            android:name="com.mio.service.GameService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse">
@@ -211,7 +217,7 @@
                 android:resource="@xml/provider_paths" />
         </provider>
         <provider
-            android:name="com.kongbai.kculauncher.library.crash.CrashReporterInitProvider"
+            android:name="com.tungsten.fcllibrary.crash.CrashReporterInitProvider"
             android:authorities="${applicationId}.crashreporterinitprovider"
             android:exported="false"
             android:initOrder="101" />
