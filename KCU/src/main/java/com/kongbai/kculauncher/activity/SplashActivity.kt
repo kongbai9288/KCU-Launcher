@@ -82,6 +82,11 @@ class SplashActivity : KCUActivity() {
         // 这两项是强措施，必须在任何常规界面出现之前就挡住。
         // 这里只读本地缓存，不发网络请求，因此不会卡住启动。
         KcuPolicy.loadCached()
+        // 开发者模式的远程开关也要先读缓存：停用是即时措施，
+        // 只在下次启动才生效的话，本次运行开发者模式照常能用，措施形同虚设。
+        // 这里只读本地缓存，不发请求，不会拖慢启动
+        com.kongbai.kculauncher.util.KcuDevPolicy.loadCached()
+        com.kongbai.kculauncher.util.KcuDevMode.refresh()
         if (KcuPolicy.shutdown() != null) {
             startActivity(KcuGateActivity.stopped(this))
             finish()
@@ -136,6 +141,10 @@ class SplashActivity : KCUActivity() {
             try {
                 KcuPolicy.prepare()
                 KcuGrant.refresh()
+                // 取远程的开发者模式开关；拿到新规则后清一次缓存，
+                // 让"这个版本不许开"在下一次判断时立刻生效
+                com.kongbai.kculauncher.util.KcuDevPolicy.refresh()
+                com.kongbai.kculauncher.util.KcuDevMode.refresh()
             } catch (e: Throwable) {
                 return@Thread
             }
