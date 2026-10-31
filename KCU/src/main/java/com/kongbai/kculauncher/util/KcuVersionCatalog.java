@@ -69,7 +69,11 @@ public final class KcuVersionCatalog {
         /** 该版本 version.json 的地址，取客户端下载地址时要再请求一次 */
         public final String url;
 
-        Entry(String id, String type, String url) {
+        /**
+         * 对外公开：导入页在 activity 包下，跨包构造需要 public。
+         * 三个字段都是只读的，开放构造不会让外部改动已有条目。
+         */
+        public Entry(String id, String type, String url) {
             this.id = id;
             this.type = type;
             this.url = url;
