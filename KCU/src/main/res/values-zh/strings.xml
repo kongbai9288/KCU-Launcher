@@ -42,7 +42,7 @@
     <string name="plugin_env_config">配置</string>
     <string name="about_sponsor">赞助</string>
     <string name="about_source">开源</string>
-    <string name="about_desc">KCU Launcher 是一个由架构师 kongbai9288 以 FCL（即 Fold Craft Launcher）为主体、其他项目为辅的开源软件，源码可修改，遵循 GPL-v3 许可发布。\n\n页面下方的条目携带图标，点击「开源许可」可查看所使用开源项目的许可（全部内置于本地，不联网获取）。</string>
+    <string name="about_desc">KCU Launcher 是由架构师 kongbai9288 主导开发的开源启动器，源码可修改，遵循 GPL-v3 许可发布。\n\n页面下方的条目携带图标，点击「开源许可」可查看所使用开源项目的许可（全部内置于本地，不联网获取）。</string>
     <string name="account_add_server">添加认证服务器</string>
     <string name="account_add_server_url">服务器地址</string>
     <string name="account_add_server_name">服务器名称</string>
@@ -1488,6 +1488,8 @@
     <string name="file_browser_invalid_name">文件名不合法。</string>
     <string name="file_browser_exists">已存在同名文件。</string>
     <string name="file_browser_clipboard_empty">剪贴板为空。</string>
+    <string name="file_browser_paste_recursive">不能把文件夹粘贴到它自己或其子目录里。</string>
+    <string name="file_browser_result_lost">选择结果未能送达，请重新选择一次。</string>
     <string name="file_browser_no_selection">未选择文件。</string>
     <string name="file_browser_operation_failed">操作失败。</string>
     <string name="crash_reporter_title">崩溃报告</string>
