@@ -22,6 +22,12 @@ import com.kongbai.kculauncher.util.KcuUrlFormat;
 import com.kongbai.kculauncher.util.KcuDownloadPrefs;
 import com.kongbai.kculauncher.util.KcuNetwork;
 import com.kongbai.kculauncher.util.KcuVersionMeta;
+import com.kongbai.kculauncher.util.KcuDownloadSources;
+import com.kongbai.kculauncher.core.download.game.GameVersionList;
+import com.kongbai.kculauncher.core.download.game.GameRemoteVersion;
+import com.kongbai.kculauncher.core.task.Schedulers;
+import com.kongbai.kculauncher.core.task.Task;
+import com.kongbai.kculauncher.setting.DownloadProviders;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,6 +36,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -56,6 +63,8 @@ public class KcuImportActivity extends Activity {
 
     private List<KcuVersionCatalog.Entry> catalog;
     private boolean showSnapshots = false;
+    /** 从版本列表里选中的版本；这个入口只做选择，不替玩家下载任何东西 */
+    private String selectedVersionId = null;
 
     /** 格式链接下载：当前用途，false=版本 true=模组 */
     private boolean customForMod = false;
@@ -210,7 +219,74 @@ public class KcuImportActivity extends Activity {
         card.addView(KcuUi.body(this, KcuPolicy.bodyFor(this, KcuPolicy.FEATURE_DOWNLOAD)));
     }
 
+    /**
+     * 取版本列表。
+     *
+     * 优先复用"下载我的世界本体"那一套：它跟下载页用的是同一个下载源、
+     * 同一份清单，玩家在设置里换了源，这里跟着变，不会出现两个页面
+     * 列出不同版本的情况。
+     * 那套取不到时才退回自研清单，保证列表不至于整个空掉。
+     *
+     * 【这个入口只做选择】
+     * 从这里点版本不会下载任何东西 —— 导入页要的是"选定一个版本名"，
+     * 真正的内容由玩家用下面的格式链接或本地文件提供。
+     * 之前这里会自己把客户端 jar 下下来，那是把它当成下载页用了。
+     */
     private void loadCatalog() {
+        setStatus(getString(R.string.kcu_import_resolving));
+        try {
+            GameVersionList list = new GameVersionList(DownloadProviders.getDownloadProvider());
+            Task<?> task = list.loadAsync();
+            task.whenComplete(Schedulers.androidUIThread(), (result, exception) -> {
+                List<KcuVersionCatalog.Entry> converted = null;
+                if (exception == null) {
+                    converted = fromGameVersionList(list);
+                }
+                if (converted == null || converted.isEmpty()) {
+                    // 复用那套拿不到就退回自研清单，不至于整个列表空掉
+                    loadCatalogFallback();
+                    return;
+                }
+                catalog = converted;
+                renderList();
+            }).start();
+        } catch (Throwable e) {
+            // 取列表这条路本身出问题也要有兜底，不能让页面停在空白
+            Logging.LOG.log(java.util.logging.Level.WARNING, "KCU: game version list failed", e);
+            loadCatalogFallback();
+        }
+    }
+
+    /** 把"下载我的世界"那套的列表转成导入页用的条目 */
+    private List<KcuVersionCatalog.Entry> fromGameVersionList(GameVersionList list) {
+        try {
+            java.util.Collection<GameRemoteVersion> versions = list.getVersions(null);
+            if (versions == null || versions.isEmpty()) {
+                return null;
+            }
+            List<KcuVersionCatalog.Entry> out = new java.util.ArrayList<>();
+            for (GameRemoteVersion one : versions) {
+                if (one == null) {
+                    continue;
+                }
+                String id = one.getSelfVersion();
+                if (id == null || id.isEmpty()) {
+                    continue;
+                }
+                // 枚举值大小写不定，统一转小写再比：isRelease 只认 release，
+                // 写成 RELEASE 的话所有版本都会被当成快照，正式版一列会空掉
+                String type = one.getType() == null
+                        ? "release" : one.getType().toString().toLowerCase(java.util.Locale.ROOT);
+                out.add(new KcuVersionCatalog.Entry(id, type, ""));
+            }
+            return out;
+        } catch (Throwable e) {
+            Logging.LOG.log(java.util.logging.Level.WARNING, "KCU: convert version list failed", e);
+            return null;
+        }
+    }
+
+    private void loadCatalogFallback() {
         // 必须把玩家选的源带进去：
         // 不带的话固定按镜像优先去取，切换源就只是把按钮高亮挪了个位置，
         // 取回来的还是同一个列表。玩家正是想在镜像不通时改用官方，
@@ -386,6 +462,89 @@ public class KcuImportActivity extends Activity {
         card.addView(start);
 
         rebuildPlaceholders();
+        addRaceSources();
+    }
+
+    /**
+     * 多源同时下载：勾选哪些源参与，以及添加自定义源。
+     *
+     * 【为什么放在这里】
+     * 这一片本来就是下载源的设置区，玩家找过一次就记得位置。
+     * 这里只改"参与哪几个源"，至于具体文件怎么下，由下载页那边决定。
+     *
+     * 【自定义源为什么填前缀而不是整条地址】
+     * 同一个文件在不同源上只有前面那段不一样，让玩家为每个文件
+     * 都填一遍完整地址不现实。
+     */
+    private void addRaceSources() {
+        card.addView(KcuUi.gap(this, 20));
+        card.addView(KcuUi.title(this, getString(R.string.kcu_race_title)));
+        card.addView(KcuUi.gap(this, 8));
+        card.addView(KcuUi.hint(this, getString(R.string.kcu_race_note)));
+        card.addView(KcuUi.gap(this, 10));
+
+        Set<String> on = KcuDownloadSources.enabled();
+        card.addView(sourceToggle(KcuDownloadSources.OFFICIAL,
+                getString(R.string.kcu_source_official), on));
+        card.addView(KcuUi.gap(this, 8));
+        card.addView(sourceToggle(KcuDownloadSources.BMCL,
+                getString(R.string.kcu_source_mirror), on));
+        card.addView(KcuUi.gap(this, 12));
+
+        List<KcuDownloadSources.Rule> rules = KcuDownloadSources.custom();
+        if (rules.isEmpty()) {
+            card.addView(KcuUi.hint(this, getString(R.string.kcu_race_custom_none)));
+        } else {
+            for (int i = 0; i < rules.size(); i++) {
+                final int index = i;
+                KcuDownloadSources.Rule rule = rules.get(i);
+                android.widget.Button remove = KcuUi.secondaryButton(
+                        this, rule.from + "  →  " + rule.to + "   " + getString(R.string.kcu_race_remove));
+                remove.setOnClickListener(v -> {
+                    List<KcuDownloadSources.Rule> list = KcuDownloadSources.custom();
+                    if (index < list.size()) {
+                        list.remove(index);
+                        KcuDownloadSources.saveCustom(list);
+                    }
+                    renderList();
+                });
+                card.addView(remove);
+                card.addView(KcuUi.gap(this, 6));
+            }
+        }
+
+        android.widget.EditText from = KcuUi.field(this, getString(R.string.kcu_race_custom_from));
+        android.widget.EditText to = KcuUi.field(this, getString(R.string.kcu_race_custom_to));
+        card.addView(KcuUi.gap(this, 8));
+        card.addView(from);
+        card.addView(to);
+
+        android.widget.Button add = KcuUi.primaryButton(this, getString(R.string.kcu_race_custom_add));
+        add.setOnClickListener(v -> {
+            String f = from.getText() == null ? "" : from.getText().toString().trim();
+            String t = to.getText() == null ? "" : to.getText().toString().trim();
+            if (f.isEmpty() || t.isEmpty()) {
+                Toast.makeText(this, R.string.kcu_race_custom_none, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            List<KcuDownloadSources.Rule> list = KcuDownloadSources.custom();
+            list.add(new KcuDownloadSources.Rule(f, t));
+            KcuDownloadSources.saveCustom(list);
+            Toast.makeText(this, R.string.kcu_race_saved, Toast.LENGTH_SHORT).show();
+            renderList();
+        });
+        card.addView(add);
+    }
+
+    /** 单个源的勾选按钮；选中态用文字前缀标记，与同页其他开关保持一致 */
+    private android.widget.Button sourceToggle(String id, String label, Set<String> on) {
+        boolean checked = on.contains(id);
+        android.widget.Button button = KcuUi.secondaryButton(this, (checked ? "✓ " : "　　") + label);
+        button.setOnClickListener(v -> {
+            KcuDownloadSources.setEnabled(id, !KcuDownloadSources.enabled().contains(id));
+            renderList();
+        });
+        return button;
     }
 
     /** 选中标记：当前用途前面加一个勾，未选中的留空保持对齐 */
@@ -584,9 +743,29 @@ public class KcuImportActivity extends Activity {
     }
 
     private android.widget.Button versionButton(KcuVersionCatalog.Entry entry) {
-        android.widget.Button button = KcuUi.secondaryButton(this, entry.id);
-        button.setOnClickListener(v -> startDownload(entry));
+        android.widget.Button button = KcuUi.secondaryButton(
+                this, (entry.id.equals(selectedVersionId) ? "✓ " : "") + entry.id);
+        button.setOnClickListener(v -> selectVersion(entry.id));
         return button;
+    }
+
+    /**
+     * 选中一个版本。只记下来，不下载。
+     *
+     * 选中的版本名填进下面的目标名输入框：玩家接下来无论是用格式链接
+     * 还是选本地文件，都要有个名字，让他自己再打一遍纯属折腾。
+     * 填之前先看那个框是不是空的 —— 他要是已经写了别的名字，不能给覆盖掉。
+     */
+    private void selectVersion(String id) {
+        selectedVersionId = id;
+        setStatus(getString(R.string.kcu_import_selected, id));
+        if (nameEdit != null) {
+            String current = nameEdit.getText() == null ? "" : nameEdit.getText().toString().trim();
+            if (current.isEmpty()) {
+                nameEdit.setText(id);
+            }
+        }
+        renderList();
     }
 
     private void addLocalPick() {
@@ -600,51 +779,6 @@ public class KcuImportActivity extends Activity {
                     REQUEST_PICK);
         });
         card.addView(local);
-    }
-
-    /** 选中版本：先取该版本 json 里的 client 地址，再下载 jar */
-    private void startDownload(KcuVersionCatalog.Entry entry) {
-        // 下载前先判联网：没网时不发请求，直接说明原因，免得干等超时
-        if (!KcuNetwork.isOnline()) {
-            setStatus(getString(R.string.kcu_net_offline));
-            return;
-        }
-        setStatus(getString(R.string.kcu_import_resolving));
-        worker.execute(() -> {
-            String jarUrl = KcuVersionCatalog.fetchClientJarUrl(entry.url);
-            if (jarUrl == null || jarUrl.isEmpty()) {
-                setStatus(getString(R.string.kcu_import_no_client));
-                return;
-            }
-            setStatus(getString(R.string.kcu_import_downloading));
-            File target = targetFile(entry.id);
-            if (target == null) {
-                setStatus(getString(R.string.kcu_import_no_dir));
-                return;
-            }
-            File dir = target.getParentFile();
-
-            // 先落 jar 再落 json：顺序反了会在 jar 失败时留下一个只有 json 的版本目录，
-            // 它照样出现在版本列表里，玩家点开却是坏的，而界面刚刚才提示过导入失败
-            if (!download(jarUrl, target)) {
-                removeIfEmpty(dir);
-                setStatus(getString(R.string.kcu_import_failed));
-                return;
-            }
-
-            // 版本 json 优先取官方原样内容，比自行拼一个最小 json 更完整，
-            // 后续依赖补全也能读到；取不到时退回最小 json，版本依然可用
-            File json = new File(dir, entry.id + ".json");
-            if (!download(entry.url, json)) {
-                writeVersionJson(dir, entry.id);
-            }
-            if (!json.isFile()) {
-                removeIfEmpty(dir);
-                setStatus(getString(R.string.kcu_import_failed));
-                return;
-            }
-            finishImport(entry.id, target, true);
-        });
     }
 
     @Override
