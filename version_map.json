@@ -2747,7 +2747,7 @@
   },
   {
     "type": "release",
-    "versionCode": 1,
+    "versionCode": 114,
     "versionName": "0.95.1",
     "date": "2026.10.31",
     "author": "yuanbao",
@@ -2769,7 +2769,7 @@
   },
   {
     "type": "release",
-    "versionCode": 1,
+    "versionCode": 115,
     "versionName": "0.95.2",
     "date": "2026.10.31",
     "author": "yuanbao",
@@ -2792,7 +2792,7 @@
   },
   {
     "type": "release",
-    "versionCode": 1,
+    "versionCode": 116,
     "versionName": "0.95.3",
     "date": "2026.10.31",
     "author": "yuanbao",
@@ -2813,7 +2813,7 @@
   },
   {
     "type": "release",
-    "versionCode": 1,
+    "versionCode": 117,
     "versionName": "0.95.4",
     "date": "2026.10.31",
     "author": "yuanbao",
@@ -2835,7 +2835,7 @@
   },
   {
     "type": "release",
-    "versionCode": 1,
+    "versionCode": 118,
     "versionName": "0.95.5",
     "date": "2026.10.31",
     "author": "yuanbao",
@@ -2858,7 +2858,7 @@
   },
   {
     "type": "release",
-    "versionCode": 1,
+    "versionCode": 119,
     "versionName": "0.95.6",
     "date": "2026.10.31",
     "author": "yuanbao",
@@ -2880,7 +2880,7 @@
   },
   {
     "type": "release",
-    "versionCode": 1,
+    "versionCode": 120,
     "versionName": "0.95.7",
     "date": "2026.10.31",
     "author": "yuanbao",
@@ -2901,7 +2901,7 @@
   },
   {
     "type": "release",
-    "versionCode": 1,
+    "versionCode": 121,
     "versionName": "0.95.8",
     "date": "2026.10.31",
     "author": "yuanbao",
