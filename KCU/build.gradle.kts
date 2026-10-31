@@ -91,8 +91,8 @@ android {
         applicationId = "com.kcu.launcher"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 122
-        versionName = "0.95.9"
+        versionCode = 123
+        versionName = "0.96.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
