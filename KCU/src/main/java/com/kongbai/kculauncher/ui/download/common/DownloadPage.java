@@ -970,8 +970,17 @@ public class DownloadPage extends KCUPage implements View.OnClickListener {
             race.setName(name);
             return race;
         }
+        // 只排出一个源时，要用排出来的那个，而不是传进来的原始地址。
+        // 玩家只勾镜像（关掉官方）时排出来的就只有镜像，这里若还拿原始地址去下，
+        // 镜像等于没生效 —— 而他之所以只勾镜像，正是嫌官方慢、最需要镜像的时候。
+        // 一个都没排出来（源全关、或改不出来）时才退回原始地址兜底，
+        // 至少还能下下来，比直接失败好
+        String singleUrl = url;
+        if (sources != null && !sources.isEmpty()) {
+            singleUrl = sources.get(0);
+        }
         FileDownloadTask single = new FileDownloadTask(
-                NetworkUtils.toURL(url), dest,
+                NetworkUtils.toURL(singleUrl), dest,
                 integrityCheck instanceof com.kongbai.kculauncher.core.task.FileDownloadTask.IntegrityCheck
                         ? (com.kongbai.kculauncher.core.task.FileDownloadTask.IntegrityCheck) integrityCheck : null);
         single.setName(name);
