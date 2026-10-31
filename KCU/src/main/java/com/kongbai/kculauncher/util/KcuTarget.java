@@ -178,6 +178,11 @@ public final class KcuTarget {
 
     /** 当前客户端标识：平台-架构 */
     public static String currentClient() {
+        return ("android-" + primaryAbi()).toLowerCase(Locale.ROOT);
+    }
+
+    /** 设备首选 ABI；取不到时按 unknown，避免与任何真实架构意外相同 */
+    private static String primaryAbi() {
         String abi = "";
         try {
             String[] abis = Build.SUPPORTED_ABIS;
@@ -188,13 +193,63 @@ public final class KcuTarget {
         if (abi == null || abi.isEmpty()) {
             abi = "unknown";
         }
-        return ("android-" + abi).toLowerCase(Locale.ROOT);
+        return abi;
+    }
+
+    /**
+     * 同一架构的常见简称。
+     *
+     * 只列确实通用的那几种：设备上报的是 arm64-v8a、armeabi-v7a 这种完整写法，
+     * 而规则里习惯写成 arm64、arm 这种简称。列多了容易与别的架构混淆，
+     * 因此宁可少列，也不要凭猜测写进不属于这个架构的名字。
+     */
+    private static List<String> abiAliases(String abi) {
+        List<String> out = new ArrayList<>();
+        if ("arm64-v8a".equals(abi)) {
+            out.add("arm64");
+        } else if ("armeabi-v7a".equals(abi)) {
+            out.add("armeabi");
+            out.add("arm");
+        } else if ("armeabi".equals(abi)) {
+            out.add("arm");
+        } else if ("x86_64".equals(abi)) {
+            out.add("x64");
+        }
+        return out;
+    }
+
+    /**
+     * 当前客户端的所有等价写法。
+     *
+     * 【为什么要列一套等价写法，而不是只比一种】
+     * 设备上报的 ABI 是完整写法（arm64-v8a），规则里却习惯写简称（android-arm64）。
+     * 只比完整写法的话，照着说明写出来的规则在真机上一条都匹配不上，
+     * 而且匹配不上不会有任何报错 —— 规则安静地不生效，
+     * 看上去像是远端没下发、或者代码漏了判断，很难查到是写法对不上。
+     * 因此把同一个设备的几种常见写法都列出来，命中任意一种即算匹配。
+     */
+    private static List<String> clientAliases() {
+        List<String> out = new ArrayList<>();
+        String abi = primaryAbi().toLowerCase(Locale.ROOT);
+        out.add("android-" + abi);
+        for (String alias : abiAliases(abi)) {
+            String one = "android-" + alias;
+            if (!out.contains(one)) {
+                out.add(one);
+            }
+        }
+        // 只写平台时匹配该平台下所有架构
+        if (!out.contains("android")) {
+            out.add("android");
+        }
+        return out;
     }
 
     /**
      * 判断当前客户端是否匹配。
      *
-     * 规则写 android 表示匹配所有安卓架构，写 android-arm64 只匹配这一种。
+     * 规则写 android 表示匹配所有安卓架构，写 android-arm64 只匹配这一种，
+     * 写 android-arm64-v8a 这种完整写法同样能匹配。
      * 无法识别时按不匹配处理，理由同版本号：宁可规则不生效也不乱套。
      */
     public static boolean clientMatches(String pattern) {
@@ -203,13 +258,12 @@ public final class KcuTarget {
         }
         try {
             String want = pattern.trim().toLowerCase(Locale.ROOT);
-            String mine = currentClient();
-            if (want.equals(mine)) {
-                return true;
+            for (String alias : clientAliases()) {
+                if (want.equals(alias)) {
+                    return true;
+                }
             }
-            // 只写了平台：匹配该平台下所有架构
-            String myPlatform = mine.contains("-") ? mine.substring(0, mine.indexOf('-')) : mine;
-            return want.equals(myPlatform);
+            return false;
         } catch (Throwable e) {
             return false;
         }
