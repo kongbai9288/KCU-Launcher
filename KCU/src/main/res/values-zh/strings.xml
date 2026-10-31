@@ -1604,4 +1604,14 @@
     <string name="kcu_gate_dev">GitHub 上的 kongbai9288</string>
     <string name="kcu_gate_open_failed">无法打开页面</string>
     <string name="kcu_dev_unlock_key_hint">许可密钥（两栏填任意一个即可）</string>
+
+    <string name="kcu_import_selected">已选：%1$s</string>
+    <string name="kcu_race_title">多源同时下载</string>
+    <string name="kcu_race_note">下载模组、资源包这类文件时，同时从几个源拉同一个文件，谁先下完用谁的。我的世界本体和依赖不走这个。</string>
+    <string name="kcu_race_custom_from">地址前缀</string>
+    <string name="kcu_race_custom_to">换成</string>
+    <string name="kcu_race_custom_add">添加自定义源</string>
+    <string name="kcu_race_custom_none">还没添加自定义源</string>
+    <string name="kcu_race_remove">移除</string>
+    <string name="kcu_race_saved">已保存</string>
 </resources>
