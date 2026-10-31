@@ -463,6 +463,38 @@ public class KCULauncher {
         return returnValue;
     }
 
+    /** 内置兜底渲染库的库名（Krypton Wrapper）。内置渲染器库名在 RendererManager 中硬编码，
+     *  此处取字面量以避免访问 rendererList 触发插件系统初始化（:jvm 进程启动路径上的副作用） */
+    private static final String FALLBACK_GL_LIB = "libng_gl4es.so";
+
+    /**
+     * 渲染库加载失败时改用内置兜底库再试一次。
+     * 当前渲染器本身已是兜底库时返回 0（重复尝试无意义）。
+     * 成功返回新句柄；失败返回 0（维持原状，不比改前更糟）。
+     */
+    private static long tryFallbackGl(KCUConfig config, KCUBridge bridge, String nativeDir, String failedGl) {
+        String name = FALLBACK_GL_LIB;
+        try {
+            String current = config.getRenderer().getGlName();
+            if (current != null && current.equals(name)) return 0;
+        } catch (Throwable ignore) {
+            // 取不到当前库名时仍尝试兜底，不因比较失败而放弃
+        }
+        String full = nativeDir + "/" + name;
+        try {
+            long h = bridge.dlopen(full);
+            if (h != 0) {
+                Logging.LOG.log(Level.WARNING, "Renderer fallback used: " + failedGl + " -> " + full);
+            } else {
+                Logging.LOG.log(Level.SEVERE, "Renderer fallback also failed: " + full + " (originally " + failedGl + ")");
+            }
+            return h;
+        } catch (Throwable t) {
+            Logging.LOG.log(Level.SEVERE, "Renderer fallback threw: " + t, t);
+            return 0;
+        }
+    }
+
     private static void setupGraphicAndSoundEngine(KCUConfig config, KCUBridge bridge) {
         String nativeDir = config.getContext().getApplicationInfo().nativeLibraryDir;
 
@@ -481,6 +513,10 @@ public class KCULauncher {
                 });
             }
             long handle = bridge.dlopen(config.getRenderer().getGLPath());
+            // 渲染库未加载成功时改用内置兜底库，避免后续 GL 调用直接崩溃
+            if (handle == 0) {
+                handle = tryFallbackGl(config, bridge, nativeDir, config.getRenderer().getGLPath());
+            }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
                 try {
                     Os.setenv("RENDERER_HANDLE", handle + "", true);
@@ -489,7 +525,12 @@ public class KCULauncher {
             }
 //            bridge.dlopen(RendererPlugin.getSelected().getPath() + "/" + RendererPlugin.getSelected().getEglName());
         } else {
-            bridge.dlopen(nativeDir + "/" + config.getRenderer().getGlName());
+            String glFull = nativeDir + "/" + config.getRenderer().getGlName();
+            long builtinHandle = bridge.dlopen(glFull);
+            // 同上：内置渲染库加载失败时改用内置兜底库再试一次
+            if (builtinHandle == 0) {
+                tryFallbackGl(config, bridge, nativeDir, glFull);
+            }
         }
     }
 
