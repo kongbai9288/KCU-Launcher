@@ -1,6 +1,26 @@
 [
   {
     "type": "release",
+    "versionCode": 125,
+    "versionName": "0.96.2",
+    "date": "2026.11.01",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "这轮做了两件事：彻底清掉文件管理里的 FCL 残留，以及处理「选完文件没反应」。",
+          "最严重的一条：AndroidManifest 里 Application 写的还是 .FCLApp，而真正的类早已改名成 KCUApp，仓库里根本没有 FCLApp 这个类。Application 类找不到，应用一启动就会崩。已改成 .KCUApp。",
+          "FCL 残留一并清掉：关于页的 about_launcher 显示 Fold Craft Launcher、about_developer 显示 FCL-Team，都改为 KCU；关于页正文里「以 FCL 为主体」的写法删掉，改为 KCU 自主开发，上游项目的致谢仍保留在开源许可页；文件管理「外部打开」在共享目录下硬编码跳进 /sdcard/FCL，改成 KCU。",
+          "选完文件没反应这条：根因是回调挂在调用方 Activity 上，Activity 被系统回收后重建，回调随之丢失，而原来这种情况下什么都不做，玩家只看到点了没反应。这次没有强行把结果塞回旧回调——那个回调里攥的是已销毁的 Activity，弹窗会直接崩。改成明确提示「选择结果未能送达，请重新选择一次」。真要彻底修，得改 25 个调用点的回调绑定方式，这轮没动。",
+          "另外修了三处：分享文件用的 authority 写死成发布包名，debug 包上一分享必崩，改为跟随包名；结果 uri 用 Uri.parse 解析绝对路径，文件名带 # 或 ? 会被截断，改为 Uri.fromFile；把文件夹粘贴到它自己的子目录会造成无限递归，加了拦截。",
+          "五个架构全部编译通过（run 41219039330）。以上除编译外均未在真机验证过。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 124,
     "versionName": "0.96.1",
     "date": "2026.10.31",
