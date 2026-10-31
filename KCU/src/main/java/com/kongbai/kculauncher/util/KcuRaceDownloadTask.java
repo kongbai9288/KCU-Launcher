@@ -62,6 +62,11 @@ public class KcuRaceDownloadTask extends Task<Void> {
 
     @Override
     public void execute() throws Exception {
+        // 每次执行都从"未停止"开始：
+        // 这个标记是本实例的字段，收尾时会被置为停止。
+        // 万一同一个实例被再执行一次，残留的停止标记会让所有源一开始就放弃，
+        // 表现出来就是点了下载毫无动静。
+        stopped = false;
         List<String> usable = new ArrayList<>();
         for (String one : urls) {
             if (one != null && !one.isEmpty() && usable.size() < MAX_PARALLEL) {
@@ -159,11 +164,10 @@ public class KcuRaceDownloadTask extends Task<Void> {
                 throw new java.io.IOException("checksum mismatch");
             }
         }
-        // 先删掉可能已存在的同名文件，否则改名会失败，
-        // 玩家会发现新下的文件没换上去
-        if (target.exists() && !target.delete()) {
-            Log.w(TAG, "unable to remove " + target);
-        }
+        // 直接改名，不先删同名文件：
+        // 改名本身就是覆盖式的，先删是多余的；更关键的是先删后移一旦改名失败，
+        // 旧文件已经没了、新文件也没换上，玩家会凭空丢一个文件。
+        // 直接改名的话，要么换上新的，要么保留旧的，两个方向都不会丢东西。
         if (!wonFile.renameTo(target)) {
             cleanup(temps);
             throw new java.io.IOException("unable to move downloaded file");
@@ -185,9 +189,7 @@ public class KcuRaceDownloadTask extends Task<Void> {
                     throw new java.io.IOException("checksum mismatch");
                 }
             }
-            if (target.exists() && !target.delete()) {
-                Log.w(TAG, "unable to remove " + target);
-            }
+            // 同上：直接改名覆盖，不先删同名文件，避免改名失败时丢文件
             if (!temp.renameTo(target)) {
                 throw new java.io.IOException("unable to move downloaded file");
             }
@@ -237,7 +239,10 @@ public class KcuRaceDownloadTask extends Task<Void> {
                 if (done > bestBytes.get()) {
                     bestBytes.set(done);
                 }
-                if (total > 0) {
+                // 只在读到的字节数还没超过声明长度时才报进度：
+                // 服务器声明的长度可能小于实际内容（压缩传输、分块、或声明值本身有误），
+                // 这时算出来的进度会大于 1，而基类会直接抛异常把这次下载判成失败
+                if (total > 0 && done <= total) {
                     updateProgress(done, total);
                 }
             }
