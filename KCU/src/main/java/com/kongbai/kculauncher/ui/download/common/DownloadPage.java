@@ -53,6 +53,8 @@ import com.kongbai.kculauncher.core.mod.curse.CurseAddon;
 import com.kongbai.kculauncher.core.mod.curse.CurseForgeRemoteModRepository;
 import com.kongbai.kculauncher.core.mod.modrinth.ModrinthRemoteModRepository;
 import com.kongbai.kculauncher.core.task.FileDownloadTask;
+import com.kongbai.kculauncher.util.KcuDownloadSources;
+import com.kongbai.kculauncher.util.KcuRaceDownloadTask;
 import com.kongbai.kculauncher.core.task.Schedulers;
 import com.kongbai.kculauncher.core.task.Task;
 import com.kongbai.kculauncher.core.task.TaskExecutor;
@@ -931,6 +933,51 @@ public class DownloadPage extends KCUPage implements View.OnClickListener {
     }
 
     /**
+     * 造一个下载任务：能多源就多源，不能就退回原来的单源。
+     *
+     * 【什么时候退回单源】
+     * 一是只排出一个地址时 —— 没得比，并发只是白占流量。
+     * 二是要求用 SHA-1 以外的算法校验时 —— 竞速只认 SHA-1，
+     * 拿它去下需要别的算法校验的文件等于把校验丢了，不如不加速。
+     *
+     * 【为什么只在这里用】
+     * 这个页面管的是模组 / 资源包 / 世界 / 光影包这类单文件下载。
+     * 我的世界本体与依赖库的下载不经过这里，不受影响。
+     */
+    private Task<Void> buildDownloadTask(String url, File dest, Object integrityCheck, String name) {
+        String sha1 = null;
+        boolean otherAlgorithm = false;
+        if (integrityCheck instanceof com.kongbai.kculauncher.core.task.FileDownloadTask.IntegrityCheck) {
+            com.kongbai.kculauncher.core.task.FileDownloadTask.IntegrityCheck check =
+                    (com.kongbai.kculauncher.core.task.FileDownloadTask.IntegrityCheck) integrityCheck;
+            String algorithm = check.getAlgorithm();
+            // 算法名写法不统一，去掉分隔符再比，避免 "-1" 写法的细微差异
+            if (algorithm != null && algorithm.replace("-", "").equalsIgnoreCase("SHA1")) {
+                sha1 = check.getChecksum();
+            } else if (algorithm != null && !algorithm.isEmpty()) {
+                otherAlgorithm = true;
+            }
+        }
+        List<String> sources = null;
+        try {
+            sources = KcuDownloadSources.candidates(url);
+        } catch (Throwable e) {
+            sources = null;
+        }
+        if (sources != null && sources.size() > 1 && !otherAlgorithm) {
+            KcuRaceDownloadTask race = new KcuRaceDownloadTask(sources, dest, sha1);
+            race.setName(name);
+            return race;
+        }
+        FileDownloadTask single = new FileDownloadTask(
+                NetworkUtils.toURL(url), dest,
+                integrityCheck instanceof com.kongbai.kculauncher.core.task.FileDownloadTask.IntegrityCheck
+                        ? (com.kongbai.kculauncher.core.task.FileDownloadTask.IntegrityCheck) integrityCheck : null);
+        single.setName(name);
+        return single;
+    }
+
+    /**
      * 下载到当前选中游戏目录的指定子目录（版本未选中时落到根目录）
      */
     private void download(Context context, RemoteMod.Version file, String subdirectoryName) {
@@ -944,8 +991,7 @@ public class DownloadPage extends KCUPage implements View.OnClickListener {
         DownloadAddonDialog dialog = new DownloadAddonDialog(context, file.file().filename(), name -> {
             Path dest = modsDirectory.resolve(name);
 
-            FileDownloadTask fileTask = new FileDownloadTask(NetworkUtils.toURL(file.file().url()), dest.toFile());
-            fileTask.setName(file.name());
+            Task<Void> fileTask = buildDownloadTask(file.file().url(), dest.toFile(), null, file.name());
             Task<Void> downloadTask = Task.composeAsync(() -> fileTask);
             TaskExecutor executor = downloadTask.whenComplete(Schedulers.androidUIThread(), exception -> {
                     if (exception != null) {
@@ -1013,8 +1059,7 @@ public class DownloadPage extends KCUPage implements View.OnClickListener {
     /** 提交单个模组文件到下载队列：队列标题与保存文件均使用原始文件名；成功完成后刷新安装状态 */
     private void submitModDownload(Context context, String filename, RemoteMod.Version version, Path modsDirectory, ModManager modManager) {
         Path dest = modsDirectory.resolve(filename);
-        FileDownloadTask fileTask = new FileDownloadTask(NetworkUtils.toURL(version.file().url()), dest.toFile(), version.file().getIntegrityCheck());
-        fileTask.setName(filename);
+        Task<Void> fileTask = buildDownloadTask(version.file().url(), dest.toFile(), version.file().getIntegrityCheck(), filename);
         Task<Void> downloadTask = Task.composeAsync(() -> fileTask);
         TaskExecutor executor = downloadTask.whenComplete(Schedulers.androidUIThread(), exception -> {
             if (exception != null && !(exception instanceof CancellationException)) {
