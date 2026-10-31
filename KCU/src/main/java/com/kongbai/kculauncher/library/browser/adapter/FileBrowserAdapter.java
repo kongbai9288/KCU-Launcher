@@ -43,11 +43,19 @@ public class FileBrowserAdapter extends KCUAdapter {
 
     @SuppressLint("SimpleDateFormat")
     public FileBrowserAdapter(Context context, FileBrowser fileBrowser, Path path, ArrayList<String> selectedFiles, SortMode sortMode, FileBrowserListener listener) {
+        this(context, fileBrowser, FileOperator.getFileList(path, fileBrowser, sortMode), selectedFiles, listener);
+    }
+
+    /**
+     * 目录内容已在 IO 线程算好时走这里：避免在界面线程列目录，文件多时会卡住界面
+     */
+    @SuppressLint("SimpleDateFormat")
+    public FileBrowserAdapter(Context context, FileBrowser fileBrowser, List<File> files, ArrayList<String> selectedFiles, FileBrowserListener listener) {
         super(context);
         this.fileBrowser = fileBrowser;
         this.selectedFiles = selectedFiles;
         this.listener = listener;
-        this.list = FileOperator.getFileList(path, fileBrowser, sortMode);
+        this.list = files != null ? files : new ArrayList<>();
 
         this.formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     }
