@@ -39,7 +39,7 @@ public class KCUApp extends Application implements Application.ActivityLifecycle
     @NotNull
     public static Context getAppContext() {
         if (instance == null) {
-            throw new IllegalStateException("FCLApp is not initialized");
+            throw new IllegalStateException("KCUApp is not initialized");
         }
         return instance;
     }
