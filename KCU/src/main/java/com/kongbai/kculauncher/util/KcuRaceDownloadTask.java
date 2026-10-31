@@ -95,6 +95,9 @@ public class KcuRaceDownloadTask extends Task<Void> {
         AtomicInteger winner = new AtomicInteger(-1);
         AtomicInteger failed = new AtomicInteger(0);
         AtomicLong bestBytes = new AtomicLong(0);
+        // 服务器声明的文件总长。进度要拿它当分母：
+        // 拿已下载字节数当分母算出来恒等于 100%，界面上根本看不出下到哪了
+        AtomicLong declaredTotal = new AtomicLong(0);
         CountDownLatch latch = new CountDownLatch(usable.size());
         List<Thread> threads = new ArrayList<>();
 
@@ -105,7 +108,7 @@ public class KcuRaceDownloadTask extends Task<Void> {
                 final File temp = temps.get(i);
                 Thread thread = new Thread(() -> {
                     try {
-                        fetch(address, temp, winner, index, bestBytes);
+                        fetch(address, temp, winner, index, bestBytes, declaredTotal);
                         // 第一个完整下完的记下来；后面下完的即使成功也不用，
                         // 此时已经有可用的完整文件了
                         if (winner.compareAndSet(-1, index)) {
@@ -128,7 +131,14 @@ public class KcuRaceDownloadTask extends Task<Void> {
 
             // 等所有源结束。被取消时不再等，直接退出并清理
             while (!latch.await(500, java.util.concurrent.TimeUnit.MILLISECONDS)) {
-                updateProgress(bestBytes.get(), Math.max(1, bestBytes.get()));
+                // 只在知道总长、且已下载不超过总长时才上报：
+                // 拿已下载字节数当分母算出来恒等于 100%，界面上永远满格；
+                // 而基类对大于 1 的进度会直接抛异常，这里必须自己挡住
+                long total = declaredTotal.get();
+                long done = bestBytes.get();
+                if (total > 0 && done <= total) {
+                    updateProgress(done, total);
+                }
                 if (stopped && winner.get() >= 0) {
                     // 已经有人下完了，其余的能停就停，不必干等
                     break;
@@ -182,7 +192,7 @@ public class KcuRaceDownloadTask extends Task<Void> {
         }
         File temp = new File(parent, target.getName() + ".race0.tmp");
         try {
-            fetch(address, temp, new AtomicInteger(-1), 0, new AtomicLong(0));
+            fetch(address, temp, new AtomicInteger(-1), 0, new AtomicLong(0), new AtomicLong(0));
             if (expectSha1 != null && !expectSha1.isEmpty()) {
                 String actual = sha1(temp);
                 if (actual == null || !actual.equalsIgnoreCase(expectSha1)) {
@@ -206,7 +216,8 @@ public class KcuRaceDownloadTask extends Task<Void> {
      * 每读一块都看一次"是不是已经有别的源下完了 / 是不是被取消了"，
      * 有就立刻停手 —— 明知用不上还把流量吃完，只会拖慢赢家。
      */
-    private void fetch(String address, File temp, AtomicInteger winner, int index, AtomicLong bestBytes)
+    private void fetch(String address, File temp, AtomicInteger winner, int index, AtomicLong bestBytes,
+                       AtomicLong declaredTotal)
             throws Exception {
         HttpURLConnection conn = null;
         InputStream in = null;
@@ -222,6 +233,11 @@ public class KcuRaceDownloadTask extends Task<Void> {
                 throw new java.io.IOException("http " + code);
             }
             long total = conn.getContentLengthLong();
+            // 记下第一个拿到长度的那个源即可：几个源下的是同一个文件，
+            // 声明的长度理论上一致，反复覆盖反而让进度在几个值之间跳
+            if (total > 0 && declaredTotal.get() == 0) {
+                declaredTotal.set(total);
+            }
             in = conn.getInputStream();
             out = new FileOutputStream(temp, false);
             byte[] buf = new byte[BUFFER];
