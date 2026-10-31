@@ -38,6 +38,7 @@ import com.kongbai.kculauncher.library.component.view.KCUTextView;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -289,7 +290,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         }
         if (view == openExternal) {
             if (currentPath.toFile().getAbsolutePath().equals(Environment.getExternalStorageDirectory().getAbsolutePath())) {
-                currentPath = currentPath.resolve("FCL");
+                currentPath = currentPath.resolve("KCU");
             }
             Uri uri = FileProvider.getUriForFile(this, getApplication().getPackageName() + ".provider", currentPath.toFile());
             Intent intent = new Intent(Intent.ACTION_SEND);
@@ -302,11 +303,16 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             launcher.launch(null);
         }
         if (view == confirm) {
-            if (selectedFiles.isEmpty() && fileBrowser.getLibMode() != LibMode.FILE_BROWSER) {
+            if (selectedFiles.isEmpty()) {
+                if (fileBrowser.getLibMode() == LibMode.FILE_BROWSER) {
+                    setResult(Activity.RESULT_CANCELED);
+                    finish();
+                    return;
+                }
                 Toast.makeText(this, getString(R.string.file_browser_positive_alert), Toast.LENGTH_SHORT).show();
             } else {
                 Intent intent = new Intent();
-                intent.putParcelableArrayListExtra(FileBrowser.SELECTED_FILES, (ArrayList<? extends Parcelable>) selectedFiles.stream().map(Uri::parse).collect(Collectors.toList()));
+                intent.putParcelableArrayListExtra(FileBrowser.SELECTED_FILES, (ArrayList<? extends Parcelable>) selectedFiles.stream().map(path -> Uri.fromFile(new File(path))).collect(Collectors.toList()));
                 setResult(Activity.RESULT_OK, intent);
                 finish();
             }
@@ -510,6 +516,12 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         List<File> files = new ArrayList<>(FileClipboard.getFiles());
         boolean cut = FileClipboard.isCut();
         File dir = currentPath.toFile();
+        for (File source : files) {
+            if (isSelfOrDescendant(source, dir)) {
+                toast(R.string.file_browser_paste_recursive);
+                return;
+            }
+        }
         runFileOperation(() -> {
             if (cut) {
                 FileOperator.moveTo(files, dir);
@@ -518,6 +530,19 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 FileOperator.copyTo(files, dir);
             }
         });
+    }
+
+    /**
+     * 判断目标目录是否为来源本身或其子目录：是则粘贴会造成无限递归
+     */
+    private static boolean isSelfOrDescendant(File source, File targetDir) {
+        try {
+            String src = source.getCanonicalPath();
+            String dst = targetDir.getCanonicalPath();
+            return dst.equals(src) || dst.startsWith(src + File.separator);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private void clipboardSelected(boolean cut) {
@@ -568,7 +593,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
 
     private void shareFile(File file) {
         Intent intent = new Intent(Intent.ACTION_SEND);
-        Uri uri = FileProvider.getUriForFile(this, getString(R.string.file_browser_provider), file);
+        Uri uri = FileProvider.getUriForFile(this, getApplication().getPackageName() + ".provider", file);
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_STREAM, uri);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
