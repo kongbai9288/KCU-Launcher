@@ -116,9 +116,17 @@ public final class KcuDevPolicy {
 
     /** 启动时先读上次缓存，不发请求，不拖慢启动 */
     public static void loadCached() {
-        String body = readCache();
+        long[] stamp = new long[1];
+        String body = readCache(stamp);
         if (body == null || body.isEmpty()) {
             return;
+        }
+        // 缓存里记下的更新时间要一并恢复：
+        // 只恢复规则而恢复不了时间戳的话，本次启动仍会去拉一次全文
+        synchronized (LOCK) {
+            if (stamp[0] > updatedAt) {
+                updatedAt = stamp[0];
+            }
         }
         apply(parse(body));
     }
@@ -179,11 +187,14 @@ public final class KcuDevPolicy {
         if (parsed == null) {
             return;
         }
-        synchronized (LOCK) {
-            updatedAt = remote;
+        // 先落盘再改内存：缓存没写成功就不算这次同步过，
+        // 下次仍会重试，而不是在内存里假装已经拿到过
+        if (writeCache(remote, body)) {
+            synchronized (LOCK) {
+                updatedAt = remote;
+            }
         }
         apply(parsed);
-        writeCache(body);
     }
 
     private static void apply(List<Rule> parsed) {
@@ -251,18 +262,32 @@ public final class KcuDevPolicy {
      *
      * 直接截断写的话，写一半出问题会留下半截内容，
      * 下次读出来既不是新规则也不是旧规则，停用范围会莫名其妙地变。
+     *
+     * 【为什么把更新时间一起写进去】
+     * 只存规则正文、不存时间戳的话，进程重启后更新时间无从恢复（内存字段归零），
+     * "没有新内容就关闭请求"这个设计在跨启动时完全失效 —— 每次启动都会重拉全文。
+     * 返回是否写成功，写失败就不算这次同步过。
      */
-    private static void writeCache(String body) {
+    private static boolean writeCache(long remote, String body) {
         File file = cacheFile();
         if (file == null) {
-            return;
+            return false;
+        }
+        JsonObject wrapper = new JsonObject();
+        wrapper.addProperty("updatedAt", remote);
+        wrapper.addProperty("body", body);
+        byte[] bytes;
+        try {
+            bytes = wrapper.toString().getBytes(StandardCharsets.UTF_8);
+        } catch (Throwable e) {
+            return false;
         }
         File tmp = new File(file.getParentFile(), CACHE_NAME + ".tmp");
         boolean ok = false;
         try {
             FileOutputStream out = new FileOutputStream(tmp, false);
             try {
-                out.write(body.getBytes(StandardCharsets.UTF_8));
+                out.write(bytes);
                 ok = true;
             } finally {
                 try {
@@ -277,16 +302,26 @@ public final class KcuDevPolicy {
             if (!tmp.delete()) {
                 Log.w(TAG, "Dev policy: unable to remove " + tmp);
             }
-            return;
+            return false;
         }
         if (!tmp.renameTo(file)) {
             if (!tmp.delete()) {
                 Log.w(TAG, "Dev policy: unable to remove " + tmp);
             }
+            return false;
         }
+        return true;
     }
 
-    private static String readCache() {
+    /**
+     * 读缓存，更新时间通过 stampOut[0] 带出。
+     *
+     * 兼容旧格式：早期缓存只写了规则正文（顶层就是 disabled 数组所在的那个对象），
+     * 没有 updatedAt / body 这两层。认不出来时把整段当正文、时间戳按 0 处理 ——
+     * 这样升级上来的老缓存仍然生效，不会因为读不懂就退回默认（默认是不禁用，
+     * 那等于这次停用直接失效）。
+     */
+    private static String readCache(long[] stampOut) {
         File file = cacheFile();
         if (file == null || !file.isFile()) {
             return null;
@@ -306,7 +341,31 @@ public final class KcuDevPolicy {
                 }
                 out.write(buf, 0, n);
             }
-            return out.toString("UTF-8");
+            String text = out.toString("UTF-8");
+            if (text == null || text.isEmpty()) {
+                return null;
+            }
+            try {
+                JsonObject wrapper = new Gson().fromJson(text, JsonObject.class);
+                if (wrapper != null && wrapper.has("body")) {
+                    JsonElement stamp = wrapper.get("updatedAt");
+                    if (stamp != null && stamp.isJsonPrimitive()) {
+                        try {
+                            stampOut[0] = stamp.getAsLong();
+                        } catch (Throwable ignored) {
+                            stampOut[0] = 0;
+                        }
+                    }
+                    JsonElement body = wrapper.get("body");
+                    if (body != null && body.isJsonPrimitive()) {
+                        return body.getAsString();
+                    }
+                    return null;
+                }
+            } catch (Throwable ignored) {
+                // 解析不出来就按旧格式处理
+            }
+            return text;
         } catch (Throwable e) {
             return null;
         } finally {
