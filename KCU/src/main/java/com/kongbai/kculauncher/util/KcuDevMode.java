@@ -272,9 +272,11 @@ public final class KcuDevMode {
         if (v != null) {
             return v;
         }
-        // 授权标记优先：它由 PAT 校验通过后写入私有目录，是正规途径。
-        // 仍保留对旧开关文件的识别，避免此前已开启的玩家被意外关掉
-        boolean result = hasAuthorization() || matchFile();
+        // 远程开关先判：它管的就是"这个版本的开发者模式不许开"，
+        // 优先级高于本机已经开过 —— 本机授权是本地文件，
+        // 真到需要紧急收回的时候，等本地那个慢慢失效来不及
+        boolean result = !KcuDevPolicy.isDisabled()
+                && (hasAuthorization() || matchFile());
         cached = result;
         return result;
     }
