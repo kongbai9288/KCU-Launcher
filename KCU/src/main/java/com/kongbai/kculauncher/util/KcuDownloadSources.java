@@ -7,6 +7,7 @@ import android.util.Log;
 import com.kongbai.kculauncher.KCUApp;
 import com.kongbai.kculauncher.core.download.BMCLAPIDownloadProvider;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -183,7 +184,16 @@ public final class KcuDownloadSources {
         }
     }
 
-    /** 按项目自带的替换表改写地址；改不了就原样返回 */
+    /**
+     * 按项目自带的替换表改写地址；改不出来返回 null。
+     *
+     * 【为什么用 injectURLWithCandidates 而不是 injectURL】
+     * 项目里那张替换表是分两层的：主表管 mojang / forge / fabric / maven 这些，
+     * 模组平台（Modrinth / CurseForge）的地址放在备用表里。
+     * 而 injectURL 只查主表 —— 下载页要下的模组文件地址全在备用表上，
+     * 用它会原样返回，镜像地址永远排不进候选，
+     * 于是多源竞速在它最主要的场景（模组下载）上等于没开。
+     */
     private static String injectMirror(String origin) {
         try {
             if (mirror == null) {
@@ -193,10 +203,25 @@ public final class KcuDownloadSources {
                     }
                 }
             }
-            return mirror.injectURL(origin);
+            List<URL> candidates = mirror.injectURLWithCandidates(origin);
+            if (candidates == null) {
+                return null;
+            }
+            for (URL one : candidates) {
+                if (one == null) {
+                    continue;
+                }
+                String text = one.toString();
+                // 只要被改写过的那个：与原文相同的就是官方地址本身，
+                // 官方源已经单独排进去了，再排一次没意义
+                if (!text.equals(origin)) {
+                    return text;
+                }
+            }
+            return null;
         } catch (Throwable e) {
             Log.w(TAG, "Failed to build mirror url");
-            return origin;
+            return null;
         }
     }
 
@@ -219,7 +244,8 @@ public final class KcuDownloadSources {
         }
         if (on.contains(BMCL)) {
             String injected = injectMirror(origin);
-            if (!injected.equals(origin) && !out.contains(injected)) {
+            if (injected != null && !injected.isEmpty() && !injected.equals(origin)
+                    && !out.contains(injected)) {
                 out.add(injected);
             }
         }
