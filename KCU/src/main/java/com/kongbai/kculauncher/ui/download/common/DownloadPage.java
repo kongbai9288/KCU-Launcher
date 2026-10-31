@@ -76,6 +76,7 @@ import com.kongbai.kculauncher.library.util.LocaleUtils;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
