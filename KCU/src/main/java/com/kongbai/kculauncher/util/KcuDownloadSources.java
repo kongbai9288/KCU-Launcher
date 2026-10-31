@@ -65,7 +65,11 @@ public final class KcuDownloadSources {
         Set<String> out = new LinkedHashSet<>();
         try {
             String raw = prefs().getString(KEY_ENABLED, null);
-            if (raw != null && !raw.isEmpty()) {
+            // 只有从来没配过时才用默认。
+            // 玩家把源全部关掉时，写进去的是空串 —— 空串必须当成"一个都不启用"。
+            // 若把空串也当成没配过，下次启动会又变回默认全开，
+            // 玩家刚关掉的设置等于存不住，他只会以为开关坏了
+            if (raw != null) {
                 for (String one : raw.split(",")) {
                     String id = one.trim();
                     if (!id.isEmpty()) {
