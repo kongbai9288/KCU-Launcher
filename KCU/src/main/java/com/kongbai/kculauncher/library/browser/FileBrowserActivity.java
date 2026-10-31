@@ -76,6 +76,16 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
     private Path currentPath;
     private SortMode sortMode;
 
+    /**
+     * 每次列目录的序号：只有最新一次的结果允许写进界面，
+     * 避免连续切换目录时，先发起的慢请求覆盖后发起的结果
+     */
+    private long listLoadToken;
+    /** 目录内容正在后台读取：此时列表显示的还是上一个目录，先不响应点击 */
+    private volatile boolean listLoading;
+    /** 主题回调按控件登记即可，重复登记会白做，故只登记一次 */
+    private boolean themeRegistered;
+
     private ArrayList<String> selectedFiles;
     private ArrayList<Uri> extSelected;
 
@@ -220,17 +230,64 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             selectedFiles = new ArrayList<>();
             selectedFiles.add(path.toString());
         }
+        // 同目录刷新（增删改名、排序）要保住滚动位置，换目录则回到顶部
+        boolean sameDir = currentPath != null && currentPath.equals(path);
+        int firstVisible = listView.getFirstVisiblePosition();
+        View firstChild = listView.getChildAt(0);
+        int topOffset = firstChild != null ? firstChild.getTop() : 0;
+
         currentPath = path;
         currentText.setText(path.toString());
-        ThemeEngine.getInstance().registerEvent(currentText, () -> currentText.setBackgroundColor(ThemeEngine.getInstance().getTheme().getColor()));
-        adapter = new FileBrowserAdapter(this, fileBrowser, path, selectedFiles, sortMode, new FileBrowserListener() {
+        if (!themeRegistered) {
+            ThemeEngine.getInstance().registerEvent(currentText, () -> currentText.setBackgroundColor(ThemeEngine.getInstance().getTheme().getColor()));
+            themeRegistered = true;
+        }
+
+        final long token = ++listLoadToken;
+        final FileBrowser config = fileBrowser;
+        final SortMode sort = sortMode;
+        final ArrayList<String> selected = selectedFiles;
+        listLoading = true;
+        // 列目录是磁盘操作，文件多时会卡住界面线程，放到 IO 线程做
+        Schedulers.io().execute(() -> {
+            List<File> files;
+            try {
+                files = FileOperator.getFileList(path, config, sort);
+            } catch (Exception e) {
+                Logging.LOG.log(Level.WARNING, "Failed to list directory " + path, e);
+                files = new ArrayList<>();
+            }
+            Schedulers.androidUIThread().execute(() -> {
+                if (isDestroyed() || isFinishing() || token != listLoadToken) {
+                    return;
+                }
+                adapter = new FileBrowserAdapter(this, config, files, selected, createListener());
+                listView.setAdapter(adapter);
+                listLoading = false;
+                if (sameDir) {
+                    listView.setSelectionFromTop(firstVisible, topOffset);
+                } else {
+                    listView.setSelection(0);
+                }
+            });
+        });
+    }
+
+    private FileBrowserListener createListener() {
+        return new FileBrowserListener() {
             @Override
             public void onEnterDir(String path) {
+                if (listLoading) {
+                    return;
+                }
                 refreshList(new File(path).toPath());
             }
 
             @Override
             public void onSelect(FileBrowserAdapter adapter1, String path) {
+                if (listLoading) {
+                    return;
+                }
                 if (selectedFiles.stream().anyMatch(s -> s.equals(path))) {
                     selectedFiles.remove(path);
                 } else {
@@ -241,14 +298,29 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 }
                 adapter1.setSelectedFiles(selectedFiles);
                 adapter1.notifyDataSetChanged();
+                // 单选文件：点中即返回，不必再点一次确认
+                if (fileBrowser.getLibMode() == LibMode.FILE_CHOOSER
+                        && fileBrowser.getSelectionMode() == SelectionMode.SINGLE_SELECTION
+                        && selectedFiles.contains(path)) {
+                    confirmSelection();
+                }
             }
 
             @Override
             public void onItemLongClick(File file) {
                 showItemMenu(file);
             }
-        });
-        listView.setAdapter(adapter);
+        };
+    }
+
+    /**
+     * 把当前勾选作为结果返回给调用方
+     */
+    private void confirmSelection() {
+        Intent intent = new Intent();
+        intent.putParcelableArrayListExtra(FileBrowser.SELECTED_FILES, (ArrayList<? extends Parcelable>) selectedFiles.stream().map(path -> Uri.fromFile(new File(path))).collect(Collectors.toList()));
+        setResult(Activity.RESULT_OK, intent);
+        finish();
     }
 
     @Override
@@ -311,10 +383,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 }
                 Toast.makeText(this, getString(R.string.file_browser_positive_alert), Toast.LENGTH_SHORT).show();
             } else {
-                Intent intent = new Intent();
-                intent.putParcelableArrayListExtra(FileBrowser.SELECTED_FILES, (ArrayList<? extends Parcelable>) selectedFiles.stream().map(path -> Uri.fromFile(new File(path))).collect(Collectors.toList()));
-                setResult(Activity.RESULT_OK, intent);
-                finish();
+                confirmSelection();
             }
         }
     }
@@ -390,7 +459,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         boolean singleSelectionChooser = fileBrowser.getLibMode() == LibMode.FILE_CHOOSER
                 && fileBrowser.getSelectionMode() == SelectionMode.SINGLE_SELECTION;
         if (!singleSelectionChooser && fileBrowser.getLibMode() != LibMode.FOLDER_CHOOSER
-                && adapter != null && adapter.getCount() > 0) {
+                && !listLoading && adapter != null && adapter.getCount() > 0) {
             items.add(getString(R.string.file_browser_batch));
             actions.add(this::showBatchMenu);
         }
@@ -559,6 +628,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
     }
 
     private void selectAll() {
+        if (adapter == null) {
+            return;
+        }
         selectedFiles = new ArrayList<>();
         for (File file : adapter.getFiles()) {
             if (file.isFile()) {
@@ -589,6 +661,15 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 builder.create().show();
             });
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        // 主题引擎按控件持有回调，不摘掉就会一直攥着本页，关闭后无法回收
+        if (currentText != null) {
+            ThemeEngine.getInstance().unregisterEvent(currentText);
+        }
+        super.onDestroy();
     }
 
     private void shareFile(File file) {
