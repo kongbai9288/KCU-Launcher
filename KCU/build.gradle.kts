@@ -331,36 +331,39 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
 }
 
+// 只更新数组第一条（最新）记录。
+// 原写法对每一行做正则替换：versionCode / versionName / date 三个字段在文件里各出现
+// 一百多次，跑一次会把全部历史记录统一改写成同一个版本号和日期，历史台账被整个抹平。
+// url 字段本文件并不存在，文件里唯一含 url 的都是历史说明文字，那个分支只会篡改它们。
 tasks.register("updateMap") {
     doLast {
         val list = mutableListOf<String>()
         val mapFile = file("${rootDir}/version_map.json")
-        mapFile.forEachLine {
-            list.add(
-                when {
-                    it.contains("versionCode") -> it.replace(
-                        Regex("[0-9]+"),
-                        android.defaultConfig.versionCode.toString()
-                    )
-
-                    it.contains("versionName") -> it.replace(
-                        Regex("\\d+(\\.\\d+)+"),
-                        android.defaultConfig.versionName.toString()
-                    )
-
-                    it.contains("date") -> it.replace(
-                        Regex("\\d{4}\\.\\d{2}\\.\\d{2}"),
-                        SimpleDateFormat("yyyy.MM.dd").format(Date())
-                    )
-
-                    it.contains("url") -> it.replace(
-                        Regex("\\d+(\\.\\d+)+"),
-                        android.defaultConfig.versionName.toString()
-                    )
-
-                    else -> it
-                }
-            )
+        var doneCode = false
+        var doneName = false
+        var doneDate = false
+        mapFile.forEachLine { raw ->
+            var line = raw
+            if (!doneCode && line.contains("versionCode")) {
+                line = line.replace(
+                    Regex("[0-9]+"),
+                    android.defaultConfig.versionCode.toString()
+                )
+                doneCode = true
+            } else if (!doneName && line.contains("versionName")) {
+                line = line.replace(
+                    Regex("\\d+(\\.\\d+)+"),
+                    android.defaultConfig.versionName.toString()
+                )
+                doneName = true
+            } else if (!doneDate && line.contains("date")) {
+                line = line.replace(
+                    Regex("\\d{4}\\.\\d{2}\\.\\d{2}"),
+                    SimpleDateFormat("yyyy.MM.dd").format(Date())
+                )
+                doneDate = true
+            }
+            list.add(line)
         }
         mapFile.writeText(list.joinToString("\n"), Charsets.UTF_8)
     }
