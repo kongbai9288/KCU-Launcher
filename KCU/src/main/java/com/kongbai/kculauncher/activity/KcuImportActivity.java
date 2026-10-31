@@ -739,6 +739,13 @@ public class KcuImportActivity extends Activity {
             setStatus(getString(R.string.kcu_dl_target));
             return;
         }
+        // 按玩家勾选的下载源取地址：
+        // 导入页上有源开关，而导入页自己的下载此前一律用玩家填的原始地址，
+        // 勾了镜像却仍然直连，界面上看不出任何异常。
+        // 只取第一个候选做单源下载 ——
+        // 多源并发按约定只用于下载页那几类，不在这里开
+        List<String> candidates = KcuDownloadSources.candidates(url);
+        final String finalUrl = candidates == null || candidates.isEmpty() ? url : candidates.get(0);
         final String finalName = name;
         setStatus(getString(R.string.kcu_import_downloading));
         worker.execute(() -> {
@@ -747,7 +754,7 @@ public class KcuImportActivity extends Activity {
                 setStatus(getString(R.string.kcu_import_no_dir));
                 return;
             }
-            boolean ok = download(url, target);
+            boolean ok = download(finalUrl, target);
             if (!ok) {
                 removeIfEmpty(target.getParentFile());
             }
