@@ -54,11 +54,11 @@
     <string name="plugin_miolibpatcher_asm">ASM backdoor</string>
     <string name="plugin_miolibpatcher_asm_desc">Removes the ASM 5.0.4 API check to support older mods like AE1 (affects all ASM 5.0.4 mods, use with caution)</string>
     <string name="plugin_env_config">Configure</string>
-    <string name="about_launcher" translatable="false">Fold Craft Launcher</string>
-    <string name="about_developer" translatable="false">FCL-Team</string>
+    <string name="about_launcher" translatable="false">KCU Launcher</string>
+    <string name="about_developer" translatable="false">KCU Studios</string>
     <string name="about_sponsor">Sponsor</string>
     <string name="about_source">Open Source</string>
-    <string name="about_desc">KCU Launcher 是一个由架构师 kongbai9288 以 FCL（即 Fold Craft Launcher）为主体、其他项目为辅的开源软件，源码可修改，遵循 GPL-v3 许可发布。\n\n页面下方的条目携带图标，点击「开源许可」可查看所使用开源项目的许可（全部内置于本地，不联网获取）。</string>
+    <string name="about_desc">KCU Launcher 是由架构师 kongbai9288 主导开发的开源启动器，源码可修改，遵循 GPL-v3 许可发布。\n\n页面下方的条目携带图标，点击「开源许可」可查看所使用开源项目的许可（全部内置于本地，不联网获取）。</string>
 
     <string name="account_add_server">Add Authentication Server</string>
     <string name="account_add_server_url">Server URL</string>
@@ -1648,6 +1648,8 @@
     <string name="file_browser_invalid_name">Invalid file name.</string>
     <string name="file_browser_exists">A file with the same name already exists.</string>
     <string name="file_browser_clipboard_empty">Clipboard is empty.</string>
+    <string name="file_browser_paste_recursive">Cannot paste a folder into itself or its subfolder.</string>
+    <string name="file_browser_result_lost">The selection was not delivered. Please select again.</string>
     <string name="file_browser_no_selection">No file selected.</string>
     <string name="file_browser_operation_failed">Operation failed.</string>
     <string name="crash_reporter_title">Crash Report</string>
