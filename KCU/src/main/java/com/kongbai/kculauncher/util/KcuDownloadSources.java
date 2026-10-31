@@ -115,7 +115,10 @@ public final class KcuDownloadSources {
         /** 把前缀换成这个 */
         public final String to;
 
-        Rule(String from, String to) {
+        /**
+         * 对外公开：导入页在 activity 包下，跨包构造需要 public。
+         */
+        public Rule(String from, String to) {
             this.from = from;
             this.to = to;
         }
