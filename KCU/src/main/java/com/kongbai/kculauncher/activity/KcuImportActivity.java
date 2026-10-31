@@ -73,6 +73,18 @@ public class KcuImportActivity extends Activity {
     private android.widget.EditText formatEdit;
     private android.widget.EditText nameEdit;
 
+    /**
+     * 重建整页时要带过去的内容。
+     *
+     * 页面上有好几处操作会整页重建：切换下载源、增删自定义源、
+     * 展开快照列表、选中一个版本。重建会把所有输入框换成新的，
+     * 玩家已经填好的格式链接、占位符、文件名会被全部清空。
+     * 先记下来，重建后再填回去。
+     */
+    private String pendingFormat = null;
+    private String pendingName = null;
+    private java.util.Map<String, String> pendingPlaceholders = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -310,6 +322,16 @@ public class KcuImportActivity extends Activity {
 
     /** 按类型分组渲染；快照默认折叠，展开后才渲染，避免首屏过长 */
     private void renderList() {
+        // 先把已填内容取出来：removeAllViews 之后这些输入框就换成了新的，
+        // 不在这里记下来就全丢了
+        if (formatEdit != null) {
+            pendingFormat = formatEdit.getText() == null ? "" : formatEdit.getText().toString();
+            pendingPlaceholders = new LinkedHashMap<>();
+            collectPlaceholders(pendingPlaceholders);
+        }
+        if (nameEdit != null) {
+            pendingName = nameEdit.getText() == null ? "" : nameEdit.getText().toString();
+        }
         card.removeAllViews();
         card.addView(KcuUi.header(this, "\u2193", getString(R.string.kcu_import_title)));
         card.addView(KcuUi.gap(this, 12));
@@ -425,6 +447,13 @@ public class KcuImportActivity extends Activity {
         placeholderBox.setOrientation(LinearLayout.VERTICAL);
         card.addView(placeholderBox);
 
+        // 格式链接要在这里回填：占位符是根据它解析出来的，
+        // 晚一步重建出来的输入框就没内容可填了。
+        // 此时 placeholderBox 已经是新的，setText 触发的重建会直接把值填回去
+        if (pendingFormat != null && !pendingFormat.isEmpty()) {
+            formatEdit.setText(pendingFormat);
+        }
+
         previewText = KcuUi.hint(this, "");
         card.addView(previewText);
         card.addView(KcuUi.gap(this, 10));
@@ -454,6 +483,11 @@ public class KcuImportActivity extends Activity {
         card.addView(KcuUi.gap(this, 8));
 
         nameEdit = KcuUi.field(this, getString(R.string.kcu_dl_target));
+        // 文件名同样要带过去：选中一个版本时会把版本名填进来，
+        // 而紧接着的整页重建会把它换成空框 —— 不带过去的话那次填充等于白做
+        if (pendingName != null && !pendingName.isEmpty()) {
+            nameEdit.setText(pendingName);
+        }
         card.addView(nameEdit);
         card.addView(KcuUi.gap(this, 10));
 
@@ -558,21 +592,35 @@ public class KcuImportActivity extends Activity {
      * 已填过的值要保留：玩家改动格式时若把已填内容清空，
      * 等于让他重新填一遍，格式一复杂就很难用。
      */
-    private void rebuildPlaceholders() {
-        if (placeholderBox == null) {
+    /** 把当前占位符输入框里已填的值收进 map */
+    private void collectPlaceholders(java.util.Map<String, String> into) {
+        if (placeholderBox == null || into == null) {
             return;
         }
-        java.util.Map<String, String> kept = new LinkedHashMap<>();
         for (int i = 0; i < placeholderBox.getChildCount(); i++) {
             android.view.View child = placeholderBox.getChildAt(i);
             Object tag = child.getTag();
             if (tag instanceof String && child instanceof LinearLayout) {
                 android.widget.EditText edit = KcuUi.editOf((LinearLayout) child);
                 if (edit != null) {
-                    kept.put((String) tag, edit.getText().toString());
+                    into.put((String) tag, edit.getText().toString());
                 }
             }
         }
+    }
+
+    private void rebuildPlaceholders() {
+        if (placeholderBox == null) {
+            return;
+        }
+        java.util.Map<String, String> kept = new LinkedHashMap<>();
+        // 整页重建带过来的先放进去，再拿当前已有的覆盖：
+        // 当前的是玩家刚改过的，以它为准
+        if (pendingPlaceholders != null) {
+            kept.putAll(pendingPlaceholders);
+            pendingPlaceholders = null;
+        }
+        collectPlaceholders(kept);
         placeholderBox.removeAllViews();
         String format = formatEdit == null ? "" : formatEdit.getText().toString();
         List<String> names = KcuUrlFormat.placeholders(format);
