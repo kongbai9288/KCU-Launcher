@@ -83,30 +83,60 @@ public final class KcuDataExport {
 
             appendLine(text, "说明：本文件只记录清单与设置摘要，不包含任何登录凭据。");
 
-            File dir = exportDir();
-            if (dir == null) {
-                return null;
+            // 按候选依次找能写的地方：这条路是强制停止页唯一的出口，
+            // 公共目录写不进去就直接失败的话，等于把最后一条取回数据的路也堵死
+            for (File dir : exportDirs()) {
+                if (dir == null) {
+                    continue;
+                }
+                File written = writeInto(dir, text.toString());
+                if (written != null) {
+                    return written;
+                }
             }
-            File file = new File(dir, "kcu_export_" + stamp() + ".txt");
-            File tmp = new File(dir, "kcu_export_" + stamp() + ".tmp");
-            OutputStream out = new FileOutputStream(tmp, false);
-            try {
-                out.write(text.toString().getBytes(StandardCharsets.UTF_8));
-                out.flush();
-            } finally {
+            return null;
+        } catch (Throwable e) {
+            return null;
+        }
+    }
+
+    /**
+     * 往某个目录里写一份。写不进去返回 null，交给调用方换下一个候选。
+     */
+    private static File writeInto(File dir, String text) {
+        String name = "kcu_export_" + stamp();
+        File file = new File(dir, name + ".txt");
+        File tmp = new File(dir, name + ".tmp");
+        OutputStream out = null;
+        boolean ok = false;
+        try {
+            out = new FileOutputStream(tmp, false);
+            out.write(text.getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            ok = true;
+        } catch (Throwable e) {
+            return null;
+        } finally {
+            if (out != null) {
                 try {
                     out.close();
                 } catch (Throwable ignored) {
                 }
             }
-            if (!tmp.renameTo(file)) {
-                tmp.delete();
-                return null;
+        }
+        if (!ok) {
+            if (!tmp.delete()) {
+                // 删不掉也无所谓，下次会覆盖同名临时文件
             }
-            return file;
-        } catch (Throwable e) {
             return null;
         }
+        if (!tmp.renameTo(file)) {
+            if (!tmp.delete()) {
+                // 同上
+            }
+            return null;
+        }
+        return file;
     }
 
     private static void appendLine(StringBuilder text, String line) {
@@ -146,16 +176,47 @@ public final class KcuDataExport {
         }
     }
 
-    private static File exportDir() {
+    /**
+     * 导出目录的候选，按理想程度从高到低排。
+     *
+     * 【为什么要有第二个候选】
+     * 强制停止页是在启动的最前面弹出来的，早于权限申请。
+     * 全新安装、权限被撤销、或者用户之前拒过，公共存储就写不进去，
+     * 而导出是那个页面唯一的出口 —— 没有备选等于把人堵死。
+     *
+     * 【为什么第二候选是应用专属外部目录而不是私有目录】
+     * 私有目录下的文件用户根本取不到，导出了等于没导出。
+     * 应用专属外部目录不需要任何权限就能写，用户也还有办法取走。
+     *
+     * 【为什么不用内部目录兜底】
+     * 落在内部目录里用户拿不到，给一条取不到的路径只会让人更困惑，
+     * 两条都不通时宁可明确告知失败。
+     */
+    private static List<File> exportDirs() {
+        List<File> out = new ArrayList<>();
         try {
             File dir = new File(KCUPath.KCU_SHARED_ROOT, "export");
-            if (!dir.exists() && !dir.mkdirs()) {
-                return null;
+            if (dir.isDirectory() || dir.mkdirs()) {
+                out.add(dir);
             }
-            return dir;
-        } catch (Throwable e) {
-            return null;
+        } catch (Throwable ignored) {
+            // 公共目录用不了就换下一个
         }
+        try {
+            Context context = KCUApp.getAppContext();
+            if (context != null) {
+                File external = context.getExternalFilesDir(null);
+                if (external != null) {
+                    File dir = new File(external, "export");
+                    if (dir.isDirectory() || dir.mkdirs()) {
+                        out.add(dir);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+            // 同上
+        }
+        return out;
     }
 
     /** 列出目录下的子项名称；取不到就返回空列表 */
