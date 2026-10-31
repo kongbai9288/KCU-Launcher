@@ -1,12 +1,14 @@
 package com.kongbai.kculauncher.library.browser
 
 import android.app.Activity
+import android.widget.Toast
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.kongbai.kculauncher.R
 import com.kongbai.kculauncher.library.browser.options.LibMode
 import com.kongbai.kculauncher.library.browser.options.SelectionMode
 
@@ -22,13 +24,22 @@ class FileBrowserLauncher(val activity: AppCompatActivity) {
         this.launcher = activity.registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result: ActivityResult? ->
-            if (currentFileBrowser != null && currentFileBrowser!!.callback != null) {
-                if (result!!.resultCode == Activity.RESULT_OK && result.data != null) {
+            val browser = currentFileBrowser
+            if (browser != null && browser.callback != null) {
+                if (result?.resultCode == Activity.RESULT_OK && result.data != null) {
                     val files = FileBrowser.getSelectedFiles(result.data)
-                    currentFileBrowser!!.callback.onResult(files)
+                    browser.callback.onResult(files)
                 } else {
-                    currentFileBrowser!!.callback.onResult(null)
+                    browser.callback.onResult(null)
                 }
+            } else if (result?.resultCode == Activity.RESULT_OK) {
+                // 调用方 Activity 已被重建，回调随之丢失。此时若强行回调，lambda 里
+                // 持有的仍是已销毁的 Activity/页面，弹窗会直接崩溃，因此只明确告知。
+                Toast.makeText(
+                    activity,
+                    R.string.file_browser_result_lost,
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
