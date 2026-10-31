@@ -469,18 +469,14 @@ public class KCULauncher {
 
     /**
      * 渲染库加载失败时改用内置兜底库再试一次。
-     * 当前渲染器本身已是兜底库时返回 0（重复尝试无意义）。
      * 成功返回新句柄；失败返回 0（维持原状，不比改前更糟）。
+     * [failedGl] 传入的是失败库的完整路径，用于判重与日志：
+     * 仅当失败路径与兜底路径完全一致时才跳过 ——
+     * 插件目录下的同名库与内置库是不同文件，插件库损坏时内置库仍是有效救援，不能按库名误判跳过。
      */
-    private static long tryFallbackGl(KCUConfig config, KCUBridge bridge, String nativeDir, String failedGl) {
-        String name = FALLBACK_GL_LIB;
-        try {
-            String current = config.getRenderer().getGlName();
-            if (current != null && current.equals(name)) return 0;
-        } catch (Throwable ignore) {
-            // 取不到当前库名时仍尝试兜底，不因比较失败而放弃
-        }
-        String full = nativeDir + "/" + name;
+    private static long tryFallbackGl(KCUBridge bridge, String nativeDir, String failedGl) {
+        String full = nativeDir + "/" + FALLBACK_GL_LIB;
+        if (full.equals(failedGl)) return 0;
         try {
             long h = bridge.dlopen(full);
             if (h != 0) {
@@ -515,7 +511,7 @@ public class KCULauncher {
             long handle = bridge.dlopen(config.getRenderer().getGLPath());
             // 渲染库未加载成功时改用内置兜底库，避免后续 GL 调用直接崩溃
             if (handle == 0) {
-                handle = tryFallbackGl(config, bridge, nativeDir, config.getRenderer().getGLPath());
+                handle = tryFallbackGl(bridge, nativeDir, config.getRenderer().getGLPath());
             }
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
                 try {
@@ -529,7 +525,7 @@ public class KCULauncher {
             long builtinHandle = bridge.dlopen(glFull);
             // 同上：内置渲染库加载失败时改用内置兜底库再试一次
             if (builtinHandle == 0) {
-                tryFallbackGl(config, bridge, nativeDir, glFull);
+                tryFallbackGl(bridge, nativeDir, glFull);
             }
         }
     }
