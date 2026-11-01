@@ -57,6 +57,10 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
 
     private static final String PREFERENCES_NAME = "launcher";
     private static final String KEY_SORT_MODE = "file_browser_sort_mode";
+    /** 重建时恢复现场用的键：目录、排序、已勾选的文件 */
+    private static final String STATE_PATH = "kcu_fb_path";
+    private static final String STATE_SORT = "kcu_fb_sort";
+    private static final String STATE_SELECTED = "kcu_fb_selected";
 
     private FileBrowser fileBrowser;
     private FileBrowserAdapter adapter;
@@ -192,6 +196,37 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
 
         selectedFiles = new ArrayList<>();
         extSelected = new ArrayList<>();
+        // 被系统回收后重建时先恢复原来的目录与勾选：
+        // 玩家翻到深层目录、勾好几个模组，接个电话回来界面回到根目录、勾选全没，
+        // 只得重新翻一遍——这正是最让人觉得"不像正常软件"的地方
+        if (savedInstanceState != null) {
+            String savedPath = savedInstanceState.getString(STATE_PATH);
+            if (savedPath != null && !savedPath.isEmpty()) {
+                currentPath = new File(savedPath).toPath();
+            }
+            String savedSort = savedInstanceState.getString(STATE_SORT);
+            if (savedSort != null) {
+                try {
+                    // 只在这里直接解析而不用 parseSortMode：
+                    // 那个方法解析不出来会退回默认，会把从偏好里读出来的排序覆盖掉
+                    sortMode = SortMode.valueOf(savedSort);
+                } catch (IllegalArgumentException ignored) {
+                    // 认不出就保持偏好里读到的那个
+                }
+            }
+            ArrayList<String> savedSelected = savedInstanceState.getStringArrayList(STATE_SELECTED);
+            if (savedSelected != null) {
+                // 只保留还在的：回收期间文件可能被别的应用删掉或移动走，
+                // 留着不存在的路径会让后面按它去操作时直接失败
+                ArrayList<String> alive = new ArrayList<>();
+                for (String one : savedSelected) {
+                    if (one != null && new File(one).exists()) {
+                        alive.add(one);
+                    }
+                }
+                selectedFiles = alive;
+            }
+        }
         currentText = findViewById(R.id.current_folder);
         listView = findViewById(R.id.list);
         refreshList(currentPath != null ? currentPath : new File(fileBrowser.getInitDir()).toPath());
@@ -404,12 +439,14 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             showManageMenu();
         }
         if (view == openExternal) {
-            if (currentPath.toFile().getAbsolutePath().equals(Environment.getExternalStorageDirectory().getAbsolutePath())) {
-                currentPath = currentPath.resolve("KCU");
-            }
+            // 用局部变量，不改写 currentPath：
+            // 原来直接改写字段却不刷新界面，路径栏还显示着旧目录，
+            // 之后一刷新或进出目录就会突然跳到另一个地方，而界面上毫无提示
+            File externalTarget = currentPath.toFile().getAbsolutePath()
+                    .equals(Environment.getExternalStorageDirectory().getAbsolutePath())
+                    ? currentPath.resolve("KCU").toFile() : currentPath.toFile();
             // 这个目录可能还没建过。交给外部应用一个不存在的路径，对方打开是空的，
             // 看不出是自己没建还是启动器给错了
-            File externalTarget = currentPath.toFile();
             if (!externalTarget.exists() && !externalTarget.mkdirs()) {
                 toast(R.string.file_browser_operation_failed);
                 return;
@@ -822,6 +859,20 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 builder.create().show();
             });
         });
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (currentPath != null) {
+            outState.putString(STATE_PATH, currentPath.toString());
+        }
+        if (sortMode != null) {
+            outState.putString(STATE_SORT, sortMode.name());
+        }
+        if (selectedFiles != null && !selectedFiles.isEmpty()) {
+            outState.putStringArrayList(STATE_SELECTED, new ArrayList<>(selectedFiles));
+        }
     }
 
     @Override
