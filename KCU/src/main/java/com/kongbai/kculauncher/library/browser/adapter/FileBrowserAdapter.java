@@ -126,7 +126,9 @@ public class FileBrowserAdapter extends KCUAdapter {
         }
         stringBuilder.append(displayTime);
         if (file.isFile()) {
-            String fileSize = FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(file));
+            // 文件可能在列目录之后被删掉：sizeOf 遇到不存在的路径会抛异常，
+            // 滚动到那一行时整个界面崩掉。普通文件取长度即可，目录本来就跳过
+            String fileSize = FileUtils.byteCountToDisplaySize(file.length());
             stringBuilder.append("    ").append(fileSize);
         }
         String description = stringBuilder.toString();
