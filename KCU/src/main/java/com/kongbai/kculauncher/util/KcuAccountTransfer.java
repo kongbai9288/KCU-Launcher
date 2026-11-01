@@ -178,6 +178,10 @@ public final class KcuAccountTransfer {
             writer.endArray();
             writer.endObject();
             writer.flush();
+            // 关成功才算写完：JsonWriter 带缓冲，close 才会把内容刷到底层。
+            // 它失败的话临时文件是残缺的，不能拿它去替换正式文件
+            writer.close();
+            writer = null;
             ok = true;
         } catch (Throwable ignored) {
             // 写入失败不影响启动
