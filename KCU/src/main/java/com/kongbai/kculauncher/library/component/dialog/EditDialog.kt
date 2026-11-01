@@ -31,7 +31,7 @@ class EditDialog @JvmOverloads constructor(
         if (defaultText.isNotEmpty()) {
             // 传了默认文本（重命名、改名）时全选：光标默认在最前面，
             // 玩家想改后缀得先把光标挪过去；标准做法是打开即全选，直接输入就覆盖
-            editText.selectAll()
+            binding.editText.selectAll()
         }
     }
 
