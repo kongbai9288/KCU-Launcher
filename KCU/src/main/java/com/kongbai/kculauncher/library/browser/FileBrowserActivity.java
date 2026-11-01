@@ -639,9 +639,19 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         items.add(getString(allFilesSelected() ? R.string.file_browser_deselect_all : R.string.file_browser_select_all));
         actions.add(this::selectAll);
         items.add(getString(R.string.file_browser_copy));
-        actions.add(() -> clipboardSelected(false));
+        actions.add(() -> {
+            // 只在真的放进去了才提示：没勾东西时那边已经提示过"没有选中"，
+            // 再说一句已放入剪贴板就自相矛盾了
+            if (clipboardSelected(false)) {
+                toast(R.string.file_browser_clipboard_set);
+            }
+        });
         items.add(getString(R.string.file_browser_cut));
-        actions.add(() -> clipboardSelected(true));
+        actions.add(() -> {
+            if (clipboardSelected(true)) {
+                toast(R.string.file_browser_clipboard_set);
+            }
+        });
         items.add(getString(R.string.file_browser_delete));
         actions.add(this::confirmDeleteSelected);
         ItemSelectionDialog.show(this, getString(R.string.file_browser_batch), items, false, -1,
@@ -661,9 +671,17 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         items.add(getString(R.string.file_browser_delete));
         actions.add(() -> confirmDelete(List.of(file)));
         items.add(getString(R.string.file_browser_copy));
-        actions.add(() -> FileClipboard.copy(List.of(file)));
+        // 复制/剪切只是把路径放进剪贴板，界面上没有任何变化。
+        // 不给反馈的话玩家点了以后看不出成没成，往往会再点一次
+        actions.add(() -> {
+            FileClipboard.copy(List.of(file));
+            toast(R.string.file_browser_clipboard_set);
+        });
         items.add(getString(R.string.file_browser_cut));
-        actions.add(() -> FileClipboard.cut(List.of(file)));
+        actions.add(() -> {
+            FileClipboard.cut(List.of(file));
+            toast(R.string.file_browser_clipboard_set);
+        });
         if (file.isFile()) {
             items.add(getString(R.string.file_browser_share));
             actions.add(() -> shareFile(file));
@@ -787,10 +805,11 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         }
     }
 
-    private void clipboardSelected(boolean cut) {
+    /** 把当前勾选放进剪贴板，返回是否真的放了（没勾任何东西时返回 false） */
+    private boolean clipboardSelected(boolean cut) {
         if (selectedFiles.isEmpty()) {
             toast(R.string.file_browser_no_selection);
-            return;
+            return false;
         }
         List<File> files = selectedFiles.stream().map(File::new).collect(Collectors.toList());
         if (cut) {
@@ -798,6 +817,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         } else {
             FileClipboard.copy(files);
         }
+        return true;
     }
 
     private void selectAll() {
