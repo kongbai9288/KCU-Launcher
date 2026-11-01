@@ -1,5 +1,7 @@
 package com.kongbai.kculauncher.activity;
 
+import com.kongbai.kculauncher.util.KcuWatchdog;
+
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -398,6 +400,8 @@ public class JVMActivity extends KCUActivity implements TextureView.SurfaceTextu
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_FOCUSED, 0);
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_HOVERED, 0);
         super.onPause();
+        // 离开前台就停：这时界面无响应是系统在切窗口，不是卡死
+        KcuWatchdog.stop();
     }
 
     @Override
@@ -408,6 +412,9 @@ public class JVMActivity extends KCUActivity implements TextureView.SurfaceTextu
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_FOCUSED, 1);
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_HOVERED, 1);
         super.onResume();
+        // 游戏回到前台才开始守：真正会把设备拖住的是游戏跑起来之后，
+        // 而浏览界面时主线程忙一阵是正常的，那时退出纯属误伤
+        KcuWatchdog.start(this);
     }
 
     @Override
@@ -500,6 +507,8 @@ public class JVMActivity extends KCUActivity implements TextureView.SurfaceTextu
         SdlBridge.reset();
         FliteTts.shutdown();
         GameService.stop(this);
+        // 界面销毁必须停掉守卫，否则它会在游戏已经退出后继续计时
+        KcuWatchdog.stop();
         // 停止菜单开启的采样线程；这些线程持有 Activity 引用，不停止会让本界面无法回收
         if (menu != null && menuType == MenuType.GAME) {
             ((GameMenu) menu).onDestroy();
