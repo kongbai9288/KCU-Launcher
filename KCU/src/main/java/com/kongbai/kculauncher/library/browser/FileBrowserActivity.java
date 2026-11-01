@@ -250,13 +250,15 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         listLoading = true;
         // 列目录是磁盘操作，文件多时会卡住界面线程，放到 IO 线程做
         Schedulers.io().execute(() -> {
-            List<File> files;
+            // 内层 lambda 只能捕获不再改写的变量，故先算完再定死
+            List<File> loaded;
             try {
-                files = FileOperator.getFileList(path, config, sort);
+                loaded = FileOperator.getFileList(path, config, sort);
             } catch (Exception e) {
                 Logging.LOG.log(Level.WARNING, "Failed to list directory " + path, e);
-                files = new ArrayList<>();
+                loaded = new ArrayList<>();
             }
+            final List<File> files = loaded;
             Schedulers.androidUIThread().execute(() -> {
                 if (isDestroyed() || isFinishing() || token != listLoadToken) {
                     return;
