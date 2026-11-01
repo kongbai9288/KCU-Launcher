@@ -1234,6 +1234,12 @@
     <string name="settings_disable_fullscreen_input_desc">Disable fullscreen input on some devices. For TouchController mod.</string>
     <string name="settings_launcher_exit_after_launching">Auto close</string>
     <string name="settings_launcher_exit_after_launching_desc">Exit the launcher automatically after the game starts. The crash screen will no longer be shown.</string>
+    <string name="settings_launcher_watchdog">Auto exit on freeze</string>
+    <string name="settings_launcher_watchdog_desc">While the game runs, if the interface stays completely unresponsive for this long, the launcher exits itself so the device does not get stuck. Off by default.</string>
+    <string name="settings_launcher_watchdog_timeout">Unresponsive for</string>
+    <string name="settings_launcher_watchdog_timeout_desc">Only counted while the game runs. Normal play does not trigger it, and game progress is not saved on exit.</string>
+    <string name="settings_launcher_watchdog_timeout_option">%1$d s</string>
+    <string name="settings_launcher_watchdog_last_exit">The launcher stayed unresponsive last time and exited itself.</string>
     <string name="settings_launcher_custom_launcher_name">Custom launcher information</string>
     <string name="settings_launcher_custom_launcher_name_desc">Customize the launcher name displayed in-game.</string>
     <string name="settings_launcher_allow_screenshot">Allow screenshot/recording in crash activity</string>
