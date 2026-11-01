@@ -330,8 +330,14 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
      * 把当前勾选作为结果返回给调用方
      */
     private void confirmSelection() {
+        // 显式构造 ArrayList：Collectors.toList() 只保证返回 List，
+        // 直接强转是赌它恰好是 ArrayList，换实现就会崩
+        ArrayList<Uri> uris = new ArrayList<>();
+        for (String path : selectedFiles) {
+            uris.add(Uri.fromFile(new File(path)));
+        }
         Intent intent = new Intent();
-        intent.putParcelableArrayListExtra(FileBrowser.SELECTED_FILES, (ArrayList<? extends Parcelable>) selectedFiles.stream().map(path -> Uri.fromFile(new File(path))).collect(Collectors.toList()));
+        intent.putParcelableArrayListExtra(FileBrowser.SELECTED_FILES, uris);
         setResult(Activity.RESULT_OK, intent);
         finish();
     }
@@ -387,6 +393,8 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             Uri uri = FileProvider.getUriForFile(this, getApplication().getPackageName() + ".provider", externalTarget);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setDataAndType(uri, "*/*");
+            // 只给 setDataAndType 的话不少外部应用收不到，EXTRA_STREAM 是通用做法
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             startActivity(Intent.createChooser(intent, getString(R.string.file_browser_open_external)));
@@ -490,12 +498,31 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
     }
 
     /**
+     * 当前目录里的文件是否已被全部勾选（决定菜单里写"全选"还是"取消全选"）
+     */
+    private boolean allFilesSelected() {
+        if (adapter == null) {
+            return false;
+        }
+        boolean any = false;
+        for (File file : adapter.getFiles()) {
+            if (file.isFile()) {
+                any = true;
+                if (!selectedFiles.contains(file.getAbsolutePath())) {
+                    return false;
+                }
+            }
+        }
+        return any;
+    }
+
+    /**
      * 批量操作菜单：作用于当前勾选的文件
      */
     private void showBatchMenu() {
         List<String> items = new ArrayList<>();
         List<Runnable> actions = new ArrayList<>();
-        items.add(getString(R.string.file_browser_select_all));
+        items.add(getString(allFilesSelected() ? R.string.file_browser_deselect_all : R.string.file_browser_select_all));
         actions.add(this::selectAll);
         items.add(getString(R.string.file_browser_copy));
         actions.add(() -> clipboardSelected(false));
@@ -611,13 +638,25 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 return;
             }
         }
+        final int total = files.size();
         runFileOperation(() -> {
+            // 逐个文件时有的会失败（权限、被占用、空间不够），只刷新的话
+            // 玩家看不出少了几个，只会以为全成了，之后才发现文件不见了
+            int done;
             if (cut) {
-                FileOperator.moveTo(files, dir);
+                done = FileOperator.moveTo(files, dir);
                 FileClipboard.clear();
             } else {
-                FileOperator.copyTo(files, dir);
+                done = FileOperator.copyTo(files, dir);
             }
+            final int ok = done;
+            Schedulers.androidUIThread().execute(() -> {
+                if (isDestroyed() || isFinishing()) {
+                    return;
+                }
+                Toast.makeText(this, getString(cut ? R.string.file_browser_move_result : R.string.file_browser_copy_result,
+                        ok, total - ok), Toast.LENGTH_SHORT).show();
+            });
         });
     }
 
@@ -651,10 +690,22 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         if (adapter == null) {
             return;
         }
-        selectedFiles = new ArrayList<>();
+        // 已经全选了就取消，否则勾上之后没有任何入口能一次性清掉，
+        // 只能一个个点回去
+        boolean allSelected = true;
         for (File file : adapter.getFiles()) {
-            if (file.isFile()) {
-                selectedFiles.add(file.getAbsolutePath());
+            if (file.isFile() && !selectedFiles.contains(file.getAbsolutePath())) {
+                allSelected = false;
+                break;
+            }
+        }
+        if (allSelected) {
+            selectedFiles = new ArrayList<>();
+        } else {
+            for (File file : adapter.getFiles()) {
+                if (file.isFile() && !selectedFiles.contains(file.getAbsolutePath())) {
+                    selectedFiles.add(file.getAbsolutePath());
+                }
             }
         }
         adapter.setSelectedFiles(selectedFiles);
