@@ -1654,6 +1654,9 @@
     <string name="file_browser_operation_failed">Operation failed.</string>
     <string name="file_browser_unreadable">Cannot read this directory. It may be a permission problem.</string>
     <string name="file_browser_path_invalid">This path does not exist, or it is not a folder.</string>
+    <string name="file_browser_move_result">Move finished: %1$d succeeded, %2$d failed.</string>
+    <string name="file_browser_copy_result">Copy finished: %1$d succeeded, %2$d failed.</string>
+    <string name="file_browser_deselect_all">Deselect all</string>
     <string name="crash_reporter_title">Crash Report</string>
     <string name="crash_reporter_hint">KCU Launcher has encountered an unresolvable error, please seek help from the developer or others.</string>
     <string name="crash_reporter_restart">Restart</string>
