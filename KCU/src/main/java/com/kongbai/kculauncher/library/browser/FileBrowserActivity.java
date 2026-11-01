@@ -116,7 +116,12 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                     }
                 }
             } else {
-                extSelected.add(data.getData());
+                // 有些文件管理器点了返回却仍给 RESULT_OK，此时 getData() 是 null。
+                // 直接加进去会让后面 new SelectedFile(null) 抛异常，整个导入流程崩掉
+                Uri single = data.getData();
+                if (single != null) {
+                    extSelected.add(single);
+                }
             }
             return null;
         }
@@ -259,6 +264,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 loaded = new ArrayList<>();
             }
             final List<File> files = loaded;
+            // 读不出来的目录（无权限 / 不是目录）listFiles 返回 null，列表会是空的。
+            // 不说一声的话，玩家只会以为这个文件夹本来就是空的
+            final boolean listable = path.toFile().isDirectory() && path.toFile().canRead();
             Schedulers.androidUIThread().execute(() -> {
                 if (isDestroyed() || isFinishing() || token != listLoadToken) {
                     return;
@@ -266,6 +274,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 adapter = new FileBrowserAdapter(this, config, files, selected, createListener());
                 listView.setAdapter(adapter);
                 listLoading = false;
+                if (files.isEmpty() && !listable) {
+                    toast(R.string.file_browser_unreadable);
+                }
                 if (sameDir) {
                     listView.setSelectionFromTop(firstVisible, topOffset);
                 } else {
@@ -279,17 +290,13 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         return new FileBrowserListener() {
             @Override
             public void onEnterDir(String path) {
-                if (listLoading) {
-                    return;
-                }
+                // 不再屏蔽：点的条目来自当前显示的列表，路径是绝对路径，
+                // 跳过去一定跳得对。屏蔽只会让这一下轻点毫无反应
                 refreshList(new File(path).toPath());
             }
 
             @Override
             public void onSelect(FileBrowserAdapter adapter1, String path) {
-                if (listLoading) {
-                    return;
-                }
                 if (selectedFiles.stream().anyMatch(s -> s.equals(path))) {
                     selectedFiles.remove(path);
                 } else {
