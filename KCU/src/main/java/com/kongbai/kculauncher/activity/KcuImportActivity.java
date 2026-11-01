@@ -898,7 +898,14 @@ public class KcuImportActivity extends Activity {
             return;
         }
         File dir = jar.getParentFile();
-        writeVersionJson(dir, id);
+        boolean registered = writeVersionJson(dir, id);
+        if (!registered) {
+            // 版本 json 没落盘就等于没导进来：上游枚举阶段会整份忽略这个目录，
+            // 列表里根本看不到它。此时若还提示"导入完成"，玩家会拿着一个
+            // 找不到的版本四处翻，完全无从判断是哪里出了问题
+            setStatus(getString(R.string.kcu_import_failed));
+            return;
+        }
         KcuVersionMeta.Meta meta = new KcuVersionMeta.Meta();
         meta.known = false;
         meta.display = KcuVersionMeta.UNKNOWN;
@@ -908,10 +915,10 @@ public class KcuImportActivity extends Activity {
     }
 
     /** 最小可被解析的版本 JSON：validate 只要求 id 非空 */
-    private void writeVersionJson(File dir, String id) {
+    private boolean writeVersionJson(File dir, String id) {
         File file = new File(dir, id + ".json");
         if (file.isFile()) {
-            return;
+            return true;
         }
         File tmp = new File(dir, id + ".json.kcupart");
         boolean ok = false;
@@ -925,6 +932,10 @@ public class KcuImportActivity extends Activity {
             String json = "{\n  \"id\": \"" + safe + "\",\n  \"jar\": \"" + safe + "\"\n}\n";
             out.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             out.flush();
+            // 关成功才算写完。close 还会把缓冲里的内容刷到底层，
+            // 它失败的话文件可能是不完整的，此时不能算成功
+            out.close();
+            out = null;
             ok = true;
         } catch (Throwable ignored) {
             // 写不出来不影响 jar 已就位，仅版本不会出现在列表中
@@ -934,9 +945,18 @@ public class KcuImportActivity extends Activity {
                 Logging.LOG.warning("KcuImport: unable to delete partial " + tmp);
             }
         }
-        if (ok && !tmp.renameTo(file) && !tmp.delete()) {
-            Logging.LOG.warning("KcuImport: unable to delete " + tmp);
+        if (!ok) {
+            return false;
         }
+        if (!tmp.renameTo(file)) {
+            // 换不上去就等于这个版本没登记：临时文件留着也救不了，
+            // 但必须把失败告诉调用方，不能让它继续提示导入完成
+            if (!tmp.delete()) {
+                Logging.LOG.warning("KcuImport: unable to delete " + tmp);
+            }
+            return false;
+        }
+        return true;
     }
 
     /** 按 JSON 字符串规则转义：引号、反斜杠与控制字符都必须转义 */
