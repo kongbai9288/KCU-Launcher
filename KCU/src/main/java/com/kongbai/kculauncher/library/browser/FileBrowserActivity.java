@@ -200,6 +200,10 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 File file = new File(path);
                 if (file.exists() && file.isDirectory()) {
                     refreshList(file.toPath());
+                } else {
+                    // 原来什么都不做：点路径栏输了个不存在的路径，界面毫无反应，
+                    // 玩家只会以为这个输入框是摆设
+                    toast(R.string.file_browser_path_invalid);
                 }
             }).show();
         });
@@ -373,7 +377,14 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             if (currentPath.toFile().getAbsolutePath().equals(Environment.getExternalStorageDirectory().getAbsolutePath())) {
                 currentPath = currentPath.resolve("KCU");
             }
-            Uri uri = FileProvider.getUriForFile(this, getApplication().getPackageName() + ".provider", currentPath.toFile());
+            // 这个目录可能还没建过。交给外部应用一个不存在的路径，对方打开是空的，
+            // 看不出是自己没建还是启动器给错了
+            File externalTarget = currentPath.toFile();
+            if (!externalTarget.exists() && !externalTarget.mkdirs()) {
+                toast(R.string.file_browser_operation_failed);
+                return;
+            }
+            Uri uri = FileProvider.getUriForFile(this, getApplication().getPackageName() + ".provider", externalTarget);
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.setDataAndType(uri, "*/*");
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -652,12 +663,25 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
 
     private void showDetails(File file) {
         Schedulers.io().execute(() -> {
-            String detail = getString(R.string.file_browser_name) + ": " + file.getName() + "\n"
-                    + getString(R.string.file_browser_type) + ": "
-                    + getString(file.isDirectory() ? R.string.file_browser_type_folder : R.string.file_browser_type_file) + "\n"
-                    + getString(R.string.file_browser_size) + ": " + FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(file)) + "\n"
-                    + getString(R.string.file_browser_last_modified) + ": " + formatter.format(new Date(file.lastModified())) + "\n"
-                    + getString(R.string.file_browser_path) + ": " + file.getAbsolutePath();
+            String detail;
+            try {
+                // 文件可能刚好被删掉：sizeOf 遇到不存在的路径会抛异常，
+                // 整段没有兜底的话弹窗直接崩，且看不到任何原因
+                detail = getString(R.string.file_browser_name) + ": " + file.getName() + "\n"
+                        + getString(R.string.file_browser_type) + ": "
+                        + getString(file.isDirectory() ? R.string.file_browser_type_folder : R.string.file_browser_type_file) + "\n"
+                        + getString(R.string.file_browser_size) + ": " + FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(file)) + "\n"
+                        + getString(R.string.file_browser_last_modified) + ": " + formatter.format(new Date(file.lastModified())) + "\n"
+                        + getString(R.string.file_browser_path) + ": " + file.getAbsolutePath();
+            } catch (Exception e) {
+                Logging.LOG.log(Level.WARNING, "Failed to read file details " + file.getAbsolutePath(), e);
+                Schedulers.androidUIThread().execute(() -> {
+                    if (!isDestroyed() && !isFinishing()) {
+                        toast(R.string.file_browser_operation_failed);
+                    }
+                });
+                return;
+            }
             Schedulers.androidUIThread().execute(() -> {
                 if (isDestroyed() || isFinishing()) {
                     return;
