@@ -1100,7 +1100,7 @@
     <string name="settings_launcher_watchdog_timeout">多久算没反应</string>
     <string name="settings_launcher_watchdog_timeout_desc">只在游戏运行时计时。正常游玩不会触发，退出时不会保存游戏进度。</string>
     <string name="settings_launcher_watchdog_timeout_option">%1$d 秒</string>
-    <string name="settings_launcher_watchdog_last_exit">上次启动器长时间没有反应，已自动退出。</string>
+    <string name="settings_launcher_watchdog_last_exit">上次启动器长时间没有反应，已自动退出。不想要的话，可以在启动器设置里关掉「卡死自动退出」。</string>
     <string name="settings_launcher_custom_launcher_name">自定义启动器信息</string>
     <string name="settings_launcher_custom_launcher_name_desc">自定义启动器在游戏内显示的名称</string>
     <string name="settings_launcher_allow_screenshot">允许在崩溃界面截图/录屏</string>
