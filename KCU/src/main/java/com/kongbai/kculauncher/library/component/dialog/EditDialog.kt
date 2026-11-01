@@ -28,6 +28,11 @@ class EditDialog @JvmOverloads constructor(
             negative.setOnClickListener(this@EditDialog)
             editText.setText(defaultText)
         }
+        if (defaultText.isNotEmpty()) {
+            // 传了默认文本（重命名、改名）时全选：光标默认在最前面，
+            // 玩家想改后缀得先把光标挪过去；标准做法是打开即全选，直接输入就覆盖
+            editText.selectAll()
+        }
     }
 
     override fun onClick(v: View?) {
@@ -37,6 +42,16 @@ class EditDialog @JvmOverloads constructor(
                 if (!s.trim { it <= ' ' }.isEmpty()) {
                     callback.accept(s)
                     dismiss()
+                } else {
+                    // 空着点确定时原来什么都不做：对话框不关、也没提示，
+                    // 玩家只会以为这个按钮坏了
+                    // 用通用文案：这个对话框是全项目共用的，
+                    // 拿文件管理专用的那句给别的页面用会文不对题
+                    android.widget.Toast.makeText(
+                        binding.root.context,
+                        com.kongbai.kculauncher.R.string.input_not_empty,
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
             if (v === negative) {
