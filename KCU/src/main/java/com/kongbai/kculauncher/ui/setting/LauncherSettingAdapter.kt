@@ -26,6 +26,7 @@ import com.kongbai.kculauncher.library.component.view.KCUImageButton
 import com.kongbai.kculauncher.library.component.view.KCUSpinner
 import com.kongbai.kculauncher.library.component.view.KCUTextView
 import com.kongbai.kculauncher.library.util.LocaleUtils
+import com.kongbai.kculauncher.util.KcuWatchdog
 
 /** 启动器设置行操作标签：按钮 / 开关 / Spinner / SeekBar / 勾选框按此分发 */
 enum class LauncherSettingTag {
@@ -63,12 +64,14 @@ enum class LauncherSettingTag {
     SWITCH_IGNORE_NOTCH,
     SWITCH_DISABLE_FULLSCREEN_INPUT,
     SWITCH_ALLOW_SCREENSHOTS,
+    SWITCH_WATCHDOG,
 
     // Spinner 行
     SPINNER_LANGUAGE,
     SPINNER_THEME_MODE,
     SPINNER_VERSION_LIST_SOURCE,
     SPINNER_FILE_DOWNLOAD_SOURCE,
+    SPINNER_WATCHDOG_TIMEOUT,
 
     // SeekBar 行
     SEEKBAR_VIDEO_VOLUME,
@@ -167,6 +170,28 @@ class LauncherSettingAdapter(
                 { prefs.getBoolean("autoExitLauncher", false) },
                 LauncherSettingTag.SWITCH_AUTO_EXIT,
                 R.string.settings_launcher_exit_after_launching_desc,
+            ),
+            Row.SwitchRow(
+                R.string.settings_launcher_watchdog,
+                { prefs.getBoolean(KcuWatchdog.KEY_ENABLED, false) },
+                LauncherSettingTag.SWITCH_WATCHDOG,
+                R.string.settings_launcher_watchdog_desc,
+            ),
+            Row.SpinnerRow(
+                R.string.settings_launcher_watchdog_timeout,
+                KcuWatchdog.TIMEOUT_CHOICES.map {
+                    context.getString(R.string.settings_launcher_watchdog_timeout_option, it)
+                },
+                // 存过的值不在选项里时（比如从别的版本沿用下来）退回默认档，
+                // 否则下标是 -1，下拉会显示成没选任何一项
+                KcuWatchdog.TIMEOUT_CHOICES.indexOf(
+                    prefs.getInt(
+                        KcuWatchdog.KEY_TIMEOUT,
+                        KcuWatchdog.TIMEOUT_CHOICES[KcuWatchdog.DEFAULT_CHOICE_INDEX]
+                    )
+                ).let { if (it < 0) KcuWatchdog.DEFAULT_CHOICE_INDEX else it },
+                LauncherSettingTag.SPINNER_WATCHDOG_TIMEOUT,
+                R.string.settings_launcher_watchdog_timeout_desc,
             ),
             Row.SpinnerRow(
                 R.string.settings_launcher_theme_mode, themeModeList,
