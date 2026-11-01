@@ -2,13 +2,16 @@ package com.kongbai.kculauncher.library.browser;
 
 import android.app.Activity;
 import android.content.ClipData;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcelable;
+import android.provider.OpenableColumns;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -127,6 +130,27 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         }
     }, result -> {
         if (!extSelected.isEmpty()) {
+            // 外部选择走的是系统选择器，它并不认识这里配的文件类型：不过一遍后缀，
+            // 什么文件都能选进来，后面要么静默失败、要么把错误内容当成要的文件
+            ArrayList<Uri> accepted = new ArrayList<>();
+            int rejected = 0;
+            for (Uri uri : extSelected) {
+                if (matchesConfiguredSuffix(uri)) {
+                    accepted.add(uri);
+                } else {
+                    rejected++;
+                }
+            }
+            if (accepted.isEmpty()) {
+                // 全部不符就留在本页：直接返回等于选完了却毫无反应
+                toast(R.string.file_browser_external_type_mismatch);
+                extSelected.clear();
+                return;
+            }
+            extSelected = accepted;
+            if (rejected > 0) {
+                Toast.makeText(this, getString(R.string.file_browser_external_type_skipped, rejected), Toast.LENGTH_SHORT).show();
+            }
             Intent intent = new Intent();
             intent.putParcelableArrayListExtra(FileBrowser.SELECTED_FILES, extSelected);
             FileBrowserActivity.this.setResult(Activity.RESULT_OK, intent);
@@ -414,6 +438,59 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 confirmSelection();
             }
         }
+    }
+
+    /**
+     * 外部选择拿到的文件是否符合配置的后缀。
+     * 认不出文件名时一律放行：误拒会让玩家根本选不了文件，比多选进来几个更糟
+     */
+    private boolean matchesConfiguredSuffix(Uri uri) {
+        List<String> suffix = fileBrowser.getSuffix();
+        if (suffix == null || suffix.isEmpty()) {
+            return true;
+        }
+        String name = displayNameOf(uri);
+        if (name == null || name.isEmpty()) {
+            return true;
+        }
+        String lower = name.toLowerCase(Locale.ROOT);
+        for (String item : suffix) {
+            if (item == null || item.isEmpty()) {
+                continue;
+            }
+            if (lower.endsWith(item.toLowerCase(Locale.ROOT))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 取外部选择结果的文件名。content 下取不到显示名时返回 null，表示认不出来
+     */
+    private String displayNameOf(Uri uri) {
+        if (uri == null) {
+            return null;
+        }
+        if (ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (index >= 0) {
+                        return cursor.getString(index);
+                    }
+                }
+                return null;
+            } catch (Exception e) {
+                Logging.LOG.log(Level.WARNING, "Failed to query display name: " + uri, e);
+                return null;
+            }
+        }
+        String path = uri.getPath();
+        if (path != null) {
+            return new File(path).getName();
+        }
+        return null;
     }
 
     private void toast(int resId) {
