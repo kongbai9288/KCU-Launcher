@@ -42,6 +42,7 @@ import com.kongbai.kculauncher.library.component.theme.ThemeData;
 import com.kongbai.kculauncher.library.component.theme.ThemeEngine;
 import com.kongbai.kculauncher.library.component.ui.KCUPage;
 import com.kongbai.kculauncher.library.util.LocaleUtils;
+import com.kongbai.kculauncher.util.KcuWatchdog;
 
 import java.io.File;
 import java.io.IOException;
@@ -283,6 +284,14 @@ public class LauncherSettingPage extends KCUPage implements LauncherSettingAdapt
             case SWITCH_ALLOW_SCREENSHOTS:
                 sharedPreferences.edit().putBoolean("allowScreenshots", checked).apply();
                 break;
+            case SWITCH_WATCHDOG:
+                sharedPreferences.edit().putBoolean(KcuWatchdog.KEY_ENABLED, checked).apply();
+                // 关掉就立刻停掉可能正在跑的守卫；
+                // 它只在游戏前台跑，这里停不到也无妨，但设置改了就得马上生效
+                if (!checked) {
+                    KcuWatchdog.stop();
+                }
+                break;
             default:
                 break;
         }
@@ -316,6 +325,12 @@ public class LauncherSettingPage extends KCUPage implements LauncherSettingAdapt
                 break;
             case SPINNER_FILE_DOWNLOAD_SOURCE:
                 config().setFileDownloadSource(toDownloadSourceName(position));
+                break;
+            case SPINNER_WATCHDOG_TIMEOUT:
+                int[] watchdogChoices = KcuWatchdog.TIMEOUT_CHOICES;
+                if (position >= 0 && position < watchdogChoices.length) {
+                    sharedPreferences.edit().putInt(KcuWatchdog.KEY_TIMEOUT, watchdogChoices[position]).apply();
+                }
                 break;
             default:
                 break;
