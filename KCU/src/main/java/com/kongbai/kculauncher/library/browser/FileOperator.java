@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 
 public class FileOperator {
@@ -31,10 +32,17 @@ public class FileOperator {
         rawList.sort(DirectoryFileComparator.DIRECTORY_COMPARATOR);
         List<File> filterList = new ArrayList<>();
         if (!fileBrowser.getSuffix().isEmpty()) {
+            // 后缀先统一成小写再比：从电脑拷过来的文件常是大写扩展名（比如 mod.JAR），
+            // 按原样比的话这类文件在列表里根本不出现，玩家只会以为自己没这个文件
+            List<String> lowerSuffix = new ArrayList<>();
+            for (String suffix : fileBrowser.getSuffix()) {
+                lowerSuffix.add(suffix.toLowerCase(Locale.ROOT));
+            }
             for (File file : rawList) {
                 if (file.isFile()) {
-                    for (String suffix : fileBrowser.getSuffix()) {
-                        if (file.getName().endsWith(suffix)) {
+                    String name = file.getName().toLowerCase(Locale.ROOT);
+                    for (String suffix : lowerSuffix) {
+                        if (name.endsWith(suffix)) {
                             filterList.add(file);
                             break;
                         }
