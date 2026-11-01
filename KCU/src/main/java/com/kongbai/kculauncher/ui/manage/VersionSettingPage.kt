@@ -284,6 +284,12 @@ class VersionSettingPage(
                     "Failed to copy icon file from $selectedFile to $iconFile",
                     e
                 )
+                // 原来只记日志：选完图标毫无反应，玩家分不清是没成功还是不能用
+                Toast.makeText(
+                    activity,
+                    activity.getString(R.string.message_failed),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
