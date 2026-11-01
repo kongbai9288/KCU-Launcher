@@ -816,20 +816,21 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             toast(R.string.file_browser_clipboard_empty);
             return;
         }
-        List<File> files = new ArrayList<>(FileClipboard.getFiles());
+        List<File> sources = new ArrayList<>(FileClipboard.getFiles());
         boolean cut = FileClipboard.isCut();
         File dir = currentPath.toFile();
-        for (File source : files) {
+        for (File source : sources) {
             if (isSelfOrDescendant(source, dir)) {
                 toast(R.string.file_browser_paste_recursive);
                 return;
             }
         }
+        List<File> pending = sources;
         if (cut) {
             // 剪切后粘回文件原来所在的目录：不拦的话会给每个文件生成 "mod (1).jar"
             // 这样的带序号副本。玩家只是想把文件挪走，却凭空多出一堆重复文件
-            List<File> pending = new ArrayList<>();
-            for (File source : files) {
+            pending = new ArrayList<>();
+            for (File source : sources) {
                 File parent = source.getParentFile();
                 if (parent != null && isSameDirectory(parent, dir)) {
                     continue;
@@ -840,8 +841,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 toast(R.string.file_browser_paste_same_dir);
                 return;
             }
-            files = pending;
         }
+        // 下面的 lambda 会用到文件列表，故在这里定死，之后不再改写
+        final List<File> files = pending;
         // 目标目录里已有同名文件时会自动改成 "xxx (n)"：不说一声的话，
         // 玩家对着改名后的文件找不到自己刚粘贴的那一份
         boolean renamed = false;
