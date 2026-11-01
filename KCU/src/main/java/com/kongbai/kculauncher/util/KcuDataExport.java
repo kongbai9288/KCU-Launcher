@@ -113,6 +113,10 @@ public final class KcuDataExport {
             out = new FileOutputStream(tmp, false);
             out.write(text.getBytes(StandardCharsets.UTF_8));
             out.flush();
+            // 关成功才算写完：close 还会把缓冲里的内容刷到底层，
+            // 它失败的话这份摘要可能是不完整的，不能算导出成功
+            out.close();
+            out = null;
             ok = true;
         } catch (Throwable e) {
             return null;
