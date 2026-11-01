@@ -92,6 +92,8 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
     private volatile boolean listLoading;
     /** 主题回调按控件登记即可，重复登记会白做，故只登记一次 */
     private boolean themeRegistered;
+    /** 有文件操作正在 IO 线程执行 */
+    private volatile boolean operationBusy;
 
     private ArrayList<String> selectedFiles;
     private ArrayList<Uri> extSelected;
@@ -358,8 +360,10 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 adapter = new FileBrowserAdapter(this, config, files, selected, createListener());
                 listView.setAdapter(adapter);
                 listLoading = false;
-                if (files.isEmpty() && !listable) {
-                    toast(R.string.file_browser_unreadable);
+                if (files.isEmpty()) {
+                    // 读不出来的目录和本来就空的目录，列表长得一模一样，
+                    // 都不说一声的话玩家分不清是没加载出来还是真没有文件
+                    toast(listable ? R.string.file_browser_empty_folder : R.string.file_browser_unreadable);
                 }
                 if (sameDir) {
                     listView.setSelectionFromTop(firstVisible, topOffset);
@@ -564,13 +568,22 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
     }
 
     /**
-     * 在 IO 线程执行文件操作，成功后回主线程刷新列表，失败时提示
+     * 在 IO 线程执行文件操作，成功后回主线程刷新列表，失败时提示。
+     * 操作期间不接受新的提交：复制大目录要跑很久，期间界面没有任何变化，
+     * 不挡住的话玩家以为没反应就会再点一次，两个操作撞在同一批文件上
      */
     private void runFileOperation(FileOperation operation) {
+        if (operationBusy) {
+            toast(R.string.file_browser_operation_busy);
+            return;
+        }
+        operationBusy = true;
+        toast(R.string.file_browser_operation_running);
         Schedulers.io().execute(() -> {
             try {
                 operation.run();
                 Schedulers.androidUIThread().execute(() -> {
+                    operationBusy = false;
                     if (!isDestroyed() && !isFinishing()) {
                         refreshList(currentPath);
                     }
@@ -578,6 +591,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             } catch (Exception e) {
                 Logging.LOG.log(Level.WARNING, "File browser operation failed", e);
                 Schedulers.androidUIThread().execute(() -> {
+                    operationBusy = false;
                     if (!isDestroyed() && !isFinishing()) {
                         toast(R.string.file_browser_operation_failed);
                     }
@@ -756,7 +770,10 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         KCUAlertDialog.Builder builder = new KCUAlertDialog.Builder(this);
         builder.setAlertLevel(KCUAlertDialog.AlertLevel.ALERT);
         builder.setTitle(getString(R.string.file_browser_delete));
-        builder.setMessage(getString(R.string.file_browser_delete_message));
+        // 只说"删了不能恢复"却不说是删什么：多选删八个文件时，
+        // 玩家无法从弹窗确认自己勾的到底是哪几个
+        builder.setMessage(getString(R.string.file_browser_delete_message)
+                + "\n\n" + describeFiles(files));
         builder.setPositiveButton(() -> {
             List<String> paths = files.stream().map(File::getAbsolutePath).collect(Collectors.toList());
             runFileOperation(() -> {
@@ -768,6 +785,19 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         });
         builder.setNegativeButton(null);
         builder.create().show();
+    }
+
+    /**
+     * 把要删除的文件说清楚：只一个就直接给名字，多个给首个名字加总数
+     */
+    private String describeFiles(List<File> files) {
+        if (files == null || files.isEmpty()) {
+            return "";
+        }
+        if (files.size() == 1) {
+            return files.get(0).getName();
+        }
+        return files.get(0).getName() + " " + getString(R.string.file_browser_items_count, files.size());
     }
 
     private void confirmDeleteSelected() {
