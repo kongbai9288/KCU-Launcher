@@ -1239,7 +1239,7 @@
     <string name="settings_launcher_watchdog_timeout">Unresponsive for</string>
     <string name="settings_launcher_watchdog_timeout_desc">Only counted while the game runs. Normal play does not trigger it, and game progress is not saved on exit.</string>
     <string name="settings_launcher_watchdog_timeout_option">%1$d s</string>
-    <string name="settings_launcher_watchdog_last_exit">The launcher stayed unresponsive last time and exited itself.</string>
+    <string name="settings_launcher_watchdog_last_exit">The launcher stayed unresponsive last time and exited itself. You can turn "Auto exit on freeze" off in launcher settings.</string>
     <string name="settings_launcher_custom_launcher_name">Custom launcher information</string>
     <string name="settings_launcher_custom_launcher_name_desc">Customize the launcher name displayed in-game.</string>
     <string name="settings_launcher_allow_screenshot">Allow screenshot/recording in crash activity</string>
