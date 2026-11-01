@@ -1662,6 +1662,10 @@
     <string name="file_browser_no_selection">No file selected.</string>
     <string name="file_browser_operation_failed">Operation failed.</string>
     <string name="file_browser_unreadable">Cannot read this directory. It may be a permission problem.</string>
+    <string name="file_browser_empty_folder">This folder is empty.</string>
+    <string name="file_browser_operation_running">Processing…</string>
+    <string name="file_browser_operation_busy">Another operation is still running.</string>
+    <string name="file_browser_items_count">and %1$d items</string>
     <string name="file_browser_path_invalid">This path does not exist, or it is not a folder.</string>
     <string name="file_browser_external_type_mismatch">The selected file type is not supported. Please choose again.</string>
     <string name="file_browser_external_type_skipped">%1$d file(s) of an unsupported type were skipped.</string>
