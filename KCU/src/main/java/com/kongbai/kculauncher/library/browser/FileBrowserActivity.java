@@ -229,7 +229,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         }
         currentText = findViewById(R.id.current_folder);
         listView = findViewById(R.id.list);
+        // 现场恢复之后才知道勾了几个，所以放在刷新之后更新
         refreshList(currentPath != null ? currentPath : new File(fileBrowser.getInitDir()).toPath());
+        updateSelectionHint();
 
         if (fileBrowser.getLibMode() != LibMode.FILE_CHOOSER) {
             selectExternal.setVisibility(View.GONE);
@@ -255,7 +257,10 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         }
 
         currentText.setOnClickListener(v -> {
-            new EditDialog(this, path -> {
+            // 预填当前路径：点路径栏是要改路径，打开却是空的，
+            // 每次都得从头敲一遍完整路径。预填后配合输入框的打开即全选，
+            // 直接输入就替换，想改末尾也可以在原路径上改
+            new EditDialog(this, currentPath != null ? currentPath.toString() : "", path -> {
                 File file = new File(path);
                 if (file.exists() && file.isDirectory()) {
                     refreshList(file.toPath());
@@ -291,6 +296,22 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             return getString(R.string.file_browser_selection_simple);
         }
         return getString(R.string.file_browser_selection_multiple);
+    }
+
+    /**
+     * 多选时把已选数量写在模式那一行：勾了几个在界面上没有任何体现，
+     * 跨目录勾了之后更是数不清，只有点确认才知道勾了什么
+     */
+    private void updateSelectionHint() {
+        if (type == null) {
+            return;
+        }
+        if (fileBrowser.getSelectionMode() == SelectionMode.MULTIPLE_SELECTION
+                && selectedFiles != null && !selectedFiles.isEmpty()) {
+            type.setText(getType() + " (" + selectedFiles.size() + ")");
+        } else {
+            type.setText(getType());
+        }
     }
 
     private void refreshList(Path path) {
@@ -370,6 +391,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 }
                 adapter1.setSelectedFiles(selectedFiles);
                 adapter1.notifyDataSetChanged();
+                updateSelectionHint();
                 // 单选文件：点中即返回，不必再点一次确认
                 if (fileBrowser.getLibMode() == LibMode.FILE_CHOOSER
                         && fileBrowser.getSelectionMode() == SelectionMode.SINGLE_SELECTION
@@ -844,6 +866,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         }
         adapter.setSelectedFiles(selectedFiles);
         adapter.notifyDataSetChanged();
+        updateSelectionHint();
     }
 
     private void showDetails(File file) {
@@ -852,10 +875,22 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             try {
                 // 文件可能刚好被删掉：sizeOf 遇到不存在的路径会抛异常，
                 // 整段没有兜底的话弹窗直接崩，且看不到任何原因
+                // 目录不能递归算大小：实例目录里有成千上万个文件，
+                // 遍历一遍要几十秒，这期间弹窗迟迟不出，看起来就是点了没反应。
+                // 目录改为直接子项数量，只看一层，很快
+                String sizeText;
+                if (file.isDirectory()) {
+                    File[] children = file.listFiles();
+                    sizeText = children == null
+                            ? getString(R.string.file_browser_size_unknown)
+                            : getString(R.string.file_browser_items, children.length);
+                } else {
+                    sizeText = FileUtils.byteCountToDisplaySize(file.length());
+                }
                 detail = getString(R.string.file_browser_name) + ": " + file.getName() + "\n"
                         + getString(R.string.file_browser_type) + ": "
                         + getString(file.isDirectory() ? R.string.file_browser_type_folder : R.string.file_browser_type_file) + "\n"
-                        + getString(R.string.file_browser_size) + ": " + FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(file)) + "\n"
+                        + getString(R.string.file_browser_size) + ": " + sizeText + "\n"
                         + getString(R.string.file_browser_last_modified) + ": " + formatter.format(new Date(file.lastModified())) + "\n"
                         + getString(R.string.file_browser_path) + ": " + file.getAbsolutePath();
             } catch (Exception e) {
