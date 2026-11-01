@@ -115,7 +115,9 @@ public final class KcuWatchdog {
         if (t != null) {
             t.interrupt();
         }
-        appContext = null;
+        // 这里不清 appContext：它是 Application 上下文，与进程同生命周期，
+        // 持有它不会泄漏。清掉反而留下一个窗口 —— 若守卫此刻正要记录退出标记，
+        // 会读到 null 而记不下来，玩家下次就看不到那句解释
     }
 
     public static synchronized boolean isRunning() {
