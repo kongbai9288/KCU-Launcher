@@ -285,14 +285,21 @@ public final class KcuDevPolicy {
         File tmp = new File(file.getParentFile(), CACHE_NAME + ".tmp");
         boolean ok = false;
         try {
-            FileOutputStream out = new FileOutputStream(tmp, false);
+            FileOutputStream out = null;
             try {
+                out = new FileOutputStream(tmp, false);
                 out.write(bytes);
+                // 关成功才算写完：close 还会把缓冲里的内容刷到底层，
+                // 它失败的话缓存可能是不完整的，不能拿它去替换
+                out.close();
+                out = null;
                 ok = true;
             } finally {
-                try {
-                    out.close();
-                } catch (Throwable ignored) {
+                if (out != null) {
+                    try {
+                        out.close();
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
         } catch (Throwable e) {
