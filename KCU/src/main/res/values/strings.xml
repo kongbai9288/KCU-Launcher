@@ -1654,6 +1654,7 @@
     <string name="file_browser_invalid_name">Invalid file name.</string>
     <string name="file_browser_exists">A file with the same name already exists.</string>
     <string name="file_browser_clipboard_empty">Clipboard is empty.</string>
+    <string name="file_browser_clipboard_set">已放入剪贴板，到目标目录长按菜单里粘贴。</string>
     <string name="file_browser_paste_recursive">Cannot paste a folder into itself or its subfolder.</string>
     <string name="file_browser_result_lost">The selection was not delivered. Please select again.</string>
     <string name="file_browser_no_selection">No file selected.</string>
