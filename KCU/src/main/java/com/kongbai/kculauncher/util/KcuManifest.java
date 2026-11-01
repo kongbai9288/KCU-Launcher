@@ -57,16 +57,23 @@ public final class KcuManifest {
             // 不用 java.nio.file.Files.move：该 API 要求 API 26，与 minSdk 正好相同，
             // 属边界值，改用传统方式避免任何兼容性风险
             File tmp = new File(file.getParentFile(), FILE_NAME + ".kcupart");
-            java.io.FileOutputStream out = new java.io.FileOutputStream(tmp, false);
+            java.io.FileOutputStream out = null;
             boolean ok = false;
             try {
+                out = new java.io.FileOutputStream(tmp, false);
                 out.write(json.getBytes("UTF-8"));
                 out.flush();
+                // 关成功才算写完：close 里还会把缓冲刷到底层，
+                // 它失败的话临时文件可能是不完整的，不能拿它去替换
+                out.close();
+                out = null;
                 ok = true;
             } finally {
-                try {
-                    out.close();
-                } catch (Throwable ignored) {
+                if (out != null) {
+                    try {
+                        out.close();
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
             if (!ok || !tmp.renameTo(file)) {
