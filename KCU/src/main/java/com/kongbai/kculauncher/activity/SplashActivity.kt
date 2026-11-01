@@ -78,6 +78,15 @@ class SplashActivity : KCUActivity() {
         ImageUtil.loadInto(
             binding.background, ThemeEngine.getInstance().getTheme().getBackground(this)
         )
+        // 上次若是守卫判定无响应而退出的，进主界面前说明一次：
+        // 否则玩家只看到启动器自己没了，完全不知道为什么
+        if (com.kongbai.kculauncher.util.KcuWatchdog.takeLastExitAt(this) > 0L) {
+            Toast.makeText(
+                applicationContext,
+                getString(R.string.settings_launcher_watchdog_last_exit),
+                Toast.LENGTH_LONG
+            ).show()
+        }
         // 先看本地缓存里有没有停止或更新的要求：
         // 这两项是强措施，必须在任何常规界面出现之前就挡住。
         // 这里只读本地缓存，不发网络请求，因此不会卡住启动。
