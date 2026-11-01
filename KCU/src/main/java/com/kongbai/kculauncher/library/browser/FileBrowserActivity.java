@@ -359,6 +359,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 }
                 adapter = new FileBrowserAdapter(this, config, files, selected, createListener());
                 listView.setAdapter(adapter);
+                // 选文件夹模式会在刷新时改写勾选，数量得跟着更新，
+                // 否则界面上显示的还是上一次的数量
+                updateSelectionHint();
                 listLoading = false;
                 if (files.isEmpty()) {
                     // 读不出来的目录和本来就空的目录，列表长得一模一样，
@@ -822,6 +825,33 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 return;
             }
         }
+        if (cut) {
+            // 剪切后粘回文件原来所在的目录：不拦的话会给每个文件生成 "mod (1).jar"
+            // 这样的带序号副本。玩家只是想把文件挪走，却凭空多出一堆重复文件
+            List<File> pending = new ArrayList<>();
+            for (File source : files) {
+                File parent = source.getParentFile();
+                if (parent != null && isSameDirectory(parent, dir)) {
+                    continue;
+                }
+                pending.add(source);
+            }
+            if (pending.isEmpty()) {
+                toast(R.string.file_browser_paste_same_dir);
+                return;
+            }
+            files = pending;
+        }
+        // 目标目录里已有同名文件时会自动改成 "xxx (n)"：不说一声的话，
+        // 玩家对着改名后的文件找不到自己刚粘贴的那一份
+        boolean renamed = false;
+        for (File source : files) {
+            if (new File(dir, source.getName()).exists()) {
+                renamed = true;
+                break;
+            }
+        }
+        final boolean willRename = renamed;
         final int total = files.size();
         runFileOperation(() -> {
             // 逐个文件时有的会失败（权限、被占用、空间不够），只刷新的话
@@ -838,8 +868,12 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 if (isDestroyed() || isFinishing()) {
                     return;
                 }
-                Toast.makeText(this, getString(cut ? R.string.file_browser_move_result : R.string.file_browser_copy_result,
-                        ok, total - ok), Toast.LENGTH_SHORT).show();
+                String message = getString(cut ? R.string.file_browser_move_result : R.string.file_browser_copy_result,
+                        ok, total - ok);
+                if (willRename) {
+                    message = message + getString(R.string.file_browser_renamed_hint);
+                }
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
             });
         });
     }
@@ -854,6 +888,17 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             return dst.equals(src) || dst.startsWith(src + File.separator);
         } catch (IOException e) {
             return false;
+        }
+    }
+
+    /**
+     * 两个路径是否指向同一个目录：用规范化路径比，避免大小写与符号链接造成的误判
+     */
+    private static boolean isSameDirectory(File a, File b) {
+        try {
+            return a.getCanonicalPath().equals(b.getCanonicalPath());
+        } catch (IOException e) {
+            return a.getAbsolutePath().equals(b.getAbsolutePath());
         }
     }
 
