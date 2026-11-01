@@ -1095,6 +1095,12 @@
     <string name="settings_disable_fullscreen_input_desc">禁用全屏输入（部分设备需要），用于 TouchController 模组</string>
     <string name="settings_launcher_exit_after_launching">自动关闭</string>
     <string name="settings_launcher_exit_after_launching_desc">启动游戏后自动退出启动器，将不再显示崩溃界面</string>
+    <string name="settings_launcher_watchdog">卡死自动退出</string>
+    <string name="settings_launcher_watchdog_desc">游戏运行期间，如果界面连续这么久完全没有反应，就自动退出，免得整台设备被拖住。默认关闭。</string>
+    <string name="settings_launcher_watchdog_timeout">多久算没反应</string>
+    <string name="settings_launcher_watchdog_timeout_desc">只在游戏运行时计时。正常游玩不会触发，退出时不会保存游戏进度。</string>
+    <string name="settings_launcher_watchdog_timeout_option">%1$d 秒</string>
+    <string name="settings_launcher_watchdog_last_exit">上次启动器长时间没有反应，已自动退出。</string>
     <string name="settings_launcher_custom_launcher_name">自定义启动器信息</string>
     <string name="settings_launcher_custom_launcher_name_desc">自定义启动器在游戏内显示的名称</string>
     <string name="settings_launcher_allow_screenshot">允许在崩溃界面截图/录屏</string>
