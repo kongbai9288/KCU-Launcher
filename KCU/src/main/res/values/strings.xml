@@ -1658,6 +1658,8 @@
     <string name="file_browser_items">%1$d items</string>
     <string name="file_browser_size_unknown">Unknown</string>
     <string name="file_browser_paste_recursive">Cannot paste a folder into itself or its subfolder.</string>
+    <string name="file_browser_paste_same_dir">These files are already in this folder.</string>
+    <string name="file_browser_renamed_hint"> Some files were renamed to avoid overwriting.</string>
     <string name="file_browser_result_lost">The selection was not delivered. Please select again.</string>
     <string name="file_browser_no_selection">No file selected.</string>
     <string name="file_browser_operation_failed">Operation failed.</string>
