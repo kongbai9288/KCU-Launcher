@@ -6,6 +6,7 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatDialog;
 import androidx.appcompat.widget.LinearLayoutCompat;
@@ -143,6 +144,10 @@ public class InstallerListPage extends KCUPage implements ManageUI.VersionLoadab
             File file = files.get(0).toFile(getActivity(), new File(KCUPath.CACHE_DIR));
             if (file.exists()) {
                 doInstallOffline(file);
+            } else {
+                // 内容没拷出来（没有读权限、空间不够）时原来什么都不做：
+                // 选完文件毫无反应，玩家只会以为这个入口是坏的
+                Toast.makeText(getContext(), getContext().getString(R.string.message_failed), Toast.LENGTH_SHORT).show();
             }
         });
     }
