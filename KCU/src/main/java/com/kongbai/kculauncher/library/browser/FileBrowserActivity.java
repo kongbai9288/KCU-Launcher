@@ -1,6 +1,7 @@
 package com.kongbai.kculauncher.library.browser;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -481,13 +482,36 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 return;
             }
             Uri uri = FileProvider.getUriForFile(this, getApplication().getPackageName() + ".provider", externalTarget);
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            intent.setDataAndType(uri, "*/*");
-            // 只给 setDataAndType 的话不少外部应用收不到，EXTRA_STREAM 是通用做法
-            intent.putExtra(Intent.EXTRA_STREAM, uri);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-            startActivity(Intent.createChooser(intent, getString(R.string.file_browser_open_external)));
+            // 这里要的是"用别的应用打开这个文件夹"，而 ACTION_SEND 的意思是"把这个内容发出去"。
+            // 用 ACTION_SEND 给一个目录，对面多半什么也打不开，而这个按钮点了又没有任何提示，
+            // 看起来就是没反应。改成 ACTION_VIEW
+            Intent view = new Intent(Intent.ACTION_VIEW);
+            view.setDataAndType(uri, "*/*");
+            view.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            view.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            boolean handled = false;
+            if (view.resolveActivity(getPackageManager()) != null) {
+                try {
+                    startActivity(view);
+                    handled = true;
+                } catch (ActivityNotFoundException ignored) {
+                    // 认领了却起不来，走下面的兜底
+                }
+            }
+            if (!handled) {
+                // 没有应用认领 ACTION_VIEW：退回原来的 ACTION_SEND，至少不比改前差
+                Intent send = new Intent(Intent.ACTION_SEND);
+                send.setDataAndType(uri, "*/*");
+                // 只给 setDataAndType 的话不少外部应用收不到，EXTRA_STREAM 是通用做法
+                send.putExtra(Intent.EXTRA_STREAM, uri);
+                send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                send.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                try {
+                    startActivity(Intent.createChooser(send, getString(R.string.file_browser_open_external)));
+                } catch (ActivityNotFoundException e) {
+                    toast(R.string.file_browser_operation_failed);
+                }
+            }
         }
         if (view == selectExternal) {
             launcher.launch(null);
@@ -578,6 +602,17 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
      * 不挡住的话玩家以为没反应就会再点一次，两个操作撞在同一批文件上
      */
     private void runFileOperation(FileOperation operation) {
+        runFileOperation(operation, null);
+    }
+
+    /**
+     * 在 IO 线程执行文件操作，成功后回主线程刷新列表，失败时提示。
+     * 操作期间不接受新的提交：复制大目录要跑很久，期间界面没有任何变化，
+     * 不挡住的话玩家以为没反应就会再点一次，两个操作撞在同一批文件上
+     *
+     * @param onSuccess 刷新之后要做的事（比如提示新建的文件不在当前筛选里）
+     */
+    private void runFileOperation(FileOperation operation, @Nullable Runnable onSuccess) {
         if (operationBusy) {
             toast(R.string.file_browser_operation_busy);
             return;
@@ -591,6 +626,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                     operationBusy = false;
                     if (!isDestroyed() && !isFinishing()) {
                         refreshList(currentPath);
+                        if (onSuccess != null) {
+                            onSuccess.run();
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -753,6 +791,33 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 (position, item) -> actions.get(position).run());
     }
 
+    /**
+     * 新建或改名后的文件会不会被当前列表挡在外面。
+     * 选文件模式下配了后缀（比如只要 .jar），新建一个 .txt 是能建出来的，
+     * 但刷新后列表里没有它；选文件夹模式下列表只显示目录，新建的文件同样看不见。
+     * 不说一声的话，玩家只会以为没建成
+     */
+    private boolean hiddenByFilter(File file) {
+        if (file.isDirectory()) {
+            return false;
+        }
+        if (fileBrowser.getLibMode() == LibMode.FOLDER_CHOOSER) {
+            return true;
+        }
+        List<String> suffix = fileBrowser.getSuffix();
+        if (suffix == null || suffix.isEmpty()) {
+            return false;
+        }
+        String lower = file.getName().toLowerCase(Locale.ROOT);
+        for (String item : suffix) {
+            String wanted = FileOperator.normalizeSuffix(item);
+            if (wanted != null && !wanted.isEmpty() && lower.endsWith(wanted)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void showCreateDialog(boolean directory) {
         File dir = currentPath.toFile();
         EditDialog dialog = new EditDialog(this, "", name -> {
@@ -764,11 +829,16 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 toast(R.string.file_browser_exists);
                 return;
             }
+            File created = new File(dir, name);
             runFileOperation(() -> {
                 if (directory) {
                     FileOperator.createDirectory(dir, name);
                 } else {
                     FileOperator.createFile(dir, name);
+                }
+            }, () -> {
+                if (hiddenByFilter(created)) {
+                    toast(R.string.file_browser_created_hidden);
                 }
             });
         });
@@ -787,7 +857,12 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 toast(R.string.file_browser_exists);
                 return;
             }
-            runFileOperation(() -> FileOperator.rename(file, name));
+            runFileOperation(() -> FileOperator.rename(file, name),
+                    () -> {
+                        if (hiddenByFilter(target)) {
+                            toast(R.string.file_browser_created_hidden);
+                        }
+                    });
         });
         dialog.setTitle(getString(R.string.file_browser_rename));
         dialog.show();
