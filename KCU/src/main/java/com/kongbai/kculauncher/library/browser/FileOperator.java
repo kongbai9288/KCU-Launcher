@@ -12,9 +12,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,48 @@ import java.util.Locale;
 import java.util.logging.Level;
 
 public class FileOperator {
+
+    /**
+     * 每一行的显示信息。列表滚动时若逐行去查磁盘（时间、大小、是否目录），
+     * 每滚一屏都要重查一遍，而且发生在界面线程——大目录滚动会一顿一顿的。
+     * 这里在 IO 线程把整屏要用的信息一次算好，界面只查表
+     */
+    public static final class Row {
+        public final String description;
+        public final boolean directory;
+
+        Row(String description, boolean directory) {
+            this.description = description;
+            this.directory = directory;
+        }
+    }
+
+    /**
+     * 为列表预生成每一行的显示信息。只在 IO 线程调用，故可以共用一个格式化器
+     */
+    public static Map<File, Row> buildRows(List<File> files) {
+        Map<File, Row> map = new HashMap<>();
+        if (files == null) {
+            return map;
+        }
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        for (File file : files) {
+            StringBuilder text = new StringBuilder();
+            try {
+                text.append(formatter.format(new Date(FileUtils.lastModified(file))));
+            } catch (IOException e) {
+                // 文件可能在列目录之后被删掉：这里吃掉异常，显示为 Unknown，
+                // 不至于让整行乃至整个界面崩掉
+                text.append("Unknown");
+            }
+            boolean directory = file.isDirectory();
+            if (!directory) {
+                text.append("    ").append(FileUtils.byteCountToDisplaySize(file.length()));
+            }
+            map.put(file, new Row(text.toString(), directory));
+        }
+        return map;
+    }
 
     /**
      * 列出目录内容：目录恒排前，组内按指定方式排序；可选择过滤后缀
