@@ -38,7 +38,10 @@ public class FileOperator {
             // 按原样比的话这类文件在列表里根本不出现，玩家只会以为自己没这个文件
             List<String> lowerSuffix = new ArrayList<>();
             for (String suffix : fileBrowser.getSuffix()) {
-                lowerSuffix.add(suffix.toLowerCase(Locale.ROOT));
+                String wanted = normalizeSuffix(suffix);
+                if (wanted != null && !wanted.isEmpty()) {
+                    lowerSuffix.add(wanted);
+                }
             }
             for (File file : rawList) {
                 if (file.isFile()) {
@@ -88,6 +91,22 @@ public class FileOperator {
         } else {
             list.sort(NameFileComparator.NAME_INSENSITIVE_COMPARATOR);
         }
+    }
+
+    /**
+     * 把配置里的后缀统一成带前导点的写法。
+     * 配置漏写点时（比如写 "jar"），按原样比会把 "notjar" 这类没有扩展名的文件
+     * 也算进来，筛选形同虚设；统一补上点之后两种写法行为一致
+     */
+    public static String normalizeSuffix(String suffix) {
+        if (suffix == null) {
+            return null;
+        }
+        String text = suffix.trim().toLowerCase(Locale.ROOT);
+        if (text.isEmpty()) {
+            return text;
+        }
+        return text.startsWith(".") ? text : "." + text;
     }
 
     /**
