@@ -485,14 +485,15 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             // 这里要的是"用别的应用打开这个文件夹"，而 ACTION_SEND 的意思是"把这个内容发出去"。
             // 用 ACTION_SEND 给一个目录，对面多半什么也打不开，而这个按钮点了又没有任何提示，
             // 看起来就是没反应。改成 ACTION_VIEW
-            Intent view = new Intent(Intent.ACTION_VIEW);
-            view.setDataAndType(uri, "*/*");
-            view.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            view.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            // 注意别叫 view：onClick(View view) 的形参已经叫这个名字，重名会编译不过
+            Intent viewIntent = new Intent(Intent.ACTION_VIEW);
+            viewIntent.setDataAndType(uri, "*/*");
+            viewIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            viewIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             boolean handled = false;
-            if (view.resolveActivity(getPackageManager()) != null) {
+            if (viewIntent.resolveActivity(getPackageManager()) != null) {
                 try {
-                    startActivity(view);
+                    startActivity(viewIntent);
                     handled = true;
                 } catch (ActivityNotFoundException ignored) {
                     // 认领了却起不来，走下面的兜底
