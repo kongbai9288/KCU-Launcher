@@ -608,7 +608,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
      */
     private void setSortMode(SortMode sortMode) {
         this.sortMode = sortMode;
-        getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE).edit().putString(KEY_SORT_MODE, sortMode.name()).apply();
+        // 同步写入：异步的话刚改完排序进程就被终止，下次启动又变回默认排序，
+        // 而界面上刚提示过已切换
+        getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE).edit().putString(KEY_SORT_MODE, sortMode.name()).commit();
         refreshList(currentPath);
     }
 
@@ -675,8 +677,26 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
     private void showBatchMenu() {
         List<String> items = new ArrayList<>();
         List<Runnable> actions = new ArrayList<>();
-        items.add(getString(allFilesSelected() ? R.string.file_browser_deselect_all : R.string.file_browser_select_all));
-        actions.add(this::selectAll);
+        // 当前目录一个文件都没有时，全选无从谈起：原来仍显示"全选"，
+        // 点下去一个文件也没勾上，界面毫无变化，玩家只会以为这个菜单是坏的
+        boolean hasFile = false;
+        if (adapter != null) {
+            for (File file : adapter.getFiles()) {
+                if (file.isFile()) {
+                    hasFile = true;
+                    break;
+                }
+            }
+        }
+        if (hasFile) {
+            items.add(getString(allFilesSelected() ? R.string.file_browser_deselect_all : R.string.file_browser_select_all));
+            actions.add(this::selectAll);
+        } else if (selectedFiles != null && !selectedFiles.isEmpty()) {
+            // 没有文件可勾，但别的目录可能还勾着：给一个真能清空的入口，
+            // 否则这里点了同样毫无反应
+            items.add(getString(R.string.file_browser_deselect_all));
+            actions.add(this::clearSelection);
+        }
         items.add(getString(R.string.file_browser_copy));
         actions.add(() -> {
             // 只在真的放进去了才提示：没勾东西时那边已经提示过"没有选中"，
@@ -917,6 +937,16 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             FileClipboard.copy(files);
         }
         return true;
+    }
+
+    /** 清空全部勾选并刷新界面 */
+    private void clearSelection() {
+        selectedFiles = new ArrayList<>();
+        if (adapter != null) {
+            adapter.setSelectedFiles(selectedFiles);
+            adapter.notifyDataSetChanged();
+        }
+        updateSelectionHint();
     }
 
     private void selectAll() {
