@@ -47,10 +47,15 @@ public class FileBrowserAdapter extends KCUAdapter {
     private final Map<File, FileOperator.Row> rows;
 
     public FileBrowserAdapter(Context context, FileBrowser fileBrowser, Path path, ArrayList<String> selectedFiles, SortMode sortMode, FileBrowserListener listener) {
-        // 这个入口在界面线程列目录，本来就慢；至少把每行的显示信息一次算好，
-        // 免得滚动时还要一遍遍查磁盘
-        this(context, fileBrowser, FileOperator.getFileList(path, fileBrowser, sortMode), selectedFiles, listener,
-                FileOperator.buildRows(FileOperator.getFileList(path, fileBrowser, sortMode)));
+        // 这个入口在界面线程列目录，本来就慢；至少只列一次。
+        // 原来写成"列表取一次、行信息再取一次"，每次刷新都要扫两遍磁盘，
+        // 导入多个文件时每导一个就多扫一遍，界面跟着卡
+        this(context, fileBrowser, FileOperator.snapshot(path, fileBrowser, sortMode), selectedFiles, listener);
+    }
+
+    private FileBrowserAdapter(Context context, FileBrowser fileBrowser, FileOperator.Snapshot snapshot,
+                               ArrayList<String> selectedFiles, FileBrowserListener listener) {
+        this(context, fileBrowser, snapshot.files, selectedFiles, listener, snapshot.rows);
     }
 
     /**
