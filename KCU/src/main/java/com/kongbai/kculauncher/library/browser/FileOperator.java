@@ -15,7 +15,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.logging.Level;
 
@@ -28,7 +30,7 @@ public class FileOperator {
         List<File> list = new ArrayList<>();
         File[] files = path.toFile().listFiles();
         List<File> rawList = files != null ? new ArrayList<>(Arrays.asList(files)) : new ArrayList<>();
-        rawList.sort(getComparator(sortMode));
+        sortRaw(rawList, sortMode);
         rawList.sort(DirectoryFileComparator.DIRECTORY_COMPARATOR);
         List<File> filterList = new ArrayList<>();
         if (!fileBrowser.getSuffix().isEmpty()) {
@@ -66,15 +68,26 @@ public class FileOperator {
         return list;
     }
 
-    private static Comparator<File> getComparator(SortMode sortMode) {
-        if (sortMode == null) {
-            return NameFileComparator.NAME_INSENSITIVE_COMPARATOR;
+    /**
+     * 按大小或时间排序时，比较器每比一次都要 stat 一次文件：一千个文件约两万次
+     * stat，大目录下列一个目录要等很久。先把取值算一遍存起来，排序时只查表
+     */
+    private static void sortRaw(List<File> list, SortMode sortMode) {
+        if (sortMode == SortMode.SIZE) {
+            Map<File, Long> cache = new HashMap<>();
+            for (File file : list) {
+                cache.put(file, file.length());
+            }
+            list.sort(Comparator.comparingLong((File file) -> cache.getOrDefault(file, 0L)));
+        } else if (sortMode == SortMode.DATE) {
+            Map<File, Long> cache = new HashMap<>();
+            for (File file : list) {
+                cache.put(file, file.lastModified());
+            }
+            list.sort(Comparator.comparingLong((File file) -> cache.getOrDefault(file, 0L)).reversed());
+        } else {
+            list.sort(NameFileComparator.NAME_INSENSITIVE_COMPARATOR);
         }
-        return switch (sortMode) {
-            case SIZE -> Comparator.comparingLong(File::length);
-            case DATE -> Comparator.comparingLong(File::lastModified).reversed();
-            default -> NameFileComparator.NAME_INSENSITIVE_COMPARATOR;
-        };
     }
 
     /**
