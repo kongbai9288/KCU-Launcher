@@ -93,6 +93,8 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
     private boolean themeRegistered;
     /** 有文件操作正在 IO 线程执行 */
     private volatile boolean operationBusy;
+    /** 上一次提示过的空目录（目录 + 提示原因），用于避免同一个目录反复弹同一句 */
+    private String lastEmptyNotice;
 
     private ArrayList<String> selectedFiles;
     private ArrayList<Uri> extSelected;
@@ -363,8 +365,17 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 updateSelectionHint();
                 if (files.isEmpty()) {
                     // 读不出来的目录和本来就空的目录，列表长得一模一样，
-                    // 都不说一声的话玩家分不清是没加载出来还是真没有文件
-                    toast(listable ? R.string.file_browser_empty_folder : R.string.file_browser_unreadable);
+                    // 都不说一声的话玩家分不清是没加载出来还是真没有文件。
+                    // 同一个目录同一种原因只提示一次：改个排序、删个文件都会刷新一次，
+                    // 每次都弹的话在空文件夹里动两下就连续弹好几条
+                    int noticeRes = listable ? R.string.file_browser_empty_folder : R.string.file_browser_unreadable;
+                    String notice = path.toString() + "|" + noticeRes;
+                    if (!notice.equals(lastEmptyNotice)) {
+                        lastEmptyNotice = notice;
+                        toast(noticeRes);
+                    }
+                } else {
+                    lastEmptyNotice = null;
                 }
                 if (sameDir) {
                     listView.setSelectionFromTop(firstVisible, topOffset);
@@ -945,6 +956,21 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         List<File> sources = new ArrayList<>(FileClipboard.getFiles());
         boolean cut = FileClipboard.isCut();
         File dir = currentPath.toFile();
+        // 剪贴板是进程级的，关掉文件管理再来它还在：里面的文件可能早就被删了或搬走了。
+        // 全都对不上的时候直接说清楚并清掉，不然玩家点粘贴只会看到"成功 0 个，失败 N 个"，
+        // 既不知道为什么，也不知道自己粘的到底是哪一批文件
+        boolean anyAlive = false;
+        for (File source : sources) {
+            if (source.exists()) {
+                anyAlive = true;
+                break;
+            }
+        }
+        if (!anyAlive) {
+            toast(R.string.file_browser_clipboard_stale);
+            FileClipboard.clear();
+            return;
+        }
         for (File source : sources) {
             if (isSelfOrDescendant(source, dir)) {
                 toast(R.string.file_browser_paste_recursive);
@@ -952,6 +978,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             }
         }
         List<File> pending = sources;
+        int skippedSameDir = 0;
         if (cut) {
             // 剪切后粘回文件原来所在的目录：不拦的话会给每个文件生成 "mod (1).jar"
             // 这样的带序号副本。玩家只是想把文件挪走，却凭空多出一堆重复文件
@@ -963,11 +990,15 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 }
                 pending.add(source);
             }
+            skippedSameDir = sources.size() - pending.size();
             if (pending.isEmpty()) {
                 toast(R.string.file_browser_paste_same_dir);
                 return;
             }
         }
+        // 只有一部分被跳过时也要说：结果提示只看成功与失败，
+        // 被跳过的那几个既不算成功也不算失败，界面上等于凭空少了几项
+        final int skippedCount = skippedSameDir;
         // 下面的 lambda 会用到文件列表，故在这里定死，之后不再改写
         final List<File> files = pending;
         // 目标目录里已有同名文件时会自动改成 "xxx (n)"：不说一声的话，
@@ -1000,6 +1031,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                         ok, total - ok);
                 if (willRename) {
                     message = message + getString(R.string.file_browser_renamed_hint);
+                }
+                if (skippedCount > 0) {
+                    message = message + getString(R.string.file_browser_paste_skipped_same_dir, skippedCount);
                 }
                 Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
             });
