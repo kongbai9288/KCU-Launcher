@@ -1806,4 +1806,6 @@
     <string name="kcu_race_remove">移除</string>
     <string name="kcu_race_saved">已保存</string>
     <string name="file_browser_created_hidden">It was created, but it is not shown under the current filter.</string>
+    <string name="file_browser_clipboard_stale">The files in the clipboard no longer exist. The clipboard has been cleared.</string>
+    <string name="file_browser_paste_skipped_same_dir">%1$d file(s) were already in this folder and were skipped.</string>
 </resources>
