@@ -1638,4 +1638,5 @@
     <string name="file_browser_operation_busy">上一个操作还没完成。</string>
     <string name="file_browser_paste_same_dir">这些文件已经在这个文件夹里了。</string>
     <string name="file_browser_renamed_hint"> 有文件为避免覆盖而改了名。</string>
+    <string name="file_browser_created_hidden">已创建，但当前的筛选条件下不显示它。</string>
 </resources>
