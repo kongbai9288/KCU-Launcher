@@ -353,7 +353,18 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             final Map<File, FileOperator.Row> rows = FileOperator.buildRows(files);
             // 读不出来的目录（无权限 / 不是目录）listFiles 返回 null，列表会是空的。
             // 不说一声的话，玩家只会以为这个文件夹本来就是空的
-            final boolean listable = path.toFile().isDirectory() && path.toFile().canRead();
+            // 目录不存在、读不出来、本来就空，三种情况下列表长得一模一样。
+            // 原来前两种都报"可能是权限不足"：起始目录被删掉（比如某个版本目录没了）
+            // 时报权限问题，会把人往完全错误的方向引
+            final File listedDir = path.toFile();
+            final int emptyNoticeRes;
+            if (!listedDir.exists()) {
+                emptyNoticeRes = R.string.file_browser_missing_dir;
+            } else if (listedDir.isDirectory() && listedDir.canRead()) {
+                emptyNoticeRes = R.string.file_browser_empty_folder;
+            } else {
+                emptyNoticeRes = R.string.file_browser_unreadable;
+            }
             Schedulers.androidUIThread().execute(() -> {
                 if (isDestroyed() || isFinishing() || token != listLoadToken) {
                     return;
@@ -368,7 +379,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                     // 都不说一声的话玩家分不清是没加载出来还是真没有文件。
                     // 同一个目录同一种原因只提示一次：改个排序、删个文件都会刷新一次，
                     // 每次都弹的话在空文件夹里动两下就连续弹好几条
-                    int noticeRes = listable ? R.string.file_browser_empty_folder : R.string.file_browser_unreadable;
+                    int noticeRes = emptyNoticeRes;
                     String notice = path.toString() + "|" + noticeRes;
                     if (!notice.equals(lastEmptyNotice)) {
                         lastEmptyNotice = notice;
@@ -695,8 +706,12 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 && fileBrowser.getSelectionMode() == SelectionMode.SINGLE_SELECTION;
         // 不再拿"正在后台读目录"当条件：那个标记在加载期间为 true，会让这一项时有时无。
         // 连按两次管理菜单看到不一样的内容，比多显示一项更容易让人以为菜单坏了
+        // 当前目录为空但别的目录还勾着文件时也要给入口：那里唯一的用处就是"取消全选"，
+        // 正好是在这种情况下才需要。只按当前目录有没有条目来判断的话，
+        // 玩家翻到一个空目录就再也找不到清掉勾选的入口
+        boolean hasSelectionHere = selectedFiles != null && !selectedFiles.isEmpty();
         if (!singleSelectionChooser && fileBrowser.getLibMode() != LibMode.FOLDER_CHOOSER
-                && adapter != null && adapter.getCount() > 0) {
+                && ((adapter != null && adapter.getCount() > 0) || hasSelectionHere)) {
             items.add(getString(R.string.file_browser_batch));
             actions.add(this::showBatchMenu);
         }
