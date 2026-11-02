@@ -1629,4 +1629,13 @@
     <string name="kcu_race_custom_none">还没添加自定义源</string>
     <string name="kcu_race_remove">移除</string>
     <string name="kcu_race_saved">已保存</string>
+    <!-- 文件管理：这几条此前只写在默认（英文）资源里，中文环境下会回退成英文 -->
+    <string name="file_browser_items">%1$d 项</string>
+    <string name="file_browser_items_count">等 %1$d 项</string>
+    <string name="file_browser_size_unknown">未知</string>
+    <string name="file_browser_empty_folder">这个文件夹是空的。</string>
+    <string name="file_browser_operation_running">正在处理…</string>
+    <string name="file_browser_operation_busy">上一个操作还没完成。</string>
+    <string name="file_browser_paste_same_dir">这些文件已经在这个文件夹里了。</string>
+    <string name="file_browser_renamed_hint"> 有文件为避免覆盖而改了名。</string>
 </resources>
