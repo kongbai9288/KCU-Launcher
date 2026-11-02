@@ -43,7 +43,6 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,8 +87,6 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
      * 避免连续切换目录时，先发起的慢请求覆盖后发起的结果
      */
     private long listLoadToken;
-    /** 目录内容正在后台读取：此时列表显示的还是上一个目录，先不响应点击 */
-    private volatile boolean listLoading;
     /** 主题回调按控件登记即可，重复登记会白做，故只登记一次 */
     private boolean themeRegistered;
     /** 有文件操作正在 IO 线程执行 */
@@ -97,8 +94,6 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
 
     private ArrayList<String> selectedFiles;
     private ArrayList<Uri> extSelected;
-
-    private final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
     private final ActivityResultLauncher<Object> launcher = registerForActivityResult(new ActivityResultContract<Object, Uri>() {
         @NonNull
@@ -338,7 +333,6 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         final FileBrowser config = fileBrowser;
         final SortMode sort = sortMode;
         final ArrayList<String> selected = selectedFiles;
-        listLoading = true;
         // 列目录是磁盘操作，文件多时会卡住界面线程，放到 IO 线程做
         Schedulers.io().execute(() -> {
             // 内层 lambda 只能捕获不再改写的变量，故先算完再定死
@@ -362,7 +356,6 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 // 选文件夹模式会在刷新时改写勾选，数量得跟着更新，
                 // 否则界面上显示的还是上一次的数量
                 updateSelectionHint();
-                listLoading = false;
                 if (files.isEmpty()) {
                     // 读不出来的目录和本来就空的目录，列表长得一模一样，
                     // 都不说一声的话玩家分不清是没加载出来还是真没有文件
@@ -458,10 +451,13 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             refreshList(Environment.getExternalStorageDirectory().toPath());
         }
         if (view == privateDir) {
-            if (getExternalCacheDir().getParent() != null) {
-                refreshList(new File(getExternalCacheDir().getParent()).toPath());
+            // getExternalCacheDir() 在外部存储不可用时返回 null，原来只在它之后判
+            // getParent()，取到 null 就直接空指针崩溃。先判对象本身
+            File externalCache = getExternalCacheDir();
+            if (externalCache != null && externalCache.getParent() != null) {
+                refreshList(new File(externalCache.getParent()).toPath());
             } else {
-                Toast.makeText(this, getString(R.string.file_browser_private_alert), Toast.LENGTH_SHORT).show();
+                toast(R.string.file_browser_private_alert);
             }
         }
         if (view == manage) {
@@ -521,10 +517,12 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         }
         String lower = name.toLowerCase(Locale.ROOT);
         for (String item : suffix) {
-            if (item == null || item.isEmpty()) {
+            // 与列表过滤用同一套规范：配置漏写点时，"notjar" 会被当成 jar 放行
+            String wanted = FileOperator.normalizeSuffix(item);
+            if (wanted == null || wanted.isEmpty()) {
                 continue;
             }
-            if (lower.endsWith(item.toLowerCase(Locale.ROOT))) {
+            if (lower.endsWith(wanted)) {
                 return true;
             }
         }
@@ -641,8 +639,10 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         // 入口，否则全选后确认会破坏调用方的单选约定
         boolean singleSelectionChooser = fileBrowser.getLibMode() == LibMode.FILE_CHOOSER
                 && fileBrowser.getSelectionMode() == SelectionMode.SINGLE_SELECTION;
+        // 不再拿"正在后台读目录"当条件：那个标记在加载期间为 true，会让这一项时有时无。
+        // 连按两次管理菜单看到不一样的内容，比多显示一项更容易让人以为菜单坏了
         if (!singleSelectionChooser && fileBrowser.getLibMode() != LibMode.FOLDER_CHOOSER
-                && !listLoading && adapter != null && adapter.getCount() > 0) {
+                && adapter != null && adapter.getCount() > 0) {
             items.add(getString(R.string.file_browser_batch));
             actions.add(this::showBatchMenu);
         }
@@ -998,7 +998,10 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                         + getString(R.string.file_browser_type) + ": "
                         + getString(file.isDirectory() ? R.string.file_browser_type_folder : R.string.file_browser_type_file) + "\n"
                         + getString(R.string.file_browser_size) + ": " + sizeText + "\n"
-                        + getString(R.string.file_browser_last_modified) + ": " + formatter.format(new Date(file.lastModified())) + "\n"
+                        + getString(R.string.file_browser_last_modified) + ": "
+                        // 这里在 IO 线程：SimpleDateFormat 不是线程安全的，共用一份会串。
+                        // 每次现建一个，成本可忽略
+                        + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(file.lastModified())) + "\n"
                         + getString(R.string.file_browser_path) + ": " + file.getAbsolutePath();
             } catch (Exception e) {
                 Logging.LOG.log(Level.WARNING, "Failed to read file details " + file.getAbsolutePath(), e);
