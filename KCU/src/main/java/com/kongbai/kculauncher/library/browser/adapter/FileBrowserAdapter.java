@@ -25,10 +25,11 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
+import java.util.Map;
 import java.util.List;
 
 public class FileBrowserAdapter extends KCUAdapter {
@@ -39,25 +40,30 @@ public class FileBrowserAdapter extends KCUAdapter {
 
     private ArrayList<String> selectedFiles;
 
-    private final DateFormat formatter;
+    /**
+     * 每一行的显示信息（时间、大小、是否目录），由调用方在 IO 线程预先算好。
+     * 没有它的时候才会现算——那会在界面线程查磁盘，只作为兜底
+     */
+    private final Map<File, FileOperator.Row> rows;
 
-    @SuppressLint("SimpleDateFormat")
     public FileBrowserAdapter(Context context, FileBrowser fileBrowser, Path path, ArrayList<String> selectedFiles, SortMode sortMode, FileBrowserListener listener) {
-        this(context, fileBrowser, FileOperator.getFileList(path, fileBrowser, sortMode), selectedFiles, listener);
+        // 这个入口在界面线程列目录，本来就慢；至少把每行的显示信息一次算好，
+        // 免得滚动时还要一遍遍查磁盘
+        this(context, fileBrowser, FileOperator.getFileList(path, fileBrowser, sortMode), selectedFiles, listener,
+                FileOperator.buildRows(FileOperator.getFileList(path, fileBrowser, sortMode)));
     }
 
     /**
      * 目录内容已在 IO 线程算好时走这里：避免在界面线程列目录，文件多时会卡住界面
      */
-    @SuppressLint("SimpleDateFormat")
-    public FileBrowserAdapter(Context context, FileBrowser fileBrowser, List<File> files, ArrayList<String> selectedFiles, FileBrowserListener listener) {
+    public FileBrowserAdapter(Context context, FileBrowser fileBrowser, List<File> files, ArrayList<String> selectedFiles,
+                              FileBrowserListener listener, Map<File, FileOperator.Row> rows) {
         super(context);
         this.fileBrowser = fileBrowser;
         this.selectedFiles = selectedFiles;
         this.listener = listener;
         this.list = files != null ? files : new ArrayList<>();
-
-        this.formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        this.rows = rows;
     }
 
     public void setSelectedFiles(ArrayList<String> selectedFiles) {
@@ -113,26 +119,31 @@ public class FileBrowserAdapter extends KCUAdapter {
             viewHolder = (ViewHolder) view.getTag();
         }
         File file = list.get(i);
-        StringBuilder stringBuilder = new StringBuilder();
-        String displayTime;
-        try {
-            long time = FileUtils.lastModified(file);
-            Date date = new Date();
-            date.setTime(time);
-            displayTime = formatter.format(date);
-        } catch (IOException e) {
-            e.printStackTrace();
-            displayTime = "Unknown";
+        // 优先用预先算好的那一份：现算会在界面线程查磁盘，滚一屏就重查一遍，
+        // 大目录滚动会一顿一顿的。表是 IO 线程一次算好的，查不到才兜底现算
+        FileOperator.Row row = rows != null ? rows.get(file) : null;
+        String description;
+        boolean directory;
+        if (row != null) {
+            description = row.description;
+            directory = row.directory;
+        } else {
+            StringBuilder stringBuilder = new StringBuilder();
+            try {
+                long time = FileUtils.lastModified(file);
+                stringBuilder.append(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(time)));
+            } catch (IOException e) {
+                stringBuilder.append("Unknown");
+            }
+            directory = file.isDirectory();
+            if (!directory) {
+                // 文件可能在列目录之后被删掉：sizeOf 遇到不存在的路径会抛异常，
+                // 滚动到那一行时整个界面崩掉。普通文件取长度即可，目录本来就跳过
+                stringBuilder.append("    ").append(FileUtils.byteCountToDisplaySize(file.length()));
+            }
+            description = stringBuilder.toString();
         }
-        stringBuilder.append(displayTime);
-        if (file.isFile()) {
-            // 文件可能在列目录之后被删掉：sizeOf 遇到不存在的路径会抛异常，
-            // 滚动到那一行时整个界面崩掉。普通文件取长度即可，目录本来就跳过
-            String fileSize = FileUtils.byteCountToDisplaySize(file.length());
-            stringBuilder.append("    ").append(fileSize);
-        }
-        String description = stringBuilder.toString();
-        @SuppressLint("UseCompatLoadingForDrawables") Drawable drawable = file.isFile() ? getContext().getDrawable(R.drawable.ic_baseline_file_24) : getContext().getDrawable(R.drawable.ic_baseline_folder_24);
+        @SuppressLint("UseCompatLoadingForDrawables") Drawable drawable = directory ? getContext().getDrawable(R.drawable.ic_baseline_folder_24) : getContext().getDrawable(R.drawable.ic_baseline_file_24);
         drawable.setTint(ThemeEngine.getInstance().getTheme().getColor());
         viewHolder.icon.setImageDrawable(drawable);
         viewHolder.name.setText(file.getName());
@@ -143,10 +154,10 @@ public class FileBrowserAdapter extends KCUAdapter {
             viewHolder.parent.setBackground(getContext().getDrawable(R.drawable.clickable_parent));
         }
         viewHolder.parent.setOnClickListener(view1 -> {
-            if (file.isDirectory()) {
+            if (directory) {
                 listener.onEnterDir(file.getAbsolutePath());
             }
-            if (file.isFile() && fileBrowser.getLibMode() != LibMode.FOLDER_CHOOSER) {
+            if (!directory && fileBrowser.getLibMode() != LibMode.FOLDER_CHOOSER) {
                 listener.onSelect(this, file.getAbsolutePath());
             }
         });
