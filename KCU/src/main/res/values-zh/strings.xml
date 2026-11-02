@@ -1641,4 +1641,5 @@
     <string name="file_browser_created_hidden">已创建，但当前的筛选条件下不显示它。</string>
     <string name="file_browser_clipboard_stale">剪贴板里的文件已经不在了，已清空剪贴板。</string>
     <string name="file_browser_paste_skipped_same_dir">有 %1$d 个文件原本就在这个文件夹里，已跳过。</string>
+    <string name="file_browser_missing_dir">这个文件夹不存在。</string>
 </resources>
