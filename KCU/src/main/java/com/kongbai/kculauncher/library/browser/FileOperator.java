@@ -41,6 +41,29 @@ public class FileOperator {
     }
 
     /**
+     * 一次列目录的结果：文件列表与它对应的每行显示信息。
+     * 两者必须来自同一次列目录，否则行信息会对不上列表
+     */
+    public static final class Snapshot {
+        public final List<File> files;
+        public final Map<File, Row> rows;
+
+        public Snapshot(List<File> files, Map<File, Row> rows) {
+            this.files = files;
+            this.rows = rows;
+        }
+    }
+
+    /**
+     * 列一次目录，同时把每行显示信息算好。只列一次：
+     * 分成两次调用（一次给列表、一次给显示信息）会让每次刷新多扫一遍磁盘
+     */
+    public static Snapshot snapshot(Path path, FileBrowser fileBrowser, SortMode sortMode) {
+        List<File> files = getFileList(path, fileBrowser, sortMode);
+        return new Snapshot(files, buildRows(files));
+    }
+
+    /**
      * 为列表预生成每一行的显示信息。只在 IO 线程调用，故可以共用一个格式化器
      */
     public static Map<File, Row> buildRows(List<File> files) {
