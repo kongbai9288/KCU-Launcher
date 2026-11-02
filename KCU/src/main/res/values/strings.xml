@@ -1805,4 +1805,5 @@
     <string name="kcu_race_custom_none">还没添加自定义源</string>
     <string name="kcu_race_remove">移除</string>
     <string name="kcu_race_saved">已保存</string>
+    <string name="file_browser_created_hidden">It was created, but it is not shown under the current filter.</string>
 </resources>
