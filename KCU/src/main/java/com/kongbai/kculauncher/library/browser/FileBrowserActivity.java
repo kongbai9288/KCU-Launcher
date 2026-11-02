@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -344,6 +345,9 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 loaded = new ArrayList<>();
             }
             final List<File> files = loaded;
+            // 每一行的显示信息在这里一次算好：原来是在 getView 里逐行查磁盘，
+            // 每滚一屏都重查一遍，而且发生在界面线程，大目录滚动会一顿一顿的
+            final Map<File, FileOperator.Row> rows = FileOperator.buildRows(files);
             // 读不出来的目录（无权限 / 不是目录）listFiles 返回 null，列表会是空的。
             // 不说一声的话，玩家只会以为这个文件夹本来就是空的
             final boolean listable = path.toFile().isDirectory() && path.toFile().canRead();
@@ -351,7 +355,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 if (isDestroyed() || isFinishing() || token != listLoadToken) {
                     return;
                 }
-                adapter = new FileBrowserAdapter(this, config, files, selected, createListener());
+                adapter = new FileBrowserAdapter(this, config, files, selected, createListener(), rows);
                 listView.setAdapter(adapter);
                 // 选文件夹模式会在刷新时改写勾选，数量得跟着更新，
                 // 否则界面上显示的还是上一次的数量
