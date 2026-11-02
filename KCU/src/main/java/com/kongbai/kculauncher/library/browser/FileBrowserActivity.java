@@ -794,24 +794,35 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
     }
 
     private void confirmDelete(List<File> files) {
-        KCUAlertDialog.Builder builder = new KCUAlertDialog.Builder(this);
-        builder.setAlertLevel(KCUAlertDialog.AlertLevel.ALERT);
-        builder.setTitle(getString(R.string.file_browser_delete));
-        // 只说"删了不能恢复"却不说是删什么：多选删八个文件时，
-        // 玩家无法从弹窗确认自己勾的到底是哪几个
-        builder.setMessage(getString(R.string.file_browser_delete_message)
-                + "\n\n" + describeFiles(files));
-        builder.setPositiveButton(() -> {
-            List<String> paths = files.stream().map(File::getAbsolutePath).collect(Collectors.toList());
-            runFileOperation(() -> {
-                for (File file : files) {
-                    FileOperator.delete(file);
+        // 目录是递归删除的，弹窗里却只有名字：删掉一个实例目录会连带删掉里面全部文件，
+        // 玩家从弹窗上看不出自己要删掉多少东西。直接子项数量只看一层，很快；
+        // 放到 IO 线程算，多选时也不至于卡住界面
+        Schedulers.io().execute(() -> {
+            final String summary = describeFiles(files);
+            Schedulers.androidUIThread().execute(() -> {
+                if (isDestroyed() || isFinishing()) {
+                    return;
                 }
-                Schedulers.androidUIThread().execute(() -> selectedFiles.removeAll(paths));
+                KCUAlertDialog.Builder builder = new KCUAlertDialog.Builder(this);
+                builder.setAlertLevel(KCUAlertDialog.AlertLevel.ALERT);
+                builder.setTitle(getString(R.string.file_browser_delete));
+                // 只说"删了不能恢复"却不说是删什么：多选删八个文件时，
+                // 玩家无法从弹窗确认自己勾的到底是哪几个
+                builder.setMessage(getString(R.string.file_browser_delete_message)
+                        + "\n\n" + summary);
+                builder.setPositiveButton(() -> {
+                    List<String> paths = files.stream().map(File::getAbsolutePath).collect(Collectors.toList());
+                    runFileOperation(() -> {
+                        for (File file : files) {
+                            FileOperator.delete(file);
+                        }
+                        Schedulers.androidUIThread().execute(() -> selectedFiles.removeAll(paths));
+                    });
+                });
+                builder.setNegativeButton(null);
+                builder.create().show();
             });
         });
-        builder.setNegativeButton(null);
-        builder.create().show();
     }
 
     /**
@@ -822,9 +833,24 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             return "";
         }
         if (files.size() == 1) {
-            return files.get(0).getName();
+            return describeOne(files.get(0));
         }
-        return files.get(0).getName() + " " + getString(R.string.file_browser_items_count, files.size());
+        return describeOne(files.get(0)) + " " + getString(R.string.file_browser_items_count, files.size());
+    }
+
+    /**
+     * 单个条目的说明。目录递归删除，只给名字看不出里面有多少东西，
+     * 补上直接子项数量（只看一层）；读不出来就只给名字，不谎报成 0
+     */
+    private String describeOne(File file) {
+        if (!file.isDirectory()) {
+            return file.getName();
+        }
+        File[] children = file.listFiles();
+        if (children == null) {
+            return file.getName();
+        }
+        return file.getName() + " (" + getString(R.string.file_browser_items, children.length) + ")";
     }
 
     private void confirmDeleteSelected() {
