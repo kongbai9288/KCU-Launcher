@@ -33,6 +33,7 @@
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:textSize="14sp"
+                android:ellipsize="middle"
                 app:use_theme_color="true" />
 
             <com.kongbai.kculauncher.library.component.view.KCUTextView
