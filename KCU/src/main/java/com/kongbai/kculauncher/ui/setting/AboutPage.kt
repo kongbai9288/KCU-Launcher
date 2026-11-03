@@ -278,7 +278,6 @@ class AboutPage(context: Context?, id: Int) : KCUPage(context, id, R.layout.page
         /** 开发者模块：图标一律本地字符徽章，不引用任何网络图片 */
         private val DEVS = listOf(
             LinkItem("K", "kongbai9288（架构师）", "https://github.com/kongbai9288"),
-            LinkItem("F", "FCL-Team", "https://github.com/FCL-Team"),
             LinkItem("P", "PojavLauncher", "https://github.com/PojavLauncherTeam/PojavLauncher"),
             LinkItem("H", "HMCL", "https://github.com/HMCL-dev/HMCL")
         )
@@ -287,7 +286,6 @@ class AboutPage(context: Context?, id: Int) : KCUPage(context, id, R.layout.page
             LinkItem("\u2261", "源代码仓库", "https://github.com/kongbai9288/KCU-Launcher"),
             LinkItem("\u25CF", "QQ 交流群", null),
 
-            LinkItem("F", "Fold Craft Launcher（上游）", "https://github.com/FCL-Team/FoldCraftLauncher"),
             LinkItem("J", "Android-OpenJDK-Build", "https://github.com/HMCL-dev/Android-OpenJDK-Build"),
             LinkItem("S", "SDL3", "https://github.com/libsdl-org/SDL"),
             LinkItem("L", "LWJGL", "https://github.com/LWJGL/lwjgl3"),
