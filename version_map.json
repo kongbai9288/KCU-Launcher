@@ -1,6 +1,28 @@
 [
   {
     "type": "release",
+    "versionCode": 149,
+    "versionName": "0.98.6",
+    "date": "2026.11.03",
+    "author": "yuanbao",
+    "description": [
+      {
+        "lang": "zh_CN",
+        "text": [
+          "去旧标识轮，六处，全部是用户可见位置残留的 Fold Craft Launcher / FCL-Team。",
+          "粤语资源（values-zh-rHK）整份漏改：界面语言为粤语时，启动页标题、权限提示、关于页正文、整合包不支持提示、崩溃提示共五处仍显示 Fold Craft Launcher，关于页正文仍写「由 FCL-Team 開發」。此前只改了默认（英文）与简体两份，粤语那份从未改过。",
+          "最终用户许可协议（assets/eula.txt）三处：抬头、开发方署名、最低系统版本说明。",
+          "微软登录页（assets/microsoft_auth.html）标题；默认手柄配置（assets/controllers/00000000.json）描述。",
+          "关于页移除 FCL-Team 开发者项与 Fold Craft Launcher（上游）链接项。上游出处仍在开源许可页（assets/licenses）保留，GPL 要求保留版权与许可文本，不随页面展示项一并删除。",
+          "设置页「自定义启动器名称」的默认值仍是旧名：玩家不填时游戏侧看到的将是旧名。",
+          "未改并保持原样：内部资源 id（fclCheckedTextView、fclTextView、fcl_spinner_popup_enter/exit）用户不可见，且动画文件重命名牵连 CI 脚本；数据文件名 fclversion.cfg 是既有整合包的数据格式名，改名会导致旧整合包识别失败。",
+          "改动只替换可见文案，不触碰逻辑；粤语资源通过 XML 解析校验，手柄配置通过 JSON 解析校验。"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "release",
     "versionCode": 148,
     "versionName": "0.98.5",
     "date": "2026.11.02",
