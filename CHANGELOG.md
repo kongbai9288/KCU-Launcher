@@ -2,6 +2,20 @@
 
 每次版本更新都会写入：版本号、日期、本次变更、执行者。
 
+## 0.98.7 — 2026.11.03
+
+执行者：**yuanbao**
+
+严格代码审查，两处，都在文件管理的改名流程。
+
+- `library/browser/FileBrowserActivity.java`：**名字没改就点确定，会被回绝一句「已存在」**。对话框预填原名，拦截用的是「目标已存在」判断，而目标就是文件自己。玩家只是打开看了一眼原名，什么都没做却挨一句提示。现在名字与原名完全相同时视为无变化，直接返回
+- `library/browser/FileBrowserActivity.java`：改名对话框打开时**全选整个文件名、扩展名也一起选中**，玩家一打字 `.jar` 就没了。改成只选中主文件名部分（最后一个点之前）。点在开头（`.minecraft` 这类）或没有扩展名时仍全选
+- **本轮编译失败过一次**：最初给 `EditDialog` 的构造在 callback 之后追加 Boolean 参数，五个架构全红 —— callback 不再位于参数末位，Kotlin 侧用尾随 lambda 写的调用点全部失效。`EditDialog` 是全项目共用组件。改为构造返回后用 `getEditText().setSelection` 设置选区，共用组件一行不动
+- 复核上一轮「安装器进程日志目录改用 `KCUPath.LOG_DIR`」：`ProcessService` 在 `:jvm` 进程，而 `LOG_DIR` 只在 `loadPaths` 里赋值。核对确认 `ProcessService` 在 `onStartCommand` 开头自己调用了 `loadPaths`，取值在其后，不会取到空值，那处改动成立
+- 编译通过，run 41586900032，五架构 success，产物 all 326311134 / x86_64 174934800 / arm64 169241504 / arm 161982566 / x86 155631737 B
+- 审核回执 SHA-1 `a32391404651a1ec7204f05e6ad9643787db3eab`（`ifnam`）
+- 未验证：真机一次没跑过；改名对话框的实际观感、选中范围、提示是否不再弹出，都没试过
+
 ## 0.98.6 — 2026.11.03
 
 执行者：**yuanbao**
