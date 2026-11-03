@@ -499,11 +499,17 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                     ? currentPath.resolve("KCU").toFile() : currentPath.toFile();
             // 这个目录可能还没建过。交给外部应用一个不存在的路径，对方打开是空的，
             // 看不出是自己没建还是启动器给错了
-            if (!externalTarget.exists() && !externalTarget.mkdirs()) {
+            // 路径可能已被同名文件占用：exists() 为真就跳过检查的话，
+            // 会把一个文件当目录交给外部应用，随后取 content uri 也会失败
+            if (!externalTarget.isDirectory() && !externalTarget.mkdirs()) {
                 toast(R.string.file_browser_operation_failed);
                 return;
             }
-            Uri uri = FileProvider.getUriForFile(this, getApplication().getPackageName() + ".provider", externalTarget);
+            Uri uri = uriFor(externalTarget);
+            if (uri == null) {
+                toast(R.string.file_browser_operation_failed);
+                return;
+            }
             // 这里要的是"用别的应用打开这个文件夹"，而 ACTION_SEND 的意思是"把这个内容发出去"。
             // 用 ACTION_SEND 给一个目录，对面多半什么也打不开，而这个按钮点了又没有任何提示，
             // 看起来就是没反应。改成 ACTION_VIEW
@@ -1216,13 +1222,36 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         super.onDestroy();
     }
 
+    /**
+     * FileProvider 在路径不在配置覆盖范围、路径被同名文件占用、或规范化路径读取失败时
+     * 会抛异常。原来两处调用都放在点击回调里且不兜住，异常一路抛到框架，
+     * 表现为点「用别的应用打开」或「分享」直接闪退。取不到就明确提示，不再崩
+     */
+    @Nullable
+    private Uri uriFor(File file) {
+        try {
+            return FileProvider.getUriForFile(this, getApplication().getPackageName() + ".provider", file);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            Logging.LOG.log(Level.WARNING, "Failed to build content uri: " + file, e);
+            return null;
+        }
+    }
+
     private void shareFile(File file) {
+        Uri uri = uriFor(file);
+        if (uri == null) {
+            toast(R.string.file_browser_operation_failed);
+            return;
+        }
         Intent intent = new Intent(Intent.ACTION_SEND);
-        Uri uri = FileProvider.getUriForFile(this, getApplication().getPackageName() + ".provider", file);
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_STREAM, uri);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        startActivity(Intent.createChooser(intent, getString(R.string.file_browser_share_title)));
+        try {
+            startActivity(Intent.createChooser(intent, getString(R.string.file_browser_share_title)));
+        } catch (ActivityNotFoundException e) {
+            toast(R.string.file_browser_operation_failed);
+        }
     }
 
 }
