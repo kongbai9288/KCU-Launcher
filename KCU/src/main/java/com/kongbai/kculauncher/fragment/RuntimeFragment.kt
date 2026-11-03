@@ -232,8 +232,8 @@ class RuntimeFragment : KCUFragment(), View.OnClickListener {
                     getString(
                         R.string.missing_runtime_arch_files,
                         deviceArch,
-                        "FCL-release-x.x.x.x-$deviceArch.apk",
-                        "FCL-release-x.x.x.x-all.apk"
+                        "KCU-release-x.x.x.x-$deviceArch.apk",
+                        "KCU-release-x.x.x.x-all.apk"
                     )
                 )
                 return
