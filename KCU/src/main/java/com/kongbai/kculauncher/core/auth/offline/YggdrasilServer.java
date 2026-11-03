@@ -76,8 +76,8 @@ public class YggdrasilServer extends HttpServer {
                         "localhost"
                 )),
                 pair("meta", mapOf(
-                        pair("serverName", "FCL"),
-                        pair("implementationName", "FCL"),
+                        pair("serverName", "KCU"),
+                        pair("implementationName", "KCU"),
                         pair("implementationVersion", "1.0"),
                         pair("feature.non_email_login", true)
                 ))
