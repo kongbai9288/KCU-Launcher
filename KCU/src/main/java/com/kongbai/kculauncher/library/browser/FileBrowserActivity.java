@@ -523,8 +523,8 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 try {
                     startActivity(viewIntent);
                     handled = true;
-                } catch (ActivityNotFoundException ignored) {
-                    // 认领了却起不来，走下面的兜底
+                } catch (ActivityNotFoundException | SecurityException ignored) {
+                    // 认领了却起不来，或对方读不到这个 uri，走下面的兜底
                 }
             }
             if (!handled) {
@@ -542,7 +542,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                     chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     chooser.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                     startActivity(chooser);
-                } catch (ActivityNotFoundException e) {
+                } catch (ActivityNotFoundException | SecurityException e) {
                     toast(R.string.file_browser_operation_failed);
                 }
             }
@@ -1262,7 +1262,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             Intent chooser = Intent.createChooser(intent, getString(R.string.file_browser_share_title));
             chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(chooser);
-        } catch (ActivityNotFoundException e) {
+        } catch (ActivityNotFoundException | SecurityException e) {
             toast(R.string.file_browser_operation_failed);
         }
     }
