@@ -12,8 +12,7 @@ import java.util.function.Consumer
 class EditDialog @JvmOverloads constructor(
     context: Context,
     private val defaultText: String = "",
-    private val callback: Consumer<String>,
-    private val selectMainName: Boolean = false
+    private val callback: Consumer<String>
 ) : KCUDialog(context),
     View.OnClickListener {
     var binding: DialogEditBinding
@@ -30,22 +29,9 @@ class EditDialog @JvmOverloads constructor(
             editText.setText(defaultText)
         }
         if (defaultText.isNotEmpty()) {
-            if (selectMainName) {
-                // 重命名时只选中主文件名、把扩展名留在外面：
-                // 整个名字全选的话玩家一打字 ".jar" 就没了，
-                // 而正常的文件管理器都是只选中名字部分
-                // 点开头或没有扩展名（".minecraft" 这类）时仍全选
-                val dot = defaultText.lastIndexOf('.')
-                if (dot > 0) {
-                    binding.editText.setSelection(0, dot)
-                } else {
-                    binding.editText.selectAll()
-                }
-            } else {
-                // 传了默认文本（重命名、改名）时全选：光标默认在最前面，
-                // 玩家想改后缀得先把光标挪过去；标准做法是打开即全选，直接输入就覆盖
-                binding.editText.selectAll()
-            }
+            // 传了默认文本（重命名、改名）时全选：光标默认在最前面，
+            // 玩家想改后缀得先把光标挪过去；标准做法是打开即全选，直接输入就覆盖
+            binding.editText.selectAll()
         }
     }
 
