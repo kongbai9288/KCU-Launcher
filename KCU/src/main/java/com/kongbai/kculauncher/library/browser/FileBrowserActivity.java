@@ -879,6 +879,11 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 toast(R.string.file_browser_invalid_name);
                 return;
             }
+            // 名字一个字没改就点确定：下面的 exists 判断会把文件自己当成"已存在"，
+            // 玩家只是打开看了一眼原名，却被回绝一句已存在
+            if (name.equals(file.getName())) {
+                return;
+            }
             File target = new File(file.getParentFile(), name);
             if (target.exists()) {
                 toast(R.string.file_browser_exists);
@@ -890,7 +895,7 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                             toast(R.string.file_browser_created_hidden);
                         }
                     });
-        });
+        }, true);
         dialog.setTitle(getString(R.string.file_browser_rename));
         dialog.show();
     }
