@@ -1,4 +1,4 @@
-[English](./English.md) | [中文](./README.md)
+[中文](./README.md) ｜ 英文版尚未建立
 
 ![kcu logo](./docs/assets/kcu_icon.png)
 
