@@ -532,11 +532,16 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                 Intent send = new Intent(Intent.ACTION_SEND);
                 send.setDataAndType(uri, "*/*");
                 // 只给 setDataAndType 的话不少外部应用收不到，EXTRA_STREAM 是通用做法
+                send.setClipData(ClipData.newRawUri("", uri));
                 send.putExtra(Intent.EXTRA_STREAM, uri);
                 send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 send.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                 try {
-                    startActivity(Intent.createChooser(send, getString(R.string.file_browser_open_external)));
+                    // 授权写在 send 上不会自动带到 chooser，外部应用照样读不到
+                    Intent chooser = Intent.createChooser(send, getString(R.string.file_browser_open_external));
+                    chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    chooser.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    startActivity(chooser);
                 } catch (ActivityNotFoundException e) {
                     toast(R.string.file_browser_operation_failed);
                 }
@@ -1245,10 +1250,18 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         }
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("*/*");
+        // 框架把内层 intent 的 ClipData 拷进 ACTION_CHOOSER，却不会拷 EXTRA_STREAM。
+        // 缺了 ClipData，分享面板连预览都读不到这个 uri，会抛
+        // "requires the provider be exported, or grantUriPermission()"
+        intent.setClipData(ClipData.newRawUri("", uri));
         intent.putExtra(Intent.EXTRA_STREAM, uri);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         try {
-            startActivity(Intent.createChooser(intent, getString(R.string.file_browser_share_title)));
+            // 官方文档：经 chooser 授予 URI 权限，必须把 flags 也设在 ACTION_CHOOSER
+            // intent 上，只写在 EXTRA_INTENT 里不会传递给最终选中的应用
+            Intent chooser = Intent.createChooser(intent, getString(R.string.file_browser_share_title));
+            chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(chooser);
         } catch (ActivityNotFoundException e) {
             toast(R.string.file_browser_operation_failed);
         }
