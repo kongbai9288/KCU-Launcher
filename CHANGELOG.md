@@ -3,6 +3,30 @@
 每次版本更新都会写入：版本号、日期、本次变更、执行者。
 
 
+## 0.98.9 — 2026.11.04
+
+执行者：**yuanbao**
+
+严格代码审查，另补齐两版缺失的文档登记。
+
+- **主线此前是红的**：最新提交 `7fbe2e59d`（0.98.9 / 152）对应的 run `41681782081` 为 failure，五个 job 里只有 `Build x86_64` 失败，其余四个全部 success。失败日志接口 403 拉不到，判断依据是同一份代码在四个架构上都编过，属单 job 环境抖动，不是代码错误
+- `library/browser/FileBrowserActivity.java`：0.98.9 给「用别的应用打开」「分享」补了 `ClipData` 与 chooser 授权，方向正确，但**三处 `startActivity` 仍只捕获 `ActivityNotFoundException`**。外部应用读不到 content uri 或授权被拒时框架抛 `SecurityException`，异常一路抛到点击回调外，仍是点一下直接闪退。现在三处都补捕获：ACTION_VIEW 分支转为走兜底，另外两处明确提示失败
+- 等价验证：正常启动、`ActivityNotFoundException` 新旧一致；`SecurityException` 旧=闪退、新=提示失败；`IllegalStateException` 两边都不捕获，如实保留。静态校验 8 行差异（4 删 4 增）、括号平衡、三处 catch 全覆盖、正常路径零额外动作
+- **文档缺口**：0.98.9 升了版本号却没写台账，CHANGELOG 停在 0.98.7、连 0.98.8 都没有章节。本轮补 `version_map` 首条 0.98.9 / 152，CHANGELOG 补 0.98.9 与 0.98.8 两章，原有章节一字未动
+- 编译通过，run 41733617922，五架构 success，产物 all 326310692 / x86_64 174933585 / arm64 169240506 / arm 161982156 / x86 155630081 B
+- 未验证：真机一次没跑过；`SecurityException` 分支没真机构造过；上次 x86_64 失败的真实原因未能从日志确认
+
+## 0.98.8 — 2026.11.03
+
+执行者：**yuanbao**
+
+审查轮，恢复真实仓库连接后做全量核对，再修一处代码缺陷。
+
+- `library/browser/FileBrowserActivity.java`：「用别的应用打开」「分享」两处直接调 `FileProvider.getUriForFile` 且不兜底，路径不在 provider 覆盖范围、被同名文件占用、或规范化路径读取失败时会抛异常并一路到框架，表现为点一下闪退。统一走 `uriFor()`，取不到就提示而不崩；目录判断由 `exists()` 改为 `isDirectory()`；分享补 `ActivityNotFoundException` 兜底
+- 全量核对发现本地是稀疏检出：远端 1527 个文本文件本地只有 170 个，其中 61 个分叉且双向（源码多为本地落后、文档多为本地领先）。整份覆盖会回退十几个源码文件，因此所有补丁都拉远端内容精确替换并带 sha 推送，双向分叉的防错清单改用合并而非覆盖
+- 编译通过，run 41668789886，五架构 success，产物 all 326311100 / x86_64 174934290 / arm64 169241006 / arm 161982620 / x86 155630928 B
+- 未验证：真机一次没跑过；FileProvider 三种异常是按接口语义推演的等价验证，没在真机上构造过
+
 ## 0.98.7 — 2026.11.03
 
 执行者：**yuanbao**
