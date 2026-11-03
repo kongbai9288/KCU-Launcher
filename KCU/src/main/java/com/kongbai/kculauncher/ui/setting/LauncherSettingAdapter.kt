@@ -240,7 +240,7 @@ class LauncherSettingAdapter(
                         ?: ""
                 },
                 { text -> prefs.edit { putString("custom_launcher_name", text) } },
-                $$"Fold Craft Launcher/${launcher_version}",
+                $$"KCU Launcher/${launcher_version}",
                 R.string.settings_launcher_custom_launcher_name_desc,
                 group = SettingGroup.InGame
             ),
