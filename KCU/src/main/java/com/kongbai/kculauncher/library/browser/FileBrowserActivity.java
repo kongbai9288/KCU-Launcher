@@ -895,7 +895,14 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
                             toast(R.string.file_browser_created_hidden);
                         }
                     });
-        }, true);
+        });
+        // 只选中主文件名、把扩展名留在外面：整个名字一起全选的话，
+        // 玩家一打字 ".jar" 就没了，正常的文件管理器都是只选中名字部分。
+        // 点在开头或没有扩展名（".minecraft" 这类）时保持对话框默认的全选
+        int dot = file.getName().lastIndexOf('.');
+        if (dot > 0) {
+            dialog.getEditText().setSelection(0, dot);
+        }
         dialog.setTitle(getString(R.string.file_browser_rename));
         dialog.show();
     }
