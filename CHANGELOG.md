@@ -2,6 +2,22 @@
 
 每次版本更新都会写入：版本号、日期、本次变更、执行者。
 
+## 0.98.6 — 2026.11.03
+
+执行者：**yuanbao**
+
+去旧标识（Fold Craft Launcher / FCL-Team），六处，全部是用户可见位置。
+
+- `res/values-zh-rHK/strings.xml`：**粤语资源整份漏改**。界面语言为粤语时，启动页标题、权限提示、关于页正文、整合包不支持提示、崩溃提示五处仍显示旧名，关于页正文仍写「由 FCL-Team 開發」。此前只改了默认（英文）与简体两份
+- `assets/eula.txt`：抬头、开发方署名、最低系统版本说明三处
+- `assets/microsoft_auth.html`：微软登录页标题
+- `assets/controllers/00000000.json`：默认手柄配置的 description
+- `ui/setting/AboutPage.kt`：移除 FCL-Team 开发者项与「Fold Craft Launcher（上游）」链接项。上游出处仍在 `assets/licenses` 保留（GPL 要求保留版权与许可文本）
+- `ui/setting/LauncherSettingAdapter.kt`：「自定义启动器名称」的默认值仍是旧名，玩家不填时游戏侧看到的将是旧名
+- 未改：`fclCheckedTextView` / `fclTextView` / `fcl_spinner_popup_*` 等内部资源 id 用户不可见且牵连动画资源重命名与 CI 脚本；`fclversion.cfg` 是既有整合包的数据格式名，改名会导致旧整合包识别失败
+- 粤语资源通过 XML 解析校验，手柄配置通过 JSON 解析校验
+- 审核回执 SHA-1 `7822cb693a39ec3f19e97bd0fbf08362555b06f6`（`<stri`）
+
 ## 0.96.0 — 2026.10.31
 
 执行者：**yuanbao**
