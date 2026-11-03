@@ -4,7 +4,7 @@
  "version": "1.2.1",
  "versionCode": 1210,
  "author": "Tungsten",
- "description": "Default controller of Fold Craft Launcher.",
+ "description": "Default controller of KCU Launcher.",
  "controllerVersion": 21,
  "buttonStyles": [
   {
