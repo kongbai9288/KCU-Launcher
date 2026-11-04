@@ -168,7 +168,13 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_browser);
 
-        fileBrowser = (FileBrowser) getIntent().getExtras().getSerializable("config");
+        // getExtras() 可能为 null（外部直接启动、系统恢复路径），config 反序列化
+        // 失败时也可能不是 FileBrowser。原来直接取，任一情况都会在启动时崩
+        Bundle extras = getIntent().getExtras();
+        Object rawConfig = extras == null ? null : extras.getSerializable("config");
+        fileBrowser = rawConfig instanceof FileBrowser
+                ? (FileBrowser) rawConfig
+                : new FileBrowser.Builder(this).create();
 
         SharedPreferences preferences = getSharedPreferences(PREFERENCES_NAME, MODE_PRIVATE);
         sortMode = parseSortMode(preferences.getString(KEY_SORT_MODE, null));
@@ -1056,7 +1062,20 @@ public class FileBrowserActivity extends KCUActivity implements View.OnClickList
             int done;
             if (cut) {
                 done = FileOperator.moveTo(files, dir);
-                FileClipboard.clear();
+                // 只有全部成功才清空剪贴板。原来无条件清空：逐个移动时失败的
+                // 那几个仍留在原地，但剪贴板已经没了，玩家看到「成功 N 个、失败
+                // M 个」之后也没法只重试失败的那几个
+                List<File> remaining = new ArrayList<>();
+                for (File source : files) {
+                    if (source.exists()) {
+                        remaining.add(source);
+                    }
+                }
+                if (remaining.isEmpty()) {
+                    FileClipboard.clear();
+                } else {
+                    FileClipboard.cut(remaining);
+                }
             } else {
                 done = FileOperator.copyTo(files, dir);
             }

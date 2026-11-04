@@ -97,6 +97,16 @@ class SelectedFile(val uri: Uri) {
     }
 
     /**
+     * 把所选内容拷贝到目标目录，自动使用安全且不重名的文件名。
+     * 打不开源、写入失败时返回 null（残缺目标文件已被删掉）；
+     * 调用方据此就能明确报错，而不是拿一个不存在的文件继续往下走。
+     */
+    fun copyToDir(context: Context, dir: File): File? {
+        val dest = File(dir, uniqueName(dir, fileName(context)))
+        return if (copyTo(context, dest)) dest else null
+    }
+
+    /**
      * 生成安全且不重名的目标文件名：content 源给的名字可能带非法字符、为空，
      * 多选时还可能同名，直接拿来用会互相覆盖
      */

@@ -21,7 +21,6 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.Paths
 import com.kongbai.kculauncher.mio.util.getScreenHeight
 import com.kongbai.kculauncher.mio.util.getScreenWidth
@@ -127,27 +126,20 @@ class OpenFolderDialog(
                 files.forEach { file ->
                     ensureActive()
                     val name = file.fileName(context)
-                    val inputStream = file.openInputStream(context)
-
-                    runCatching {
-                        inputStream?.use { stream ->
-                            val outPath = Paths.get(targetDir, name)
-                            Files.newOutputStream(outPath).use { out ->
-                                stream.copyTo(out)
-                            }
-
-                            withContext(Dispatchers.Main) {
-                                refreshFiles()
-                            }
-                        }
-                    }.onFailure { e ->
+                    // 原来这里自己手写了一遍拷贝：打不开源时 ?.use 什么都不做，
+                    // 既没有文件也没有提示，进度条一消失看起来就像导入成功了；
+                    // 目标名直接用 provider 给的名字，同名会被无声覆盖（数据丢失），
+                    // 名字带非法字符时还会抛异常并把整段堆栈弹给玩家看。
+                    // 统一走 SelectedFile：安全命名、不覆盖、失败即删残缺文件
+                    val copied = file.copyToDir(context, File(targetDir))
+                    if (copied == null) {
                         withContext(Dispatchers.Main) {
                             KCUAlertDialog.Builder(activity)
                                 .setMessage(
                                     activity.getString(
                                         R.string.ingame_folder_import_failed,
                                         name,
-                                        e.stackTraceToString()
+                                        activity.getString(R.string.file_browser_operation_failed)
                                     )
                                 )
                                 .setPositiveButton(
@@ -155,6 +147,11 @@ class OpenFolderDialog(
                                 ) {}.create().show()
                         }
                     }
+                }
+                // 全部导入完只刷新一次：原来每导一个就重建一次列表，而列表是
+                // 在界面线程同步列目录并逐行查磁盘的，导入十个就扫十遍
+                withContext(Dispatchers.Main) {
+                    refreshFiles()
                 }
             } catch (_: CancellationException) {
             } catch (_: Exception) {
