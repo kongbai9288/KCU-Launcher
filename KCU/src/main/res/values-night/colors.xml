@@ -10,4 +10,12 @@
     <color name="kcu_line">#1AE4E1D8</color>
     <color name="kcu_card">#262624</color>
     <color name="kcu_watermark_bg">#33262624</color>
+    <!-- 揉纸设计系统：深色同名覆盖（桌面端 v3 的 [data-theme=dark] 色板） -->
+    <color name="kcu_paper">#292A28</color>
+    <color name="kcu_paper_hi">#323330</color>
+    <color name="kcu_backdrop">#1E1F1E</color>
+    <color name="kcu_accent_hi">#9ACCC3</color>
+    <color name="kcu_sel">#297FB8AF</color>
+    <color name="kcu_line_2">#2EE9E7DE</color>
+    <color name="kcu_warn">#D9755C</color>
 </resources>

@@ -1,6 +1,28 @@
 [
  {
   "type": "release",
+  "versionCode": 154,
+  "versionName": "0.99.0",
+  "date": "2026.11.05",
+  "author": "yuanbao",
+  "description": [
+   {
+    "lang": "zh_CN",
+    "text": [
+     "设计稿落地第一轮：揉纸设计系统 token 化、设计稿归档、功能入口全景文档。",
+     "⓿ 弹窗一次性显示完整：dialog_alert 的 ScrollView 去掉 layout_weight 改 wrap_content，KCUAlertDialog.checkHeight 不再把窗口钳到「屏高-30dp」；短内容完整同屏，只有正文超过屏高 60% 时才给正文设上限，按钮行在滚动区之外永远可见。年龄页 KcuAgeActivity 去掉外层 ScrollView。",
+     "❶ 年龄不再固定 5 档：KcuAgeGate.buildInto 删掉 {6,12,16,18,20} 且不再默认勾中 18，改为周岁输入并校验 1..120；设置页「功能中心」可重新填写。",
+     "❷ client_id 公开化：build.gradle.kts 改读 OAUTH_CLIENT_ID 公开变量（非 Secret）；OAuth.authenticate 在 client_id 为空时直接抛可读中文异常，不再发出缺参请求，AADSTS900144 不再以英文原串弹给玩家。未写死任何未经验证的第三方 UUID。",
+     "❸ FCL 公共根不再沿用：KCUPath.resolveSharedRoot 只认 /sdcard/KCU，新增 migrateLegacySharedRoot 以「只复制不删源」方式搬迁，由功能中心显式触发；CACHE_DIR 去掉 fclauncher。",
+     "❹ 功能入口：设置页新增「功能中心」，集中承载重填年龄与旧目录迁移，并列出只有底层类、没有独立菜单项的能力清单。",
+     "⚠ 远端真实状态核对：main 最新提交 391e55b9，构建脚本停在 0.98.10 / 153；此前对话中报出的 0.98.11 / 154 与 run 41796421308 在本仓库工作流中不存在，本轮按真实远端重新起版。",
+     "未验证：真机未安装，弹窗观感、年龄输入、迁移耗时、client_id 配置后能否真登录成功均未实测。"
+    ]
+   }
+  ]
+ },
+ {
+  "type": "release",
   "versionCode": 153,
   "versionName": "0.98.10",
   "date": "2026.11.04",

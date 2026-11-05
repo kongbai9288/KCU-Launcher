@@ -47,7 +47,9 @@ android {
     val kcuKeyAlias = System.getenv("KCU_KEY_ALIAS") ?: localProperty?.getProperty("key.alias") ?: "KCU-Key"
     val keyPwd = System.getenv("KCU_KEY_PASSWORD") ?: pwd
     val curseApiKey = System.getenv("CURSE_API_KEY") ?: localProperty?.getProperty("curse.api.key")
-    val oauthApiKey = System.getenv("OAUTH_API_KEY") ?: localProperty?.getProperty("oauth.api.key")
+    // client_id 是公开标识而非密钥，可用仓库变量 / local.properties 注入，不依赖 CI Secret。
+    // AADSTS900144 的根因正是这里为空串：请求体里根本没有 client_id。
+    val oauthClientId = System.getenv("OAUTH_CLIENT_ID") ?: localProperty?.getProperty("oauth.client.id")
     val useReleaseSign = file("${rootDir}/key-store.jks").exists() && !pwd.isNullOrEmpty()
     // 命令行 -Darch 优先；local.properties 仅在命令行未指定时生效
     if (System.getProperty("arch") == null && localProperty != null && localProperty.getProperty(
@@ -91,8 +93,8 @@ android {
         applicationId = "com.kcu.launcher"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 153
-        versionName = "0.98.10"
+        versionCode = 154
+        versionName = "0.99.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
@@ -126,7 +128,7 @@ android {
             resValue("string", "app_version", defaultConfig.versionName.toString())
             // KCU：空则写空串，运行时据此切换国内镜像，不依赖 "null" 字符串比较
             resValue("string", "curse_api_key", curseApiKey ?: "")
-            resValue("string", "oauth_api_key", oauthApiKey ?: "")
+            resValue("string", "oauth_api_key", oauthClientId ?: "")
         }
     }
 

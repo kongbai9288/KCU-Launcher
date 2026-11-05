@@ -1,0 +1,2729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FCL · 揉纸启动器 桌面端 v3</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23F1EFE8'/%3E%3Ctext x='32' y='44' font-size='32' text-anchor='middle' fill='%233a3a3a' font-family='serif'%3EF%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap">
+<style>
+  :root{
+    /* —— 沿用移动端设计稿的揉纸色板 —— */
+    --paper:      #F1EFE8;
+    --paper-hi:   #FAF8F2;
+    --ink:        #2C2C2A;
+    --ink-2:      #55534C;
+    --ink-3:      #8E8B80;
+    --line:       rgba(40,40,38,.10);
+    --line-2:     rgba(40,40,38,.16);
+    --accent:     #3D6B66;
+    --accent-hi:  #4F8580;
+    --sel:        rgba(61,107,102,.10);
+    --card:       rgba(255,255,255,.72);
+    --warn:       #B8543F;
+
+    --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+    --sp-6: 24px; --sp-10: 40px;
+
+    --r-sm: 4px; --r-md: 8px; --r-lg: 10px;
+  }
+
+  /* ============ 深色揉纸主题 ============ */
+  .win[data-theme="dark"]{
+    --paper:      #292A28;
+    --paper-hi:   #323330;
+    --ink:        #E9E7DE;
+    --ink-2:      #BDBAB0;
+    --ink-3:      #7F7D75;
+    --line:       rgba(255,255,255,.10);
+    --line-2:     rgba(255,255,255,.18);
+    --accent:     #7FB8AF;
+    --accent-hi:  #9ACCC3;
+    --sel:        rgba(127,184,175,.16);
+    --card:       rgba(255,255,255,.055);
+    --warn:       #D9755C;
+    color:var(--ink);
+  }
+  .win[data-theme="dark"]{
+    background-image:
+      radial-gradient(1200px 800px at 18% 12%, rgba(255,255,255,.055), transparent 60%),
+      radial-gradient(900px 700px at 85% 92%, rgba(0,0,0,.42), transparent 62%),
+      linear-gradient(128deg,transparent 0%,transparent 30%,rgba(0,0,0,.28) 30.6%,rgba(255,255,255,.06) 31.2%,transparent 32%,transparent 100%),
+      linear-gradient(52deg,transparent 0%,transparent 62%,rgba(255,255,255,.05) 62.5%,rgba(0,0,0,.24) 63.2%,transparent 64%,transparent 100%),
+      linear-gradient(178deg,transparent 0%,transparent 78%,rgba(0,0,0,.2) 78.4%,rgba(255,255,255,.045) 78.9%,transparent 79.5%,transparent 100%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.85  0 0 0 0 0.85  0 0 0 0 0.8  0 0 0 .05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .win[data-theme="dark"]::before{
+    box-shadow:inset 0 0 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+  .win[data-theme="dark"] .titlebar{background:rgba(0,0,0,.28);}
+  .win[data-theme="dark"] .statusbar{background:rgba(0,0,0,.22);}
+  .win[data-theme="dark"] .tb-search input,
+  .win[data-theme="dark"] select.sel,
+  .win[data-theme="dark"] input.txt,
+  .win[data-theme="dark"] .filter,
+  .win[data-theme="dark"] .seg{background:rgba(0,0,0,.22);}
+  .win[data-theme="dark"] .btn:hover{background:rgba(255,255,255,.09);}
+  .win[data-theme="dark"] table.grid th,
+  .win[data-theme="dark"] .skin-cell,
+  .win[data-theme="dark"] .launch-hint kbd,
+  .win[data-theme="dark"] .chip,
+  .win[data-theme="dark"] kbd{background:rgba(255,255,255,.05);}
+  .win[data-theme="dark"] tbody tr:hover{background:rgba(255,255,255,.05);}
+  .win[data-theme="dark"] .rail button:hover,
+  .win[data-theme="dark"] .nav-item:hover,
+  .win[data-theme="dark"] .ver-current:hover,
+  .win[data-theme="dark"] .ver-item:hover,
+  .win[data-theme="dark"] .gear:hover,
+  .win[data-theme="dark"] .x-btn:hover,
+  .win[data-theme="dark"] .icon-btn:hover,
+  .win[data-theme="dark"] .sb-btn:hover,
+  .win[data-theme="dark"] .winctl button:hover,
+  .win[data-theme="dark"] .dl-row:hover{background:rgba(255,255,255,.07);}
+  .win[data-theme="dark"] .launch{color:#26272A;background:var(--ink);box-shadow:0 4px 16px rgba(0,0,0,.4);}
+  .win[data-theme="dark"] .launch:hover{background:#fff;}
+  .win[data-theme="dark"] .seg button.active{background:var(--ink);color:#26272A;}
+  .win[data-theme="dark"] .tb-logo{background:var(--ink);color:#26272A;}
+  .win[data-theme="dark"] .switch{background:rgba(255,255,255,.2);}
+  .win[data-theme="dark"] .switch::after{background:#DAD8D0;}
+  .win[data-theme="dark"] .logdrawer{background:rgba(18,19,18,.94);color:#CFCCC2;}
+  .win[data-theme="dark"] .notice-ico{background:rgba(127,184,175,.16);}
+  .win[data-theme="dark"] .stat-ico{filter:brightness(1.12) saturate(.85);}
+  .win[data-theme="dark"] .nav-item.active{background:rgba(127,184,175,.22);}
+  .win[data-theme="dark"] .tagline,.win[data-theme="dark"] .ver-item-time,.win[data-theme="dark"] .flabel{color:#9B988E;}
+  .win[data-theme="dark"] .notice,.win[data-theme="dark"] .panel,.win[data-theme="dark"] .vercard,.win[data-theme="dark"] .acct,.win[data-theme="dark"] .side-card,.win[data-theme="dark"] .set-card,.win[data-theme="dark"] .stat{box-shadow:0 4px 16px rgba(0,0,0,.32);}
+  .win[data-theme="dark"] .modal{box-shadow:0 34px 80px rgba(0,0,0,.6);}
+  .win[data-theme="dark"] .mem-bar,
+  .win[data-theme="dark"] .progress{background:rgba(255,255,255,.12);}
+  .win[data-theme="dark"] .ctx{box-shadow:0 14px 34px rgba(0,0,0,.5);}
+  .win[data-theme="dark"] table.grid td{color:#D7D4CA;}
+  .win[data-theme="dark"] .tagline,.win[data-theme="dark"] .rec-author,.win[data-theme="dark"] .rec-meta,
+  .win[data-theme="dark"] .panel-sub,.win[data-theme="dark"] .issue-d,.win[data-theme="dark"] .dl-meta{color:#A8A598;}
+  .win[data-theme="dark"] .badge.ok{background:rgba(127,184,175,.22);color:#A9DED5;}
+  .win[data-theme="dark"] .badge.up{background:rgba(122,162,214,.22);color:#A2C8F2;}
+  .win[data-theme="dark"] .badge.err{background:rgba(217,117,92,.22);color:#F2AB92;}
+  .win[data-theme="dark"] .badge.miss{background:rgba(230,180,90,.22);color:#F0C87E;}
+  .win[data-theme="dark"] .badge.off{background:rgba(255,255,255,.10);color:#9E9B90;}
+  .win[data-theme="dark"] .stat-pill b{color:var(--accent-hi);}
+  .win[data-theme="dark"] tr.disabled td{opacity:.55;}
+  .win[data-theme="dark"] .notice-ico,.win[data-theme="dark"] .issue-ico.err{background:rgba(217,117,92,.18);}
+  .win[data-theme="dark"] .notice-ico{background:rgba(127,184,175,.18);}
+
+  .win[data-theme="dark"] .ibadge:not(.f):not(.o):not(.q){background:linear-gradient(180deg,#86AE62 50%,#8A6A50 50%);}
+
+  /* 主题切换动画 */
+  .win,.win *,.win *::before,.win *::after{
+    transition:background-color .22s ease,border-color .22s ease,color .22s ease;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:'Noto Sans SC',-apple-system,'Segoe UI',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(900px 600px at 15% 10%, #6E7B74 0%, transparent 55%),
+      radial-gradient(800px 700px at 90% 95%, #3E4247 0%, transparent 60%),
+      linear-gradient(160deg,#57605C,#33363A 70%);
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+
+  /* ============ 桌面窗口 ============ */
+  .desk-wrap{display:flex;flex-direction:column-reverse;align-items:center;gap:14px;transform-origin:center center;}
+  .win{
+    width:1440px;height:900px;
+    border-radius:10px;
+    position:relative;
+    overflow:hidden;
+    display:flex;flex-direction:column;
+    background-color:var(--paper);
+    background-image:
+      radial-gradient(1200px 800px at 20% 15%, rgba(255,255,255,.55), transparent 60%),
+      radial-gradient(900px 700px at 85% 90%, rgba(0,0,0,.06), transparent 60%),
+      linear-gradient(128deg,transparent 0%,transparent 30%,rgba(0,0,0,.05) 30.6%,rgba(255,255,255,.5) 31.2%,transparent 32%,transparent 100%),
+      linear-gradient(52deg,transparent 0%,transparent 62%,rgba(255,255,255,.45) 62.5%,rgba(0,0,0,.045) 63.2%,transparent 64%,transparent 100%),
+      linear-gradient(178deg,transparent 0%,transparent 78%,rgba(0,0,0,.035) 78.4%,rgba(255,255,255,.4) 78.9%,transparent 79.5%,transparent 100%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.2  0 0 0 0 0.2  0 0 0 0 0.18  0 0 0 .07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    box-shadow:0 1px 2px rgba(0,0,0,.2),0 18px 50px rgba(0,0,0,.35),0 50px 120px rgba(0,0,0,.4);
+  }
+  .win::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:9;
+    box-shadow:inset 0 0 40px rgba(0,0,0,.05), inset 0 0 0 1px rgba(255,255,255,.5);
+    border-radius:10px;
+  }
+
+  /* ---------- 标题栏 ---------- */
+  .titlebar{
+    height:40px;flex-shrink:0;display:flex;align-items:center;gap:var(--sp-3);
+    padding:0 0 0 14px;border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.35);backdrop-filter:blur(6px);
+    -webkit-app-region:drag;user-select:none;position:relative;z-index:6;
+  }
+  .tb-logo{width:20px;height:20px;border-radius:4px;background:var(--ink);color:#fff;
+    font-family:'Noto Serif SC',serif;font-size:12px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;}
+  .tb-name{font-size:12px;color:var(--ink-2);letter-spacing:.5px;}
+  .tb-name b{font-weight:500;color:var(--ink);}
+  .tb-search{
+    margin-left:auto;position:relative;width:260px;
+    -webkit-app-region:no-drag;
+  }
+  .tb-search input{
+    width:100%;height:26px;border-radius:13px;border:1px solid var(--line);
+    background:rgba(255,255,255,.6);padding:0 30px 0 28px;
+    font-family:inherit;font-size:12px;color:var(--ink);outline:none;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  .tb-search input:focus{border-color:var(--accent-hi);box-shadow:0 0 0 3px rgba(61,107,102,.10);}
+  .tb-search .mag{position:absolute;left:9px;top:5px;width:16px;height:16px;color:var(--ink-3);}
+  .tb-search kbd{position:absolute;right:8px;top:6px;font-size:10px;color:var(--ink-3);
+    border:1px solid var(--line);border-radius:3px;padding:0 4px;background:var(--paper-hi);}
+  .tb-search .mag svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .tb-icon{
+    width:34px;height:24px;border:1px solid var(--line);background:rgba(255,255,255,.5);
+    border-radius:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    margin-left:10px;color:var(--ink-2);-webkit-app-region:no-drag;flex-shrink:0;
+  }
+  .tb-icon:hover{border-color:var(--line-2);color:var(--accent);}
+  .tb-icon svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .tb-icon .i-sun{display:none;}
+  .win[data-theme="dark"] .tb-icon{background:rgba(0,0,0,.3);}
+  .win[data-theme="dark"] .tb-icon .i-sun{display:block;}
+  .win[data-theme="dark"] .tb-icon .i-moon{display:none;}
+  .winctl{display:flex;height:100%;-webkit-app-region:no-drag;margin-left:6px;}
+  .winctl button{
+    width:46px;height:100%;border:none;background:none;cursor:pointer;color:var(--ink-2);
+    display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s;
+  }
+  .winctl button:hover{background:rgba(0,0,0,.06);}
+  .winctl button.close:hover{background:var(--warn);color:#fff;}
+  .winctl svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;}
+
+  /* ---------- 主体三栏 ---------- */
+  .body{flex:1;display:flex;min-height:0;position:relative;z-index:2;}
+
+  /* 侧边导航 */
+  /* 可拖拽分隔条 */
+  .grip{
+    width:5px;flex-shrink:0;cursor:col-resize;position:relative;background:transparent;
+    transition:background .15s;
+  }
+  .grip::after{
+    content:"";position:absolute;top:50%;left:1px;width:3px;height:26px;margin-top:-13px;
+    border-radius:2px;background:var(--line-2);transition:background .15s,height .15s;
+  }
+  .grip:hover{background:rgba(61,107,102,.08);}
+  .grip:hover::after,.grip.drag::after{background:var(--accent);height:56px;margin-top:-28px;}
+  body.resizing{cursor:col-resize;user-select:none;}
+  body.resizing iframe{pointer-events:none;}
+
+  .nav{
+    width:var(--nav-w,200px);flex-shrink:0;padding:var(--sp-4) 10px var(--sp-3);
+    border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px;
+    transition:width .18s ease;
+  }
+  .win.narrow .nav{width:64px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;
+    border:none;background:none;border-radius:var(--r-md);cursor:pointer;
+    font-family:inherit;font-size:13px;color:var(--ink-2);width:100%;text-align:left;
+    position:relative;transition:background .14s,color .14s;
+  }
+  .nav-item:hover{background:rgba(0,0,0,.05);color:var(--ink);}
+  .nav-item.active{background:var(--sel);color:var(--accent);font-weight:500;}
+  .nav-item.active::before{
+    content:"";position:absolute;left:-10px;top:11px;width:3px;height:16px;
+    border-radius:0 2px 2px 0;background:var(--accent);
+  }
+  .nav-item svg{width:19px;height:19px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .nav-item .lb{white-space:nowrap;overflow:hidden;}
+  .nav-item .cnt{margin-left:auto;font-size:10px;color:var(--ink-3);
+    background:rgba(0,0,0,.05);border-radius:8px;padding:1px 6px;}
+  .win.narrow .nav-item{justify-content:center;padding:0;}
+  .win.narrow .nav-item .lb,.win.narrow .nav-item .cnt{display:none;}
+  .win.narrow .nav-item:hover::after{
+    content:attr(data-tip);position:absolute;left:52px;top:9px;z-index:20;
+    background:var(--ink);color:#fff;font-size:11px;padding:4px 9px;border-radius:4px;white-space:nowrap;
+  }
+  .nav-sep{height:1px;background:var(--line);margin:10px 4px;}
+  .nav-foot{margin-top:auto;display:flex;flex-direction:column;gap:2px;}
+  .nav-collapse{justify-content:flex-start;color:var(--ink-3);}
+  .win.narrow .nav-collapse{justify-content:center;}
+  .win.narrow .nav-collapse svg{transform:rotate(180deg);}
+
+  /* 中区 */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .toolbar{
+    height:56px;flex-shrink:0;padding:0 var(--sp-6);
+    display:flex;align-items:center;gap:var(--sp-3);border-bottom:1px solid var(--line);
+  }
+  .tb-title{font-family:'Noto Serif SC',serif;font-size:18px;font-weight:700;}
+  .tb-crumb{font-size:11px;color:var(--ink-3);margin-top:2px;}
+  .tb-actions{margin-left:auto;display:flex;align-items:center;gap:var(--sp-2);}
+  .seg{display:flex;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;background:rgba(255,255,255,.5);}
+  .seg button{
+    border:none;background:none;cursor:pointer;font-family:inherit;font-size:12px;
+    padding:6px 11px;color:var(--ink-2);display:flex;align-items:center;gap:4px;
+  }
+  .seg button + button{border-left:1px solid var(--line);}
+  .seg button.active{background:var(--ink);color:#fff;}
+  .seg svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .btn{
+    border:1px solid var(--line);background:var(--card);border-radius:var(--r-md);
+    font-family:inherit;font-size:12px;color:var(--ink-2);cursor:pointer;
+    padding:7px 13px;display:inline-flex;align-items:center;gap:6px;
+    transition:background .14s,border-color .14s,color .14s;
+  }
+  .btn:hover{background:#fff;border-color:var(--line-2);color:var(--ink);}
+  .btn:disabled,.btn[disabled]{opacity:.42;cursor:not-allowed;filter:saturate(.4);}
+  .btn:disabled:hover,.btn[disabled]:hover{background:var(--card);border-color:var(--line);color:var(--ink-2);}
+  .btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn.primary:hover{background:var(--accent-hi);border-color:var(--accent-hi);color:#fff;}
+
+  .scroll{flex:1;overflow-y:auto;padding:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-4);}
+  .scroll::-webkit-scrollbar,.ver-list::-webkit-scrollbar{width:9px;}
+  .scroll::-webkit-scrollbar-thumb,.ver-list::-webkit-scrollbar-thumb{
+    background:rgba(40,40,38,.18);border-radius:5px;border:3px solid transparent;background-clip:content-box;}
+  .scroll::-webkit-scrollbar-thumb:hover{background:rgba(40,40,38,.32);background-clip:content-box;}
+
+  .view{display:none;flex-direction:column;gap:var(--sp-4);}
+  .view.on{display:flex;}
+
+  /* 公告条 */
+  .notice{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:14px 18px;display:flex;gap:var(--sp-4);align-items:flex-start;
+    box-shadow:0 4px 14px rgba(0,0,0,.04);
+  }
+  .notice-ico{
+    width:32px;height:32px;border-radius:var(--r-md);flex-shrink:0;
+    background:rgba(61,107,102,.10);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .notice-ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .notice-main{flex:1;min-width:0;}
+  .notice-head{display:flex;align-items:baseline;gap:10px;}
+  .notice-title{font-family:'Noto Serif SC',serif;font-size:14px;font-weight:700;}
+  .notice-date{font-size:11px;color:var(--ink-3);}
+  .notice-body{font-size:12px;line-height:1.8;color:var(--ink-2);margin-top:4px;}
+  .notice-body b{color:var(--accent);font-weight:600;}
+  .notice-tag{font-size:10px;padding:2px 7px;border-radius:3px;margin-right:5px;
+    background:rgba(61,107,102,.10);color:var(--accent);letter-spacing:.5px;}
+  .x-btn{border:none;background:none;cursor:pointer;color:var(--ink-3);padding:4px;border-radius:4px;}
+  .x-btn:hover{background:rgba(0,0,0,.06);color:var(--ink);}
+  .x-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+  /* 统计卡 */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-3);}
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:13px 16px;display:flex;align-items:center;gap:12px;
+  }
+  .stat-ico{width:34px;height:34px;border-radius:var(--r-md);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;color:#fff;}
+  .stat-ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .stat-v{font-family:'Noto Serif SC',serif;font-size:19px;font-weight:700;line-height:1.1;}
+  .stat-l{font-size:11px;color:var(--ink-3);margin-top:3px;}
+
+  /* 实例表格 */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;}
+  .panel-head{
+    display:flex;align-items:center;gap:var(--sp-3);
+    padding:12px 18px;border-bottom:1px solid var(--line);
+  }
+  .panel-title{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:700;}
+  .panel-sub{font-size:11px;color:var(--ink-3);}
+  .panel-tools{margin-left:auto;display:flex;align-items:center;gap:var(--sp-2);}
+  .filter{
+    border:1px solid var(--line);background:rgba(255,255,255,.6);border-radius:var(--r-md);
+    height:26px;padding:0 9px;font-family:inherit;font-size:11px;color:var(--ink-2);outline:none;cursor:pointer;
+  }
+  table.grid{width:100%;border-collapse:collapse;}
+  table.grid th{
+    text-align:left;font-size:11px;font-weight:500;color:var(--ink-3);letter-spacing:.5px;
+    padding:9px 18px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.4);
+    cursor:pointer;user-select:none;white-space:nowrap;
+  }
+  table.grid th:hover{color:var(--ink-2);}
+  table.grid th .ar{opacity:.35;font-size:9px;margin-left:3px;}
+  table.grid th.sorted .ar{opacity:1;color:var(--accent);}
+  table.grid td{padding:11px 18px;font-size:12.5px;border-bottom:1px solid var(--line);color:var(--ink-2);}
+  table.grid tbody tr{cursor:pointer;transition:background .12s;}
+  table.grid tbody tr:hover{background:rgba(0,0,0,.035);}
+  table.grid tbody tr.sel{background:var(--sel);}
+  table.grid tbody tr.sel .iname{color:var(--accent);font-weight:700;}
+  .iname{font-size:13px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:9px;}
+  .ibadge{width:26px;height:26px;border-radius:5px;flex-shrink:0;
+    background:linear-gradient(180deg,#6B8E4E 50%,#6B4A36 50%);}
+  .ibadge.f{background:linear-gradient(180deg,#4A6FA5 50%,#2C4A7C 50%);}
+  .ibadge.o{background:linear-gradient(180deg,#8A8A8A 50%,#444 50%);}
+  .ibadge.q{background:linear-gradient(180deg,#B8543F 50%,#8C3A28 50%);}
+  .tagline{font-size:10px;color:var(--ink-3);margin-top:2px;padding-left:35px;}
+  .chip{font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid var(--line);
+    background:var(--paper-hi);color:var(--ink-2);white-space:nowrap;}
+  .mono{font-variant-numeric:tabular-nums;}
+  .run-dot{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--accent);}
+  .run-dot::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);}
+  .row-act{opacity:0;transition:opacity .12s;}
+  tr:hover .row-act,tr.sel .row-act{opacity:1;}
+  .icon-btn{border:none;background:none;cursor:pointer;color:var(--ink-3);padding:4px;border-radius:4px;}
+  .icon-btn:hover{background:rgba(0,0,0,.07);color:var(--ink);}
+  .icon-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+  /* 网格视图 */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:var(--sp-3);}
+  .ins-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:14px;cursor:pointer;transition:transform .14s,box-shadow .14s,border-color .14s;
+  }
+  .ins-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.08);}
+  .ins-card.sel{border-color:var(--accent);box-shadow:0 0 0 2px rgba(61,107,102,.18);}
+  .ins-card .cover{height:78px;border-radius:6px;margin-bottom:11px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#6B8E4E,#3D6B66);}
+  .ins-card .cover.b{background:linear-gradient(135deg,#4A6FA5,#2C4A7C);}
+  .ins-card .cover.c{background:linear-gradient(135deg,#B8543F,#6B4A36);}
+  .ins-card .cover.d{background:linear-gradient(135deg,#8A8A8A,#2C2C2A);}
+  .ins-card .cover::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.25) 45%,transparent 52%);}
+  .ins-card h4{font-size:13px;font-weight:600;}
+  .ins-card p{font-size:11px;color:var(--ink-3);margin-top:4px;line-height:1.6;}
+
+  /* ---------- 右侧操作面板 ---------- */
+  .side{
+    width:var(--side-w,320px);flex-shrink:0;border-left:1px solid var(--line);
+    padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-3);
+    overflow-y:auto;
+  }
+  .side::-webkit-scrollbar{width:9px;}
+  .side::-webkit-scrollbar-thumb{background:rgba(40,40,38,.18);border-radius:5px;border:3px solid transparent;background-clip:content-box;}
+  .acct{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:13px;display:flex;align-items:center;gap:12px;backdrop-filter:blur(4px);
+  }
+  .face{width:46px;height:46px;border-radius:6px;flex-shrink:0;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#E8D0B8,#C8956C);}
+  .face::before{content:"";position:absolute;top:0;left:0;right:0;height:40%;background:#6B4A36;}
+  .face::after{content:"";position:absolute;top:50%;left:15%;right:15%;height:4px;background:#3B6EA5;box-shadow:0 8px 0 #C8956C;}
+  .acct-info{flex:1;min-width:0;}
+  .acct-name{font-weight:700;font-size:14px;}
+  .acct-type{font-size:11px;color:var(--ink-3);margin-top:2px;}
+  .link-btn{background:none;border:none;cursor:pointer;color:var(--accent);font-size:11px;
+    padding:4px 8px;border-radius:4px;font-family:inherit;}
+  .link-btn:hover{background:var(--sel);}
+
+  .vercard{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;}
+  .ver-current{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;
+    border:none;background:none;width:100%;text-align:left;font-family:inherit;color:inherit;}
+  .ver-current:hover{background:rgba(0,0,0,.03);}
+  .ver-icon{width:36px;height:36px;border-radius:6px;flex-shrink:0;position:relative;
+    background:linear-gradient(180deg,#6B8E4E 50%,#6B4A36 50%);}
+  .ver-icon::after{content:"";position:absolute;top:20%;left:20%;right:20%;height:20%;background:rgba(255,255,255,.2);}
+  .ver-info{flex:1;min-width:0;}
+  .ver-name{font-weight:700;font-size:14px;}
+  .ver-sub{font-size:11px;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .gear{width:26px;height:26px;border-radius:5px;background:none;border:none;cursor:pointer;color:var(--ink-3);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .gear:hover{background:rgba(0,0,0,.06);color:var(--ink);}
+  .gear svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .caret{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;color:var(--ink-3);transition:transform .2s;}
+  .ver-list{max-height:0;overflow:hidden;transition:max-height .25s ease;border-top:1px solid transparent;}
+  .ver-list.open{max-height:230px;overflow-y:auto;border-top-color:var(--line);}
+  .ver-list.open + .ver-current .caret{transform:rotate(180deg);}
+  .ver-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;
+    border:none;background:none;width:100%;text-align:left;font-family:inherit;color:inherit;}
+  .ver-item:hover{background:rgba(0,0,0,.04);}
+  .ver-item.active{background:var(--sel);}
+  .ver-item.active .n{color:var(--accent);}
+  .vsmall{width:24px;height:24px;border-radius:4px;flex-shrink:0;background:linear-gradient(180deg,#6B8E4E 50%,#6B4A36 50%);}
+  .vsmall.f{background:linear-gradient(180deg,#4A6FA5 50%,#2C4A7C 50%);}
+  .vsmall.o{background:linear-gradient(180deg,#8A8A8A 50%,#444 50%);}
+  .vsmall.q{background:linear-gradient(180deg,#B8543F 50%,#8C3A28 50%);}
+  .ver-item-name{flex:1;min-width:0;}
+  .ver-item-name .n{font-size:12.5px;font-weight:500;}
+  .ver-item-name .s{font-size:10px;color:var(--ink-3);margin-top:1px;}
+  .ver-item-time{font-size:10px;color:var(--ink-3);}
+
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field-row{display:flex;justify-content:space-between;align-items:baseline;}
+  .flabel{font-size:11px;color:var(--ink-3);letter-spacing:.5px;}
+  .fval{font-size:11px;color:var(--accent);font-weight:600;}
+  select.sel,input.txt{
+    width:100%;height:32px;border:1px solid var(--line);border-radius:var(--r-md);
+    background:rgba(255,255,255,.6);padding:0 10px;font-family:inherit;font-size:12px;
+    color:var(--ink);outline:none;
+  }
+  select.sel:focus,input.txt:focus{border-color:var(--accent-hi);box-shadow:0 0 0 3px rgba(61,107,102,.10);}
+  input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;}
+  .mem-bar{height:6px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden;}
+  .mem-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent-hi),var(--accent));border-radius:3px;}
+
+  .launch{
+    width:100%;background:var(--ink);color:#fff;border:none;border-radius:var(--r-lg);
+    padding:15px;font-family:inherit;font-size:15px;font-weight:500;letter-spacing:5px;cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.22);transition:transform .1s,background .15s;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+  }
+  .launch:hover{background:#000;}
+  .launch:active{transform:scale(.985);}
+  .launch svg{width:16px;height:16px;fill:currentColor;}
+  .launch.busy{background:var(--accent);letter-spacing:2px;}
+  .launch-hint{text-align:center;font-size:10px;color:var(--ink-3);}
+  .launch-hint kbd{border:1px solid var(--line);border-radius:3px;padding:0 4px;background:var(--paper-hi);font-family:inherit;}
+  .more-row{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2);}
+  .more-row .btn{justify-content:center;padding:7px 4px;font-size:11px;}
+  .side-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px;}
+  .side-title{font-family:'Noto Serif SC',serif;font-size:13px;font-weight:700;margin-bottom:10px;
+    display:flex;align-items:center;justify-content:space-between;}
+  .kv{display:flex;justify-content:space-between;font-size:11px;padding:4px 0;color:var(--ink-2);}
+  .kv span:first-child{color:var(--ink-3);}
+
+  /* 衣柜 */
+  .closet-wrap{display:grid;grid-template-columns:1fr 300px;gap:var(--sp-4);align-items:start;}
+  .skin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-3);}
+  .skin-cell{background:var(--paper-hi);border:1px solid var(--line);border-radius:var(--r-md);
+    padding:10px;cursor:pointer;text-align:center;transition:transform .15s,box-shadow .15s,border-color .15s;}
+  .skin-cell:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.08);}
+  .skin-cell.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(61,107,102,.2);}
+  .skin-face{width:100%;aspect-ratio:1/1;border-radius:var(--r-sm);position:relative;overflow:hidden;margin-bottom:8px;}
+  .skin-face .hair{position:absolute;top:0;left:0;right:0;height:38%;}
+  .skin-face .fc{position:absolute;top:38%;left:0;right:0;bottom:32%;background:#C8956C;}
+  .skin-face .eyes{position:absolute;top:55%;left:18%;right:18%;height:6%;background:#3B6EA5;}
+  .skin-face .bd{position:absolute;bottom:0;left:0;right:0;height:30%;}
+  .skin-name{font-size:11px;color:var(--ink-2);}
+  .preview{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;text-align:center;}
+  .preview .big{width:100%;aspect-ratio:1/1;border-radius:6px;position:relative;overflow:hidden;
+    background:var(--paper-hi);border:1px solid var(--line);}
+  .preview .big > div{position:absolute;left:0;right:0;}
+  .preview .p-hair{top:0;height:24%;}
+  .preview .p-face{top:24%;height:40%;background:#C8956C;}
+  .preview .p-eyes{top:40%;height:4%;background:#3B6EA5;}
+  .preview .p-body{top:64%;height:36%;}
+  .preview h4{font-family:'Noto Serif SC',serif;font-size:15px;margin-top:14px;}
+  .preview p{font-size:11px;color:var(--ink-3);margin-top:4px;}
+
+  /* 下载 */
+  .dl-row{display:flex;align-items:center;gap:var(--sp-4);padding:11px 18px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .dl-row:last-child{border-bottom:none;}
+  .dl-row:hover{background:rgba(0,0,0,.03);}
+  .dl-ver{font-family:'Noto Serif SC',serif;font-size:14px;font-weight:700;width:130px;flex-shrink:0;}
+  .dl-meta{flex:1;font-size:11px;color:var(--ink-3);}
+  .loaders{display:flex;gap:6px;flex-wrap:wrap;}
+
+  /* 设置 */
+  .set-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-4);}
+  .set-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;}
+  .set-card h4{font-family:'Noto Serif SC',serif;font-size:14px;margin-bottom:14px;
+    padding-bottom:10px;border-bottom:1px solid var(--line);}
+  .set-row{display:flex;align-items:center;gap:var(--sp-3);padding:8px 0;}
+  .set-row .sl{font-size:12px;color:var(--ink-2);width:104px;flex-shrink:0;}
+  .set-row .sc{flex:1;}
+  .switch{width:38px;height:21px;border-radius:11px;background:rgba(0,0,0,.16);position:relative;
+    cursor:pointer;border:none;transition:background .18s;flex-shrink:0;}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .18s;}
+  .switch.on{background:var(--accent);}
+  .switch.on::after{left:19px;}
+
+  /* 空状态 */
+  .empty{text-align:center;padding:60px 20px;}
+  .empty-icon{width:64px;height:64px;margin:0 auto 18px;color:var(--ink-3);}
+  .empty-icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.2;}
+  .empty-title{font-family:'Noto Serif SC',serif;font-size:19px;font-weight:700;}
+  .empty-sub{font-size:12px;color:var(--ink-3);margin-top:8px;line-height:1.8;}
+  .empty .btn{margin-top:20px;}
+
+  /* ---------- 日志抽屉 + 状态栏 ---------- */
+  .logdrawer{
+    flex-shrink:0;border-top:1px solid var(--line);background:rgba(44,44,42,.96);color:#D8D6CE;
+    height:0;overflow:hidden;transition:height .22s ease;font-family:ui-monospace,Consolas,monospace;
+    position:relative;z-index:5;
+  }
+  .logdrawer.open{height:170px;}
+  .log-head{display:flex;align-items:center;gap:10px;padding:7px 16px;border-bottom:1px solid rgba(255,255,255,.10);
+    font-family:'Noto Sans SC',sans-serif;font-size:11px;color:#9E9B90;}
+  .log-head b{color:#EDEAE0;font-weight:500;}
+  .log-body{height:calc(100% - 32px);overflow-y:auto;padding:8px 16px 14px;font-size:11.5px;line-height:1.75;}
+  .log-body div{white-space:pre-wrap;}
+  .lt{color:#6E8F8A;} .lok{color:#8FBF7A;} .lw{color:#D6A24E;}
+  .statusbar{
+    height:26px;flex-shrink:0;border-top:1px solid var(--line);background:rgba(255,255,255,.35);
+    display:flex;align-items:center;gap:var(--sp-3);padding:0 12px;font-size:11px;color:var(--ink-3);
+    position:relative;z-index:6;overflow:hidden;white-space:nowrap;
+  }
+  .statusbar .sb-i,.statusbar .sb-btn{flex-shrink:0;}
+  .statusbar #sbDev{max-width:230px;overflow:hidden;text-overflow:ellipsis;display:inline-flex;}
+  .sb-i{display:flex;align-items:center;gap:5px;}
+  .sb-i svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .sb-right{margin-left:auto;display:flex;align-items:center;gap:var(--sp-4);}
+  .sb-btn{border:none;background:none;cursor:pointer;color:var(--ink-3);font-family:inherit;font-size:11px;
+    display:flex;align-items:center;gap:5px;padding:2px 6px;border-radius:4px;}
+  .sb-btn:hover{background:rgba(0,0,0,.06);color:var(--ink);}
+  .progress{width:120px;height:4px;border-radius:2px;background:rgba(0,0,0,.10);overflow:hidden;}
+  .progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s;}
+
+  /* 右键菜单 */
+  .ctx{position:fixed;z-index:9999;min-width:172px;background:var(--paper-hi);
+    border:1px solid var(--line-2);border-radius:var(--r-md);padding:5px;
+    box-shadow:0 12px 30px rgba(0,0,0,.18);display:none;}
+  .ctx.show{display:block;}
+  .ctx button{display:flex;align-items:center;gap:9px;width:100%;border:none;background:none;
+    font-family:inherit;font-size:12px;color:var(--ink-2);padding:7px 10px;border-radius:5px;cursor:pointer;text-align:left;}
+  .ctx button:hover{background:var(--sel);color:var(--accent);}
+  .ctx button.danger:hover{background:rgba(184,84,63,.12);color:var(--warn);}
+  .ctx svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;flex-shrink:0;}
+  .ctx hr{border:none;border-top:1px solid var(--line);margin:4px 6px;}
+  .ctx .sk{margin-left:auto;font-size:10px;color:var(--ink-3);}
+
+
+  /* ---------- 工具箱 ---------- */
+  .tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-3);}
+  .tool-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+    padding:15px;cursor:pointer;display:flex;flex-direction:column;gap:9px;
+    transition:transform .14s,box-shadow .14s,border-color .14s;}
+  .tool-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.10);border-color:var(--line-2);}
+  .tool-top{display:flex;align-items:center;gap:10px;}
+  .tool-ico{width:34px;height:34px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;}
+  .tool-ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .tool-name{font-size:13.5px;font-weight:600;line-height:1.3;}
+  .tool-tag{font-size:10px;color:var(--ink-3);}
+  .tool-desc{font-size:11.5px;color:var(--ink-3);line-height:1.65;flex:1;}
+  .tool-foot{display:flex;align-items:center;gap:7px;}
+  .tool-state{font-size:10px;padding:2px 7px;border-radius:3px;}
+  .tool-state.ready{background:rgba(61,107,102,.12);color:var(--accent);}
+  .tool-state.need{background:rgba(214,162,78,.2);color:#A6742B;}
+  .tool-state.ro{background:rgba(0,0,0,.07);color:var(--ink-3);}
+  .tool-open{margin-left:auto;font-size:11px;color:var(--accent);font-weight:600;}
+  .tool-fav{color:#C9A961;font-size:12px;}
+  .win[data-theme="dark"] .tool-state.ro{background:rgba(255,255,255,.1);}
+  .win[data-theme="dark"] .tool-desc{color:#C8C5BA;}
+  .win[data-theme="dark"] .tool-tag{color:#B0ADA2;}
+  .win[data-theme="dark"] .seg button{color:#BDBAB0;}
+  .win[data-theme="dark"] .seg button.active{color:#26272A;}
+  .win[data-theme="dark"] .tool-card:hover{box-shadow:0 10px 26px rgba(0,0,0,.45);}
+  .win[data-theme="dark"] .statusbar{border-top-color:rgba(255,255,255,.16);}
+  .win[data-theme="dark"] .path-row{border-bottom-color:rgba(255,255,255,.07);}
+  .win[data-theme="dark"] .tool-state.need{color:#E6B45A;}
+
+  /* ---------- 手机互联：补充模块 ---------- */
+  .phone-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:var(--sp-4);align-items:start;}
+  .tl{padding:6px 18px 12px;}
+  .tl-item{display:flex;gap:12px;padding:9px 0;position:relative;}
+  .tl-item::before{content:"";position:absolute;left:5px;top:22px;bottom:-9px;width:1px;background:var(--line);}
+  .tl-item:last-child::before{display:none;}
+  .tl-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;margin-top:4px;background:var(--accent);}
+  .tl-dot.warn{background:#D6A24E;} .tl-dot.err{background:var(--warn);} .tl-dot.idle{background:var(--ink-3);}
+  .tl-main{flex:1;min-width:0;}
+  .tl-t{font-size:12.5px;color:var(--ink);}
+  .tl-d{font-size:10.5px;color:var(--ink-3);margin-top:3px;line-height:1.6;}
+  .tl-time{font-size:10.5px;color:var(--ink-3);white-space:nowrap;}
+  .bar-stack{display:flex;height:22px;border-radius:5px;overflow:hidden;border:1px solid var(--line);}
+  .bar-stack i{display:block;height:100%;}
+  .bar-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:11px;font-size:11px;color:var(--ink-2);}
+  .bar-legend span{display:flex;align-items:center;gap:5px;}
+  .bar-legend em{width:9px;height:9px;border-radius:2px;font-style:normal;}
+  .quick-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .quick{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2);cursor:pointer;
+    border:1px solid var(--line);background:rgba(255,255,255,.55);border-radius:16px;padding:6px 12px;
+    transition:background .14s,border-color .14s,color .14s;}
+  .quick:hover{background:#fff;border-color:var(--accent);color:var(--accent);}
+  .quick svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .qr-wrap{display:flex;gap:16px;align-items:flex-start;padding:16px 18px;}
+  .qr{width:104px;height:104px;flex-shrink:0;background:var(--paper-hi);border:1px solid var(--line-2);
+    border-radius:6px;padding:7px;display:grid;grid-template-columns:repeat(11,1fr);grid-template-rows:repeat(11,1fr);gap:1px;}
+  .qr i{background:var(--ink);border-radius:1px;}
+  .qr i.off{background:transparent;}
+  .code{font-family:ui-monospace,Consolas,monospace;font-size:23px;letter-spacing:5px;font-weight:700;color:var(--ink);}
+  .code-sub{font-size:11px;color:var(--ink-3);margin-top:5px;line-height:1.7;}
+  .dev-inst{display:flex;align-items:center;gap:11px;padding:10px 18px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .dev-inst:last-child{border-bottom:none;}
+  .dev-inst:hover{background:rgba(0,0,0,.032);}
+  .dev-inst .nm{font-size:12.5px;font-weight:500;}
+  .dev-inst .sub{font-size:10.5px;color:var(--ink-3);margin-top:2px;}
+  .dev-inst .act{margin-left:auto;display:flex;gap:6px;align-items:center;}
+  .win[data-theme="dark"] .quick{background:rgba(255,255,255,.05);}
+  .win[data-theme="dark"] .quick:hover{background:rgba(127,184,175,.14);border-color:var(--accent);}
+  .win[data-theme="dark"] .dev-inst:hover{background:rgba(255,255,255,.05);}
+  .win[data-theme="dark"] .qr{background:rgba(255,255,255,.06);}
+  .win[data-theme="dark"] .qr i{background:#DAD8D0;}
+
+  /* ---------- 手机互联（设备桥接） ---------- */
+  .dev-strip{display:flex;align-items:center;gap:var(--sp-4);flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px 18px;}
+  .dev-phone{width:44px;height:58px;border-radius:8px;flex-shrink:0;position:relative;
+    border:1.5px solid var(--ink-2);background:var(--paper-hi);}
+  .dev-phone::before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);
+    width:14px;height:2px;border-radius:1px;background:var(--ink-3);}
+  .dev-phone::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
+    width:16px;height:2px;border-radius:1px;background:var(--ink-3);}
+  .dev-phone.off{border-color:var(--line-2);opacity:.5;}
+  .dev-phone.off::before,.dev-phone.off::after{background:var(--line-2);}
+  .dev-phone.streaming{box-shadow:0 0 0 3px rgba(61,107,102,.18);}
+  .dev-name{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:700;}
+  .dev-meta{font-size:11px;color:var(--ink-3);margin-top:3px;line-height:1.6;}
+  .dev-stat{font-size:11px;color:var(--ink-2);display:flex;flex-direction:column;gap:3px;
+    border-left:1px solid var(--line);padding-left:var(--sp-4);}
+  .dev-stat b{font-weight:600;color:var(--ink);}
+  .link-ok{color:var(--accent);font-weight:600;}
+  .link-warn{color:#A6742B;font-weight:600;}
+  .link-bad{color:var(--warn);font-weight:600;}
+
+  /* 双栏目录映射 */
+  .map-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4);}
+  .map-side{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;}
+  .map-head{display:flex;align-items:center;gap:9px;padding:11px 16px;border-bottom:1px solid var(--line);
+    font-size:12px;font-weight:600;color:var(--ink);}
+  .map-head .plat{font-size:10px;color:var(--ink-3);font-weight:400;}
+  .map-head .svgw{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .path-row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--line);
+    font-size:12px;color:var(--ink-2);cursor:pointer;transition:background .12s;}
+  .path-row:last-child{border-bottom:none;}
+  .path-row:hover{background:rgba(0,0,0,.035);}
+  .path-row.picked{background:var(--sel);}
+  .path-row code{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:var(--ink);}
+  .path-row .sz{margin-left:auto;font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .no{flex-shrink:0;width:14px;height:14px;border-radius:3px;border:1px solid var(--line-2);position:relative;}
+  .path-row.picked .no{background:var(--accent);border-color:var(--accent);}
+  .path-row.picked .no::after{content:"";position:absolute;left:3px;top:1px;width:5px;height:8px;
+    border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(45deg);}
+  .path-row.blocked{opacity:.62;}
+  .path-row.blocked code{text-decoration:line-through;text-decoration-color:var(--line-2);}
+
+  /* 迁移方案 */
+  .plan-step{display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--ink-3);}
+  .plan-step .n2{width:19px;height:19px;border-radius:50%;background:rgba(0,0,0,.08);color:var(--ink-3);
+    font-size:10.5px;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;}
+  .plan-step.on{color:var(--ink);}
+  .plan-step.on .n2{background:var(--accent);color:#fff;}
+  .plan-step.done .n2{background:rgba(61,107,102,.18);color:var(--accent);}
+  .ver-arrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;}
+  .ver-box{border:1px solid var(--line);border-radius:var(--r-md);padding:11px 15px;background:rgba(255,255,255,.5);min-width:198px;}
+  .ver-box .vb-t{font-size:10px;color:var(--ink-3);letter-spacing:.5px;}
+  .ver-box .vb-v{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:700;margin-top:3px;}
+  .ver-box .vb-s{font-size:11px;color:var(--ink-2);margin-top:2px;}
+  .ver-arrow .flow{color:var(--accent);font-size:11px;display:flex;align-items:center;gap:6px;}
+  .ver-arrow .flow svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .diff-row{display:flex;align-items:center;gap:11px;padding:9px 18px;border-bottom:1px solid var(--line);font-size:12px;}
+  .diff-row:last-child{border-bottom:none;}
+  .diff-ico{width:22px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+  .diff-ico.same{background:#6B8E4E;} .diff-ico.new{background:var(--accent);}
+  .diff-ico.ver{background:#4A6FA5;} .diff-ico.risk{background:var(--warn);}
+  .diff-main{flex:1;min-width:0;}
+  .diff-t{font-size:12.5px;color:var(--ink);}
+  .diff-d{font-size:10.5px;color:var(--ink-3);margin-top:2px;}
+  .policy{display:flex;gap:7px;flex-wrap:wrap;}
+  .policy .pick{padding:7px 12px;font-size:11.5px;}
+  /* 传输队列 */
+  .xfer{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;}
+  .xfer:last-child{border-bottom:none;}
+  .xfer-dir{width:30px;height:30px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    background:var(--sel);color:var(--accent);}
+  .xfer-dir.up{background:rgba(74,111,165,.14);color:#3E6396;}
+  .xfer-dir svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;}
+  .xfer-main{flex:1;min-width:0;}
+  .xfer-t{font-size:12.5px;color:var(--ink);}
+  .xfer-s{font-size:10.5px;color:var(--ink-3);margin-top:3px;}
+  .xfer-right{text-align:right;font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;flex-shrink:0;}
+  .win[data-theme="dark"] .dev-stat{border-left-color:var(--line);}
+  .win[data-theme="dark"] .ver-box,.win[data-theme="dark"] .plan-step .n2{background:rgba(255,255,255,.07);}
+  .win[data-theme="dark"] .path-row:hover{background:rgba(255,255,255,.05);}
+  .win[data-theme="dark"] .dev-phone{border-color:var(--ink-3);background:rgba(255,255,255,.05);}
+  .win[data-theme="dark"] .map-head{background:rgba(255,255,255,.04);}
+  .win[data-theme="dark"] .path-row code{color:#E7E4DA;}
+  .win[data-theme="dark"] .path-row .sz,.win[data-theme="dark"] .dev-meta,.win[data-theme="dark"] .diff-d,
+  .win[data-theme="dark"] .xfer-s,.win[data-theme="dark"] .xfer-right,.win[data-theme="dark"] .panel-sub,
+  .win[data-theme="dark"] .ver-box .vb-t,.win[data-theme="dark"] .plan-step,
+  .win[data-theme="dark"] .rec-meta,.win[data-theme="dark"] .rec-author,.win[data-theme="dark"] .empty-sub{color:#C4C1B6;}
+  .win[data-theme="dark"] .chip,.win[data-theme="dark"] .badge.off{color:#D3D0C6;}
+  .win[data-theme="dark"] .ver-arrow>div:first-child{font-size:11px;}
+  .win[data-theme="dark"] .dev-stat span{color:#C6C3B9;}
+  .win[data-theme="dark"] .dev-stat b{color:#F0EEE6;}
+  .win[data-theme="dark"] .log-head{color:#BEBBAF;border-bottom-color:rgba(255,255,255,.16);}
+  .win[data-theme="dark"] .path-row.blocked{opacity:.75;}
+
+  /* ---------- Mod 管理 ---------- */
+  .mod-strip{display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;}
+  .mod-ctx{display:flex;align-items:center;gap:10px;}
+  .mod-ctx .ibadge{width:30px;height:30px;}
+  .mod-ctx .cn{font-size:13px;font-weight:600;}
+  .mod-ctx .cs{font-size:11px;color:var(--ink-3);}
+  .stat-pill{font-size:11px;color:var(--ink-2);border:1px solid var(--line);
+    border-radius:13px;padding:4px 11px;background:rgba(255,255,255,.5);}
+  .stat-pill b{color:var(--accent);font-weight:600;}
+  .issue{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line);}
+  .issue:last-child{border-bottom:none;}
+  .issue-ico{width:26px;height:26px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .issue-ico svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .issue-ico.err{background:rgba(184,84,63,.14);color:var(--warn);}
+  .issue-ico.mut{background:rgba(214,162,78,.18);color:#A6742B;}
+  .issue-main{flex:1;min-width:0;}
+  .issue-t{font-size:12.5px;font-weight:500;}
+  .issue-d{font-size:11px;color:var(--ink-3);margin-top:2px;}
+  .issue.fixed{opacity:.5;}
+  .issue.fixed .issue-t{text-decoration:line-through;}
+  .badge{font-size:10px;padding:2px 7px;border-radius:3px;white-space:nowrap;}
+  .badge.ok{background:rgba(61,107,102,.12);color:var(--accent);}
+  .badge.err{background:rgba(184,84,63,.14);color:var(--warn);}
+  .badge.up{background:rgba(74,111,165,.14);color:#3E6396;}
+  .badge.off{background:rgba(0,0,0,.07);color:var(--ink-3);}
+  .badge.miss{background:rgba(214,162,78,.2);color:#A6742B;}
+  tr.disabled td{opacity:.48;}
+  .rec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-3);}
+  .rec-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;
+    display:flex;flex-direction:column;gap:8px;transition:transform .14s,box-shadow .14s;}
+  .rec-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.08);}
+  .rec-top{display:flex;align-items:center;gap:9px;}
+  .rec-ico{width:32px;height:32px;border-radius:7px;flex-shrink:0;}
+  .rec-name{font-size:12.5px;font-weight:600;line-height:1.3;}
+  .rec-author{font-size:10px;color:var(--ink-3);}
+  .rec-desc{font-size:11px;color:var(--ink-3);line-height:1.65;flex:1;}
+  .rec-meta{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--ink-3);}
+  .rec-meta .dl{margin-left:auto;display:flex;align-items:center;gap:3px;}
+  .rec-card.installed{border-color:var(--accent);}
+  .search-lg{
+    flex:1;max-width:340px;height:32px;border:1px solid var(--line);border-radius:16px;
+    background:rgba(255,255,255,.6);padding:0 14px;font-family:inherit;font-size:12px;outline:none;color:var(--ink);
+  }
+  .search-lg:focus{border-color:var(--accent-hi);box-shadow:0 0 0 3px rgba(61,107,102,.10);}
+  .win[data-theme="dark"] .search-lg,.win[data-theme="dark"] .stat-pill{background:rgba(0,0,0,.22);}
+  .win[data-theme="dark"] .issue-ico.mut{background:rgba(214,162,78,.22);color:#D6A24E;}
+
+  /* ---------- 新建实例向导 ---------- */
+  .mask{position:absolute;inset:0;z-index:50;background:rgba(30,30,28,.34);backdrop-filter:blur(2px);
+    display:none;align-items:center;justify-content:center;}
+  .mask.show{display:flex;}
+  .modal{
+    width:620px;max-width:92%;background-color:var(--paper-hi);border-radius:12px;
+    border:1px solid var(--line-2);box-shadow:0 30px 70px rgba(0,0,0,.35);
+    display:flex;flex-direction:column;overflow:hidden;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.2  0 0 0 0 0.2  0 0 0 0 0.18  0 0 0 .05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23m)'/></svg>");
+  }
+  .md-head{padding:18px 22px 14px;border-bottom:1px solid var(--line);}
+  .md-title{font-family:'Noto Serif SC',serif;font-size:17px;font-weight:700;}
+  .md-steps{display:flex;align-items:center;gap:6px;margin-top:14px;}
+  .st{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink-3);}
+  .st .dot{width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.08);color:var(--ink-3);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;}
+  .st.on{color:var(--ink);}
+  .st.on .dot{background:var(--accent);color:#fff;}
+  .st.done .dot{background:rgba(61,107,102,.18);color:var(--accent);}
+  .st .bar{width:26px;height:1px;background:var(--line-2);}
+  .md-body{padding:20px 22px;min-height:250px;}
+  .md-pane{display:none;}
+  .md-pane.on{display:block;}
+  .pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .pick{
+    border:1px solid var(--line);background:rgba(255,255,255,.55);border-radius:var(--r-md);
+    padding:10px 8px;text-align:center;cursor:pointer;font-size:12.5px;color:var(--ink-2);
+    transition:border-color .14s,background .14s,transform .14s;
+  }
+  .pick:hover{transform:translateY(-1px);border-color:var(--line-2);}
+  .pick.sel{border-color:var(--accent);background:var(--sel);color:var(--accent);font-weight:600;}
+  .pick small{display:block;font-size:10px;color:var(--ink-3);margin-top:3px;font-weight:400;}
+  .md-note{font-size:11.5px;color:var(--ink-3);line-height:1.8;margin-bottom:12px;}
+  .md-field{margin-bottom:14px;}
+  .md-field label{display:block;font-size:11px;color:var(--ink-3);margin-bottom:5px;letter-spacing:.5px;}
+  .md-sum{background:rgba(255,255,255,.5);border:1px dashed var(--line-2);border-radius:var(--r-md);padding:14px 16px;}
+  .md-foot{display:flex;align-items:center;gap:8px;padding:14px 22px;border-top:1px solid var(--line);
+    background:rgba(255,255,255,.28);}
+  .md-foot .right{margin-left:auto;display:flex;gap:8px;}
+  .win[data-theme="dark"] .modal{background-color:#2F302D;}
+  .win[data-theme="dark"] .md-foot{background:rgba(0,0,0,.2);}
+  .win[data-theme="dark"] .md-sum,.win[data-theme="dark"] .pick{background:rgba(255,255,255,.05);}
+  .win[data-theme="dark"] .st .dot{background:rgba(255,255,255,.12);}
+
+  @media (prefers-reduced-motion:reduce){
+    .win,.win *,.win *::before,.win *::after{transition-duration:.01ms !important;animation-duration:.01ms !important;}
+    .logdrawer{transition:none;}
+    .ins-card:hover,.skin-cell:hover{transform:none;}
+  }
+
+  /* toast */
+  .toast{position:absolute;left:50%;bottom:44px;transform:translate(-50%,14px) scale(var(--s,1));z-index:60;
+    background:rgba(44,44,42,.94);color:#F3F1E9;font-size:12.5px;padding:10px 20px;border-radius:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;}
+  .toast.show{opacity:1;transform:translate(-50%,0) scale(var(--s,1));}
+  .toast{white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis;}
+
+  .desk-wrap{gap:0;}
+</style>
+</head>
+<body>
+
+<div class="desk-wrap" id="deskWrap">
+  <div class="win" id="win">
+
+    <!-- ===== 标题栏 ===== -->
+    <header class="titlebar">
+      <div class="tb-logo">F</div>
+      <div class="tb-name"><b>Fold Craft Launcher</b> · 桌面版</div>
+      <div class="tb-search">
+        <div class="mag"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></div>
+        <input id="search" type="text" placeholder="搜索实例 / Mod / 版本">
+        <kbd>Ctrl K</kbd>
+      </div>
+      <button class="tb-icon" id="btnTheme" title="切换深色 / 浅色揉纸">
+        <svg class="i-moon" viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 0 1 10.5 4 7 7 0 1 0 20 13.5z"/></svg>
+        <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
+      </button>
+      <div class="winctl">
+        <button title="最小化" data-win="min"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button title="最大化" data-win="max"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="1.5"/></svg></button>
+        <button class="close" title="关闭" data-win="close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </header>
+
+    <!-- ===== 三栏主体 ===== -->
+    <div class="body">
+
+      <!-- 侧边导航 -->
+      <nav class="nav">
+        <button class="nav-item active" data-view="home" data-tip="首页">
+          <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>
+          <span class="lb">首页</span><span class="cnt">7</span>
+        </button>
+        <button class="nav-item" data-view="dl" data-tip="下载中心">
+          <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+          <span class="lb">下载中心</span>
+        </button>
+        <button class="nav-item" data-view="mods" data-tip="Mod 管理">
+          <svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+          <span class="lb">Mod 管理</span><span class="cnt" id="modNavCnt">24</span>
+        </button>
+        <button class="nav-item" data-view="phone" data-tip="手机互联">
+          <svg viewBox="0 0 24 24"><rect x="6" y="2" width="9" height="14" rx="2"/><path d="M13 6h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9"/><path d="M8.5 4.5h4"/></svg>
+          <span class="lb">手机互联</span><span class="cnt" id="devCnt">1</span>
+        </button>
+        <button class="nav-item" data-view="tools" data-tip="工具箱">
+          <svg viewBox="0 0 24 24"><path d="M3 8h18v11H3z"/><path d="M3 8l2-4h14l2 4M9 8V4M15 8V4M10 13h4"/></svg>
+          <span class="lb">工具箱</span><span class="cnt">12</span>
+        </button>
+        <button class="nav-item" data-view="closet" data-tip="衣柜">
+          <svg viewBox="0 0 24 24"><path d="M6 3h12v4H6zM6 7l-2 4v10h16V11l-2-4M10 11h4"/></svg>
+          <span class="lb">衣柜</span>
+        </button>
+        <button class="nav-item" data-view="ctrl" data-tip="控制">
+          <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="3"/><path d="M7 11v3M5.5 12.5h3M15 12h.01M18 14h.01"/></svg>
+          <span class="lb">控制</span>
+        </button>
+        <div class="nav-sep"></div>
+        <button class="nav-item" data-view="set" data-tip="设置">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6A7 7 0 0 0 19 12z"/></svg>
+          <span class="lb">设置</span>
+        </button>
+
+        <div class="nav-foot">
+          <button class="nav-item" data-view="about" data-tip="关于">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+            <span class="lb">关于</span>
+          </button>
+          <button class="nav-item nav-collapse" id="btnCollapse" data-tip="收起侧栏">
+            <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+            <span class="lb">收起侧栏</span>
+          </button>
+        </div>
+      </nav>
+      <div class="grip" data-grip="nav" title="拖动调整导航栏宽度"></div>
+
+      <!-- 中区 -->
+      <main class="main">
+        <div class="toolbar">
+          <div>
+            <div class="tb-title" id="viewTitle">实例总览</div>
+            <div class="tb-crumb" id="viewCrumb">首页 · 本地 7 个实例 · 上次同步 2 分钟前</div>
+          </div>
+          <div class="tb-actions">
+            <div class="seg" id="segView">
+              <button class="active" data-mode="list"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>列表</button>
+              <button data-mode="card"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>网格</button>
+            </div>
+            <button class="btn" id="btnRefresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>刷新</button>
+            <button class="btn primary" id="btnAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>新建实例</button>
+          </div>
+        </div>
+
+        <div class="scroll">
+
+          <!-- ===== 首页 ===== -->
+          <section class="view on" id="viewHome">
+
+            <div class="notice" id="noticeBar">
+              <div class="notice-ico"><svg viewBox="0 0 24 24"><path d="M4 10v4h3l5 4V6L7 10zM16 9a4 4 0 0 1 0 6"/></svg></div>
+              <div class="notice-main">
+                <div class="notice-head">
+                  <div class="notice-title">公告：关于 1.3.1.5</div>
+                  <div class="notice-date">2026.06.28</div>
+                </div>
+                <div class="notice-body">
+                  如果你发现更新到 <b>1.3.1.5</b> 后在部分需要选择文件夹的操作中启动器发生崩溃，可以前往 GitHub 重新下载最新版本。
+                  <div style="margin-top:8px"><span class="notice-tag">更新</span><span class="notice-tag">稳定性</span></div>
+                </div>
+              </div>
+              <button class="x-btn" id="noticeClose" title="关闭公告"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            </div>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="stat-ico" style="background:#6B8E4E"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg></div>
+                <div><div class="stat-v">7</div><div class="stat-l">本地实例</div></div>
+              </div>
+              <div class="stat">
+                <div class="stat-ico" style="background:#3D6B66"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></div>
+                <div><div class="stat-v">110</div><div class="stat-l">已装 Mod</div></div>
+              </div>
+              <div class="stat">
+                <div class="stat-ico" style="background:#4A6FA5"><svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z"/><path d="M8 17v3M16 17v3"/></svg></div>
+                <div><div class="stat-v">23.4<span style="font-size:12px"> GB</span></div><div class="stat-l">.minecraft 占用</div></div>
+              </div>
+              <div class="stat">
+                <div class="stat-ico" style="background:#B8543F"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+                <div><div class="stat-v">342</div><div class="stat-l">累计启动次数</div></div>
+              </div>
+            </div>
+
+            <!-- 列表视图 -->
+            <div class="panel" id="listPanel">
+              <div class="panel-head">
+                <div class="panel-title">实例列表</div>
+                <div class="panel-sub" id="rowCount">共 7 条</div>
+                <div class="panel-tools">
+                  <select class="filter" id="filterLoader">
+                    <option value="">全部加载器</option>
+                    <option>Forge</option><option>Fabric</option>
+                    <option>NeoForge</option><option>Quilt</option><option>OptiFine</option><option>原版</option>
+                  </select>
+                  <button class="icon-btn" title="列设置"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg></button>
+                </div>
+              </div>
+              <table class="grid" id="insTable">
+                <thead>
+                  <tr>
+                    <th data-sort="name">实例名称 <span class="ar">▲</span></th>
+                    <th data-sort="ver">游戏版本 <span class="ar">▲</span></th>
+                    <th data-sort="loader">加载器 <span class="ar">▲</span></th>
+                    <th data-sort="mods">Mod 数 <span class="ar">▲</span></th>
+                    <th data-sort="size">占用 <span class="ar">▲</span></th>
+                    <th class="sorted" data-sort="last">上次启动 <span class="ar">▲</span></th>
+                    <th style="width:70px">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="insBody"><!-- JS 渲染 --></tbody>
+              </table>
+              <div class="empty" id="noResult" style="display:none">
+                <div class="empty-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></div>
+                <div class="empty-title">没有匹配的实例</div>
+                <div class="empty-sub">换个关键词，或清空筛选条件重新查找</div>
+              </div>
+            </div>
+
+            <!-- 网格视图 -->
+            <div class="cards" id="cardPanel" style="display:none"><!-- JS 渲染 --></div>
+          </section>
+
+          <!-- ===== 下载中心 ===== -->
+          <section class="view" id="viewDl">
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">官方版本</div>
+                <div class="panel-sub">数据源：McConfig 镜像 · 延迟 42 ms</div>
+                <div class="panel-tools">
+                  <div class="seg" id="segRelease">
+                    <button class="active">正式版</button><button>快照版</button><button>历史版本</button>
+                  </div>
+                </div>
+              </div>
+              <div id="dlList"><!-- JS 渲染 --></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">下载队列</div>
+                <div class="panel-sub">2 个任务 · 8.6 MB/s</div>
+                <div class="panel-tools"><button class="btn">全部暂停</button></div>
+              </div>
+              <div style="padding:14px 18px;display:flex;flex-direction:column;gap:12px">
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+                    <span>1.21.4 · Fabric Loader 0.16.9</span><span class="mono" style="color:var(--accent)">67%</span>
+                  </div>
+                  <div class="progress" style="width:100%"><i style="width:67%"></i></div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+                    <span>OptiFine_1.21.4_H_D1</span><span class="mono" style="color:var(--ink-3)">排队中</span>
+                  </div>
+                  <div class="progress" style="width:100%"><i style="width:4%"></i></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== Mod 管理 ===== -->
+          <section class="view" id="viewMods">
+            <div class="panel" style="padding:14px 18px">
+              <div class="mod-strip">
+                <div class="mod-ctx">
+                  <span class="ibadge f"></span>
+                  <div>
+                    <div class="cn" id="modCtxName">1.20.1-Fabric</div>
+                    <div class="cs" id="modCtxSub">纸鸢整合 · Fabric 0.16.9 · mods 目录 47 个文件</div>
+                  </div>
+                </div>
+                <span class="stat-pill">启用 <b id="modOn">41</b></span>
+                <span class="stat-pill">禁用 <b id="modOff">4</b></span>
+                <span class="stat-pill">冲突 <b id="modConf" style="color:var(--warn)">2</b></span>
+                <span class="stat-pill">可更新 <b id="modUp" style="color:#3E6396">6</b></span>
+                <div style="margin-left:auto;display:flex;gap:8px">
+                  <button class="btn" id="btnModScan"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>重新扫描</button>
+                  <button class="btn" data-toast="Mod 文件夹已打开"><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>打开 mods 目录</button>
+                  <button class="btn primary" id="btnImportMod"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>导入 Mod</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 冲突与依赖 -->
+            <div class="panel" id="issuePanel">
+              <div class="panel-head">
+                <div class="panel-title">冲突与依赖检测</div>
+                <div class="panel-sub" id="issueSub">发现 3 个问题 · 1 个致命</div>
+                <div class="panel-tools"><button class="btn" data-toast="已重新检测 mods 目录">重新检测</button></div>
+              </div>
+              <div id="issueList"></div>
+            </div>
+
+            <!-- 已装 Mod 列表 -->
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">已安装 Mod</div>
+                <div class="panel-sub" id="modCount">共 47 个</div>
+                <div class="panel-tools">
+                  <input class="search-lg" id="modSearch" placeholder="搜索 Mod 名称 / modloader 前缀">
+                  <div class="seg" id="segMod">
+                    <button class="active" data-mf="all">全部</button>
+                    <button data-mf="on">已启用</button>
+                    <button data-mf="off">已禁用</button>
+                    <button data-mf="bad">异常</button>
+                  </div>
+                  <select class="filter" id="modSrc">
+                    <option>全部来源</option><option>Modrinth</option><option>CurseForge</option><option>本地导入</option>
+                  </select>
+                </div>
+              </div>
+              <table class="grid">
+                <thead>
+                  <tr>
+                    <th style="width:34%">Mod 名称</th>
+                    <th>版本</th><th>类别</th><th>依赖</th><th>状态</th><th>大小</th>
+                    <th style="width:84px;text-align:right">启用</th>
+                  </tr>
+                </thead>
+                <tbody id="modBody"></tbody>
+              </table>
+            </div>
+
+            <!-- 推荐安装 -->
+            <div class="panel" style="padding:16px 18px">
+              <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px">
+                <div class="panel-title">可安装 · Modrinth 热门</div>
+                <div class="panel-sub">已按 1.20.1 / Fabric 过滤</div>
+                <div style="margin-left:auto"><button class="btn" data-toast="已刷新推荐列表">换一批</button></div>
+              </div>
+              <div class="rec-grid" id="recGrid"></div>
+            </div>
+          </section>
+
+          <!-- ===== 手机互联 ===== -->
+          <section class="view" id="viewPhone">
+
+            <!-- 设备与通道 -->
+            <div class="dev-strip" id="devStrip">
+              <div class="dev-phone streaming" id="devPhone"></div>
+              <div style="min-width:230px">
+                <div class="dev-name" id="devName">Pixel 8 Pro · KCU-Launcher</div>
+                <div class="dev-meta" id="devMeta">Android 16 · arm64-v8a · 局域网 192.168.1.37:35510</div>
+              </div>
+              <div class="dev-stat"><span>manifest <b id="devManifest">读取成功</b></span><span>协议 <b>v3</b> · 心跳 1.2s</span></div>
+              <div class="dev-stat"><span>手机可用 <b id="devFreePhone">62.4 GB</b></span><span>电脑可用 <b>318 GB</b></span></div>
+              <div class="dev-stat"><span>待传 <b id="devPending">0 项</b></span><span>速率 <b id="devSpeed">—</b></span></div>
+              <div style="margin-left:auto;display:flex;gap:8px">
+                <button class="btn" id="btnRescan"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>重新扫描设备</button>
+                <button class="btn" id="btnPair"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 20h1M20 14h1M14 20h1"/></svg>配对码</button>
+                <button class="btn" id="btnDisconnect" style="color:var(--warn)">断开连接</button>
+              </div>
+            </div>
+
+            <!-- 目录映射（公共目录 ↔ 电脑目录） -->
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">可互传内容</div>
+                <div class="panel-sub">只走 KCU 公共目录与 manifest，不碰手机私有目录；被划掉的项目两端不通用</div>
+                <div class="panel-tools">
+                  <div class="seg" id="segDir">
+                    <button class="active" data-dir="down"><svg viewBox="0 0 24 24"><path d="M12 4v14m0 0l-5-5m5 5l5-5"/></svg>手机 → 电脑</button>
+                    <button data-dir="up"><svg viewBox="0 0 24 24"><path d="M12 20V6m0 0l-5 5m5-5l5 5"/></svg>电脑 → 手机</button>
+                  </div>
+                  <button class="btn" id="btnSelAll">全选可传项</button>
+                </div>
+              </div>
+              <div class="map-grid" style="padding:0">
+                <div class="map-side" style="border:none;border-right:1px solid var(--line);border-radius:0">
+                  <div class="map-head" id="mapHeadA">
+                    <svg class="svgw" viewBox="0 0 24 24"><rect x="6" y="2" width="9" height="14" rx="2"/><path d="M8.5 4.5h4"/></svg>
+                    手机 · <span class="plat">/sdcard/KCU/</span>
+                  </div>
+                  <div id="mapA"></div>
+                </div>
+                <div class="map-side" style="border:none;border-radius:0">
+                  <div class="map-head" id="mapHeadB">
+                    <svg class="svgw" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg>
+                    电脑 · <span class="plat">D:\\Games\\.minecraft\\</span>
+                  </div>
+                  <div id="mapB"></div>
+                </div>
+              </div>
+              <div style="padding:13px 18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                <div style="font-size:11px;color:var(--ink-3);letter-spacing:.5px">同名冲突时</div>
+                <div class="policy" id="policyChips">
+                  <div class="pick sel" data-p="skip">跳过已存在</div>
+                  <div class="pick" data-p="cover">覆盖</div>
+                  <div class="pick" data-p="copy">保留两者（加 -phone 后缀）</div>
+                  <div class="pick" data-p="miss">仅补缺失依赖</div>
+                </div>
+                <div style="margin-left:auto"><button class="btn primary" id="btnStartXfer"><svg viewBox="0 0 24 24"><path d="M12 4v14m0 0l-5-5m5 5l5-5"/></svg>开始互传</button></div>
+              </div>
+            </div>
+
+            <!-- 跨版本适配（交给手机端 ModMigrator，这里只做方向与差异说明） -->
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">跨版本适配</div>
+                <div class="panel-sub">迁移方案由手机端 ModMigrator 生成，电脑端只接收方案并搬运文件</div>
+                <div class="panel-tools"><button class="btn" id="btnPullPlan">拉取手机迁移方案</button></div>
+              </div>
+              <div class="ver-arrow">
+                <div class="ver-box"><div class="vb-t">手机 · 迁移前</div><div class="vb-v">1.20.1 · Fabric</div><div class="vb-s">纸鸢整合 · 18 mods · manifest 已校验</div></div>
+                <div class="flow"><span>ModMigrator 方案</span><svg viewBox="0 0 24 24"><path d="M4 12h14m0 0l-5-5m5 5l-5 5"/></svg></div>
+                <div class="ver-box"><div class="vb-t">电脑 · 迁移后</div><div class="vb-v" id="pcTargetVer">1.21.4 · NeoForge</div><div class="vb-s">当前实例 1.21.4-NeoForge · 12 mods</div></div>
+                <div style="margin-left:auto">
+                  <div class="plan-step on" style="margin-bottom:6px"><span class="n2">1</span>手机已扫描</div>
+                  <div class="plan-step" id="planStep2"><span class="n2">2</span>电脑端比对差异</div>
+                  <div class="plan-step" id="planStep3"><span class="n2">3</span>按差异搬运</div>
+                </div>
+              </div>
+              <div id="diffList">
+                <div style="padding:26px 18px;text-align:center;color:var(--ink-3);font-size:12px">
+                  尚未拉取方案 · 点击上方「拉取手机迁移方案」，电脑端只会读取 manifest 与文件哈希，不重复执行跨版本改写
+                </div>
+              </div>
+            </div>
+
+            <!-- 快捷互传 -->
+            <div class="panel" style="padding:14px 18px">
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <div class="panel-title" style="font-size:14px">快捷互传</div>
+                <div class="panel-sub">点一下就走，不需要先做目录映射</div>
+                <div class="quick-row" style="margin-left:auto" id="quickRow">
+                  <div class="quick" data-q="saves"><svg viewBox="0 0 24 24"><path d="M4 7h16v10H4z"/><path d="M8 7V4h8v3"/></svg>最近存档</div>
+                  <div class="quick" data-q="skins"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="14"/><path d="M5 21h14"/></svg>皮肤</div>
+                  <div class="quick" data-q="shot"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8 7l2-3h4l2 3"/></svg>游戏截图</div>
+                  <div class="quick" data-q="log"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/></svg>最新日志</div>
+                  <div class="quick" data-q="pack"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>整合包</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 手机端实例 / 存储分布 + 历史 / 配对 -->
+            <div class="phone-grid">
+              <div style="display:flex;flex-direction:column;gap:var(--sp-4)">
+                <div class="panel">
+                  <div class="panel-head">
+                    <div class="panel-title">手机端实例</div>
+                    <div class="panel-sub">来自 manifest.json，只列不复制</div>
+                    <div class="panel-tools"><button class="btn" id="btnRefreshDev">刷新清单</button></div>
+                  </div>
+                  <div id="devInstList"></div>
+                </div>
+                <div class="panel" style="padding:16px 18px">
+                  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">
+                    <div class="panel-title" style="font-size:14px">手机存储占用</div>
+                    <div class="panel-sub">/sdcard/KCU/ 共 24.8 GB</div>
+                  </div>
+                  <div class="bar-stack" id="barStack"></div>
+                  <div class="bar-legend" id="barLegend"></div>
+                </div>
+                <div class="panel" style="padding:16px 18px">
+                  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
+                    <div class="panel-title" style="font-size:14px">同步偏好</div>
+                    <div class="panel-sub">只在两端公共目录之间生效</div>
+                  </div>
+                  <div class="set-row"><span class="sl">自动同步 saves</span><button class="switch on" role="switch" aria-checked="true" data-pref="autosync"></button><span style="font-size:10.5px;color:var(--ink-3)">游戏退出后触发</span></div>
+                  <div class="set-row"><span class="sl">仅 Wi-Fi 传输</span><button class="switch on" role="switch" aria-checked="true" data-pref="wifi"></button></div>
+                  <div class="set-row"><span class="sl">校验后删除源</span><button class="switch" role="switch" aria-checked="false" data-pref="delete"></button><span style="font-size:10.5px;color:var(--ink-3)">默认关闭，保留两端副本</span></div>
+                  <div class="field" style="margin-top:8px">
+                    <div class="field-row"><span class="flabel">带宽上限</span><span class="fval" id="bwVal">20 MB/s</span></div>
+                    <input type="range" id="bw" min="2" max="80" step="2" value="20">
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:var(--sp-4)">
+                <div class="panel">
+                  <div class="panel-head">
+                    <div class="panel-title">同步历史</div>
+                    <div class="panel-sub" id="tlSub">最近 6 次</div>
+                  </div>
+                  <div class="tl" id="tlList"></div>
+                </div>
+                <div class="panel">
+                  <div class="panel-head">
+                    <div class="panel-title">设备配对</div>
+                    <div class="panel-sub">手机端 KCU-Launcher → 与电脑互联 → 扫码</div>
+                  </div>
+                  <div class="qr-wrap">
+                    <div class="qr" id="qrBox"></div>
+                    <div>
+                      <div class="code" id="pairCode">740 261</div>
+                      <div class="code-sub">有效期 <b id="pairLeft">59</b> 秒 · 同一局域网内可直接发现<br>配对后电脑只获得公共目录读写授权，私有目录仍归手机</div>
+                      <div style="margin-top:12px;display:flex;gap:8px">
+                        <button class="btn" id="btnNewCode">换一个码</button>
+                        <button class="btn" data-toast="已复制局域网地址 192.168.1.37:35510">复制地址</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 传输队列 -->
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">传输队列</div>
+                <div class="panel-sub" id="xferSub">空闲 · 队列 0 项</div>
+                <div class="panel-tools">
+                  <button class="btn" id="btnPauseXfer">全部暂停</button>
+                  <button class="btn" id="btnClearXfer">清空队列</button>
+                </div>
+              </div>
+              <div id="xferList">
+                <div style="padding:22px 18px;color:var(--ink-3);font-size:11.5px;line-height:1.8">
+                  队列示例：<code style="font-family:ui-monospace,Consolas,monospace">manifest.json</code> 校验通过后按条目搬运；
+                  大文件走分块续传，中断后可从断点继续；两端只传公共目录内容，手机私有目录不会被读写。
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 工具箱 ===== -->
+          <section class="view" id="viewTools">
+            <div class="panel" style="padding:14px 18px">
+              <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                <div class="panel-title">工具箱</div>
+                <div class="panel-sub">桌面端自有工具；凡是手机端专属能力，这里只做入口与结果接收</div>
+                <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+                  <input class="search-lg" id="toolSearch" placeholder="搜索工具" style="max-width:210px;height:30px">
+                  <select class="filter" id="toolCat">
+                    <option>全部分类</option><option>效率</option><option>分析</option><option>资源</option><option>互联</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">常用</div>
+                <div class="panel-sub">按使用频率自动排序</div>
+                <div class="panel-tools"><button class="btn" id="btnToolAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>添加工具</button></div>
+              </div>
+              <div class="tool-grid" id="toolFav"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">全部工具</div>
+                <div class="panel-sub" id="toolCount">共 12 个</div>
+                <div class="panel-tools">
+                  <div class="seg" id="segTool">
+                    <button class="active" data-tf="all">全部</button>
+                    <button data-tf="ready">可用</button>
+                    <button data-tf="need">需连接手机</button>
+                    <button data-tf="ro">仅查看</button>
+                  </div>
+                </div>
+              </div>
+              <div class="tool-grid" id="toolGrid"></div>
+            </div>
+          </section>
+
+          <!-- ===== 衣柜 ===== -->
+          <section class="view" id="viewCloset">
+            <div class="closet-wrap">
+              <div>
+                <div class="panel" style="padding:18px">
+                  <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px">
+                    <div class="panel-title">衣柜</div>
+                    <div class="panel-sub">选择角色皮肤，启动前可直接预览</div>
+                    <div style="margin-left:auto"><button class="btn"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>导入皮肤</button></div>
+                  </div>
+                  <div class="skin-grid" id="skinGrid"></div>
+                </div>
+              </div>
+              <div class="preview">
+                <div class="big" id="pvBig">
+                  <div class="p-hair" id="pvHair"></div>
+                  <div class="p-face"></div>
+                  <div class="p-eyes"></div>
+                  <div class="p-body" id="pvBody"></div>
+                </div>
+                <h4 id="pvName">Alex</h4>
+                <p>Steve · Alex 双模型 · 64×32 PNG</p>
+                <div class="kv" style="margin-top:14px"><span>来源</span><span>本地皮肤</span></div>
+                <div class="kv"><span>套用账户</span><span>kongbai</span></div>
+                <div class="kv"><span>更新时间</span><span>2026-10-21</span></div>
+                <button class="btn primary" style="width:100%;justify-content:center;margin-top:14px">设为当前皮肤</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 控制 ===== -->
+          <section class="view" id="viewCtrl">
+            <div class="set-grid">
+              <div class="set-card">
+                <h4>运行中的游戏</h4>
+                <div class="kv"><span>实例</span><span>1.12.2-Forge</span></div>
+                <div class="kv"><span>进程 PID</span><span class="mono">18422</span></div>
+                <div class="kv"><span>内存占用</span><span class="mono">2.6 / 4.0 GB</span></div>
+                <div class="kv"><span>平均帧率</span><span class="mono">118 FPS</span></div>
+                <div class="mem-bar" style="margin:10px 0 16px"><i style="width:65%"></i></div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn">置顶窗口</button><button class="btn">截图</button>
+                  <button class="btn" style="color:var(--warn)">强制结束</button>
+                </div>
+              </div>
+              <div class="set-card">
+                <h4>快捷动作</h4>
+                <div class="set-row"><span class="sl">启动后</span>
+                  <select class="sel sc"><option>最小化启动器</option><option>保持前台</option><option>关闭启动器</option></select></div>
+                <div class="set-row"><span class="sl">游戏退出后</span>
+                  <select class="sel sc"><option>播放提示音</option><option>无动作</option><option>检查更新</option></select></div>
+                <div class="set-row"><span class="sl">崩溃自动重进</span><button class="switch on"></button></div>
+                <div class="set-row"><span class="sl">多人游戏提醒</span><button class="switch"></button></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ===== 设置 ===== -->
+          <section class="view" id="viewSet">
+            <div class="set-grid">
+              <div class="set-card">
+                <h4>Java 与性能</h4>
+                <div class="set-row"><span class="sl">Java 路径</span><input class="txt sc" value="C:\Program Files\Java\jdk-21\bin\javaw.exe"></div>
+                <div class="set-row"><span class="sl">最大内存</span><input class="txt sc mono" value="4096 MB"></div>
+                <div class="set-row"><span class="sl">JVM 参数</span><input class="txt sc" value="-XX:+UseG1GC -XX:+ParallelRefProcEnabled"></div>
+                <div class="set-row"><span class="sl">渲染 API</span><select class="sel sc"><option>OpenGL 3.3</option><option>Vulkan (VulkanMod)</option></select></div>
+              </div>
+              <div class="set-card">
+                <h4>外观</h4>
+                <div class="set-row"><span class="sl">主题</span>
+                  <select class="sel sc" id="themeSelect"><option>揉纸 · 浅色</option><option>揉纸 · 深色</option><option>跟随系统</option></select></div>
+                <div class="set-row"><span class="sl">窗口宽度记忆</span><button class="switch on"></button></div>
+                <div class="set-row"><span class="sl">纸张纹理</span><button class="switch on"></button></div>
+                <div class="set-row"><span class="sl">动画减弱</span><button class="switch"></button></div>
+              </div>
+              <div class="set-card">
+                <h4>目录与网络</h4>
+                <div class="set-row"><span class="sl">游戏根目录</span><input class="txt sc" value="D:\Games\.minecraft"></div>
+                <div class="set-row"><span class="sl">下载源</span>
+                  <select class="sel sc"><option>McConfig 镜像</option><option>官方 Mojang</option><option>BMCLAPI</option></select></div>
+                <div class="set-row"><span class="sl">并发下载数</span><input class="txt sc mono" value="8"></div>
+              </div>
+              <div class="set-card">
+                <h4>账户</h4>
+                <div class="set-row"><span class="sl">微软账户</span><span class="sc" style="font-size:12px;color:var(--ink-3)">未绑定</span><button class="link-btn">绑定</button></div>
+                <div class="set-row"><span class="sl">离线账户</span><span class="sc" style="font-size:12px">kongbai</span><button class="link-btn">切换</button></div>
+                <div class="set-row"><span class="sl">Crack / Elyby</span><span class="sc" style="font-size:12px;color:var(--ink-3)">已添加 1 个</span><button class="link-btn">管理</button></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px">
+              <button class="btn">取消</button>
+              <button class="btn primary" id="btnSave">保存设置</button>
+            </div>
+          </section>
+
+          <!-- ===== 关于 ===== -->
+          <section class="view" id="viewAbout">
+            <div class="panel" style="padding:40px">
+              <div class="empty" style="padding:0">
+                <div class="empty-icon" style="color:var(--accent)">
+                  <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 4v5M9 15l2 2 4-4"/></svg>
+                </div>
+                <div class="empty-title">Fold Craft Launcher</div>
+                <div class="empty-sub">桌面版 1.3.3.3 · 揉纸主题 · 单文件原型 v3<br>把手机端的纸张质感搬到大屏：更宽的视野、可排序的实例表、右键菜单与实时日志。</div>
+                <div style="display:flex;gap:8px;justify-content:center;margin-top:20px">
+                  <button class="btn">检查更新</button><button class="btn">开源许可</button><button class="btn">反馈问题</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </main>
+
+      <div class="grip" data-grip="side" title="拖动调整面板宽度"></div>
+      <!-- 右侧操作面板 -->
+      <aside class="side">
+        <div class="acct">
+          <div class="face"></div>
+          <div class="acct-info">
+            <div class="acct-name">kongbai</div>
+            <div class="acct-type">离线账户 · 皮肤已加载</div>
+          </div>
+          <button class="link-btn" id="btnSwitchAcct">切换</button>
+        </div>
+
+        <div class="vercard">
+          <div class="ver-list" id="verList"></div>
+          <button class="ver-current" id="verToggle" title="点击展开全部实例">
+            <div class="ver-icon"></div>
+            <div class="ver-info">
+              <div class="ver-name" id="curName">1.12.2-Forge</div>
+              <div class="ver-sub" id="curSub">1.12.2 · Forge 14.23.5 · 23 mods</div>
+            </div>
+            <svg class="caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
+
+        <div class="field">
+          <div class="field-row"><span class="flabel">分配内存</span><span class="fval" id="memVal">4096 MB</span></div>
+          <input type="range" id="mem" min="1024" max="12288" step="512" value="4096">
+          <div class="field-row" style="font-size:10px;color:var(--ink-3)">
+            <span>1024</span><span>本机空闲 11.2 GB</span><span>12288</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="flabel">Java 运行时</span>
+          <select class="sel" id="javaSel">
+            <option>JDK 21（推荐 · 1.20.5+）</option>
+            <option selected>JDK 17（1.17 – 1.20.4）</option>
+            <option>JDK 8（≤ 1.16.5）</option>
+          </select>
+        </div>
+
+        <button class="launch" id="btnStart">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>启 动
+        </button>
+        <div class="launch-hint">快捷键 <kbd>Ctrl</kbd> + <kbd>Enter</kbd> · 启动前将自动校验文件完整性</div>
+
+        <div class="more-row">
+          <button class="btn" data-toast="已打开 .minecraft 目录"><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>打开目录</button>
+          <button class="btn" data-toast="已复制实例配置"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5h10"/></svg>复制实例</button>
+          <button class="btn" data-toast="已导出为整合包"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4l4 4M4 20h16"/></svg>导出</button>
+        </div>
+
+        <div class="side-card">
+          <div class="side-title">启动参数 <button class="link-btn" data-toast="已切换到高级编辑">高级</button></div>
+          <div class="kv"><span>游戏窗口</span><span>1920 × 1080</span></div>
+          <div class="kv"><span>全屏</span><span>否</span></div>
+          <div class="kv"><span>语言</span><span>zh_CN</span></div>
+          <div class="kv"><span>服务器</span><span>默认</span></div>
+          <div class="kv"><span>Mod 完整性</span><span style="color:var(--accent)">已通过</span></div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- 日志抽屉 -->
+    <div class="logdrawer" id="logDrawer">
+      <div class="log-head">
+        <b>启动日志</b><span>logs/latest.log</span>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="link-btn" style="color:#9E9B90" data-toast="日志已复制">复制</button>
+          <button class="link-btn" style="color:#9E9B90" data-toast="日志已清空">清空</button>
+          <button class="link-btn" style="color:#9E9B90" id="logClose">收起</button>
+        </div>
+      </div>
+      <div class="log-body" id="logBody">
+<div><span class="lt">[11:24:02]</span> 正在读取实例配置 1.12.2-Forge…</div>
+<div><span class="lt">[11:24:02]</span> <span class="lok">[OK]</span> 版本 json 校验通过（forge-1.12.2-14.23.5.2860）</div>
+<div><span class="lt">[11:24:03]</span> <span class="lok">[OK]</span> 23 个 Mod 文件完整性检查完成</div>
+<div><span class="lt">[11:24:03]</span> <span class="lw">[WARN]</span> 检测到旧版 OptiFine，建议升级至 H8</div>
+<div><span class="lt">[11:24:04]</span> 等待启动指令…</div>
+      </div>
+    </div>
+
+    <!-- ===== 工具窗 ===== -->
+    <div class="mask" id="toolMask">
+      <div class="modal" style="width:660px" role="dialog" aria-modal="true" aria-labelledby="tlTitle">
+        <div class="md-head">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="tool-ico" id="tlIco" style="background:#3D6B66"><svg viewBox="0 0 24 24"><path d="M3 8h18v11H3z"/></svg></div>
+            <div>
+              <div class="md-title" id="tlTitle">工具</div>
+              <div class="panel-sub" id="tlNote2">—</div>
+            </div>
+            <button class="x-btn" id="tlClose" style="margin-left:auto"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+        </div>
+        <div class="md-body" id="tlBody" style="min-height:190px"></div>
+        <div class="md-foot">
+          <div class="panel-sub" id="tlHint">运行结果只在本地写入，不会自动同步到手机</div>
+          <div class="right">
+            <button class="btn" id="tlCancel">关闭</button>
+            <button class="btn primary" id="tlRun">运行</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- 状态栏 -->
+    <footer class="statusbar">
+      <div class="sb-i"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="10" rx="2"/><path d="M8 11h8"/></svg>Java 17 · 64 位</div>
+      <div class="sb-i"><svg viewBox="0 0 24 24"><path d="M4 18V8m5 10V4m5 14v-7m5 7V9"/></svg>内存 4096 M</div>
+      <div class="sb-i"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18M12 3c-3 3.5-3 14 0 18"/></svg>McConfig 镜像 · 42 ms</div>
+      <button class="sb-btn" id="sbDev" title="点击前往手机互联"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="9" height="14" rx="2"/><path d="M8.5 4.5h4"/></svg><span id="sbDevTxt">手机已连接</span></button>
+      <div class="sb-right">
+        <button class="sb-btn" id="btnLog"><svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8"><path d="M4 5h16v14H4zM8 9h8M8 13h6"/></svg>日志</button>
+        <button class="sb-btn" id="sbTask" title="点击结束当前进程">空闲</button>
+        <div class="sb-i" style="opacity:.85">FCL 1.3.3.3</div>
+      </div>
+    </footer>
+
+    <!-- ===== 新建实例向导 ===== -->
+    <div class="mask" id="mask">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mdTitleId">
+        <div class="md-head">
+          <div style="display:flex;align-items:center">
+            <div class="md-title" id="mdTitleId">新建实例</div>
+            <button class="x-btn" id="mdClose" style="margin-left:auto"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          </div>
+          <div class="md-steps" id="mdSteps">
+            <div class="st on"><span class="dot">1</span>游戏版本</div><span class="bar"></span>
+            <div class="st"><span class="dot">2</span>加载器</div><span class="bar"></span>
+            <div class="st"><span class="dot">3</span>实例配置</div><span class="bar"></span>
+            <div class="st"><span class="dot">4</span>确认</div>
+          </div>
+        </div>
+
+        <div class="md-body">
+          <div class="md-pane on" data-pane="1">
+            <div class="md-note">选择要安装的原版游戏版本。快照版同样可下载，但稳定性由 Mojang 保证程度较低。</div>
+            <div class="pick-grid" id="pickVer">
+              <div class="pick sel" data-v="1.21.4">1.21.4<small>2024-12-03</small></div>
+              <div class="pick" data-v="1.21.1">1.21.1<small>2024-08-08</small></div>
+              <div class="pick" data-v="1.20.6">1.20.6<small>2024-04-29</small></div>
+              <div class="pick" data-v="1.20.1">1.20.1<small>LTS 推荐</small></div>
+              <div class="pick" data-v="1.19.4">1.19.4<small>2023-03-14</small></div>
+              <div class="pick" data-v="1.18.2">1.18.2<small>洞穴更新</small></div>
+              <div class="pick" data-v="1.16.5">1.16.5<small>光影生态</small></div>
+              <div class="pick" data-v="1.12.2">1.12.2<small>整合常青树</small></div>
+              <div class="pick" data-v="1.7.10">1.7.10<small>Mod 黄金期</small></div>
+              <div class="pick" data-v="25w43a">25w43a<small>快照 · 新粒子</small></div>
+              <div class="pick" data-v="b1.7.3">b1.7.3<small>Beta 时代</small></div>
+              <div class="pick" data-v="1.5.2">1.5.2<small>红石更新</small></div>
+            </div>
+          </div>
+
+          <div class="md-pane" data-pane="2">
+            <div class="md-note">加载器决定可运行的 Mod 生态。原版即不安装任何加载器。</div>
+            <div class="pick-grid" id="pickLoader">
+              <div class="pick sel" data-l="Forge">Forge<small>14.23.5.2860</small></div>
+              <div class="pick" data-l="Fabric">Fabric<small>loader 0.16.9</small></div>
+              <div class="pick" data-l="NeoForge">NeoForge<small>21.4.60</small></div>
+              <div class="pick" data-l="Quilt">Quilt<small>0.21.2</small></div>
+              <div class="pick" data-l="OptiFine">OptiFine<small>H8 · 光影</small></div>
+              <div class="pick" data-l="原版">原版<small>纯净无 Mod</small></div>
+            </div>
+            <div class="md-note" style="margin-top:14px">
+              <span class="chip">提示</span> 版本与加载器兼容性会在下一步自动校验，例如 1.20.5+ 必须使用 Java 21。
+            </div>
+          </div>
+
+          <div class="md-pane" data-pane="3">
+            <div class="md-field"><label>实例名称</label>
+              <input class="txt" id="mdName" value="我的新整合"></div>
+            <div class="md-field"><label>游戏目录</label>
+              <input class="txt" id="mdPath" value="D:\Games\.minecraft\instances\new-1.21.4"></div>
+            <div class="md-field"><label>Java 运行时</label>
+              <select class="sel" id="mdJava">
+                <option>JDK 21（1.20.5+ 必需）</option>
+                <option>JDK 17（1.17 – 1.20.4）</option>
+                <option>JDK 8（≤ 1.16.5）</option>
+              </select></div>
+            <div class="md-field"><label>分配内存</label>
+              <input class="txt mono" id="mdMem" value="4096 MB"></div>
+          </div>
+
+          <div class="md-pane" data-pane="4">
+            <div class="md-note">确认无误后将创建实例并开始下载依赖，你可以随时在实例列表右键管理。</div>
+            <div class="md-sum">
+              <div class="kv"><span>游戏版本</span><span class="mono" id="sVer">1.21.4</span></div>
+              <div class="kv"><span>加载器</span><span id="sLoader">Forge 14.23.5.2860</span></div>
+              <div class="kv"><span>实例名称</span><span id="sName">我的新整合</span></div>
+              <div class="kv"><span>游戏目录</span><span class="mono" id="sPath">D:\Games\.minecraft\instances\new-1.21.4</span></div>
+              <div class="kv"><span>Java</span><span id="sJava">JDK 21</span></div>
+              <div class="kv"><span>内存</span><span class="mono" id="sMem">4096 MB</span></div>
+              <div class="kv"><span>预计下载</span><span class="mono" id="sSize">约 210 MB</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="md-foot">
+          <button class="btn" id="mdPrev"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>上一步</button>
+          <div class="right">
+            <button class="btn" id="mdCancel">取消</button>
+            <button class="btn primary" id="mdNext">下一步<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 右键菜单 -->
+<div class="ctx" id="ctx">
+  <button data-act="启动"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg>启动实例<span class="sk">Ctrl↵</span></button>
+  <button data-act="重命名"><svg viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16z"/></svg>重命名<span class="sk">F2</span></button>
+  <button data-act="复制实例"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5h10"/></svg>复制实例</button>
+  <hr>
+  <button data-act="打开游戏目录"><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>打开游戏目录</button>
+  <button data-act="导出整合包"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4l4 4M4 20h16"/></svg>导出整合包</button>
+  <button data-act="实例设置"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>实例设置</button>
+  <hr>
+  <button class="danger" data-act="删除实例"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>删除实例</button>
+</div>
+
+
+<script>
+/* ================= 数据 ================= */
+const instances=[
+  {name:'1.12.2-Forge',   cls:'',  sub:'旧养老档',   ver:'1.12.2',  loader:'Forge',    lver:'14.23.5',   mods:23, size:'6.2 GB',  last:3,   lastTxt:'3 天前'},
+  {name:'1.20.1-Fabric',  cls:'f', sub:'纸鸢整合',   ver:'1.20.1',  loader:'Fabric',   lver:'0.16.9',    mods:18, size:'4.8 GB',  last:7,   lastTxt:'1 周前'},
+  {name:'1.21.4-NeoForge',cls:'q', sub:'新版本试水', ver:'1.21.4',  loader:'NeoForge', lver:'21.4.60',   mods:12, size:'3.1 GB',  last:14,  lastTxt:'2 周前'},
+  {name:'1.16.5-OptiFine',cls:'o', sub:'光影专用档', ver:'1.16.5',  loader:'OptiFine', lver:'H8',        mods:8,  size:'2.4 GB',  last:31,  lastTxt:'1 月前'},
+  {name:'1.7.10-Vanilla', cls:'',  sub:'怀旧原版',   ver:'1.7.10',  loader:'原版',     lver:'—',         mods:0,  size:'410 MB',  last:58,  lastTxt:'2 月前'},
+  {name:'1.18.2-Quilt',   cls:'q', sub:'实验性整合', ver:'1.18.2',  loader:'Quilt',    lver:'0.21.2',    mods:18, size:'2.9 GB',  last:66,  lastTxt:'2 月前'},
+  {name:'1.19.2-Fabric',  cls:'f', sub:'建筑向整合', ver:'1.19.2',  loader:'Fabric',   lver:'0.14.21',   mods:31, size:'3.6 GB',  last:92,  lastTxt:'3 月前'}
+];
+/* 集中状态：选中实例 / 排序键与方向 / 过滤后的视图 */
+const state={selected:0,sortKey:'last',sortAsc:true,view:[]};
+let selected=state.selected, sortKey=state.sortKey, sortAsc=state.sortAsc, view=state.view;
+/* 结束进程：状态栏运行态可点击复位 */
+
+
+const skins=[
+  {name:'Alex',   hair:'#6B4A36', body:'#2E8B8B', active:true},
+  {name:'Steve',  hair:'#4A3428', body:'#3B6EA5'},
+  {name:'Ghost',  hair:'#2C2C2A', body:'#E8E6DF'},
+  {name:'Ember',  hair:'#B8543F', body:'#6B4A36'},
+  {name:'Moss',   hair:'#3D6B66', body:'#6B8E4E'},
+  {name:'Snow',   hair:'#E8E6DF', body:'#4A6FA5'},
+  {name:'Shadow', hair:'#1A1A1A', body:'#2C2C2A'},
+  {name:'Custom', hair:'#C9A961', body:'#B8543F'}
+];
+
+/* ================= 工具 ================= */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1900);
+}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+/* ================= 表格渲染 ================= */
+const insBody=document.getElementById('insBody');
+function renderTable(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  const fl=document.getElementById('filterLoader').value;
+  /* 带下标的视图数组：不再依赖 instances.indexOf */
+  state.view=view=instances.map((x,i)=>({x,i})).filter(o=>{
+    const x=o.x;
+    return (!fl||x.loader===fl)&&(!q||x.name.toLowerCase().includes(q)||x.sub.includes(q)||x.ver.includes(q));
+  });
+  view.sort((a,b)=>{
+    let va=a.x[sortKey],vb=b.x[sortKey];
+    if(typeof va==='string'){va=va.toLowerCase();vb=String(vb).toLowerCase();}
+    return (va>vb?1:va<vb?-1:0)*(sortAsc?1:-1);
+  });
+  insBody.innerHTML=view.map(o=>{
+    const x=o.x,on=o.i===selected;
+    return `<tr data-i="${o.i}" class="${on?'sel':''}">
+      <td><div class="iname"><span class="ibadge ${x.cls}"></span>${esc(x.name)}</div><div class="tagline">${esc(x.sub)}</div></td>
+      <td class="mono">${esc(x.ver)}</td>
+      <td><span class="chip">${esc(x.loader)}${x.lver!=='—'?' '+esc(x.lver):''}</span></td>
+      <td class="mono">${x.mods?x.mods:'<span style="color:var(--ink-3)">0</span>'}</td>
+      <td class="mono">${esc(x.size)}</td>
+      <td>${on?'<span class="run-dot">当前实例</span>':'<span style="color:var(--ink-3)">'+esc(x.lastTxt)+'</span>'}</td>
+      <td class="row-act" style="text-align:right">
+        <button class="icon-btn" title="启动"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg></button>
+        <button class="icon-btn" title="更多"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+      </td></tr>`;
+  }).join('');
+  const n=view.length;
+  document.getElementById('rowCount').textContent='共 '+n+' 条';
+  document.getElementById('noResult').style.display=n?'none':'block';
+  document.getElementById('listPanel').querySelector('table').style.display=n?'table':'none';
+  insBody.querySelectorAll('tr').forEach(tr=>{
+    const i=+tr.dataset.i;
+    tr.addEventListener('click',()=>pick(i));
+    tr.addEventListener('dblclick',()=>{pick(i);launch();});
+    tr.addEventListener('contextmenu',e=>{e.preventDefault();pick(i);openCtx(e.clientX,e.clientY);});
+  });
+  renderCards();
+  renderVerList();
+}
+/* 单一渲染入口：任何状态变更只需调用 render() */
+function render(){
+  renderTable();
+  if(document.getElementById('viewMods').classList.contains('on'))renderMods();
+}
+function renderCards(){
+  document.getElementById('cardPanel').innerHTML=view.map(o=>{
+    const x=o.x,i=o.i,c=['','b','c','d'][i%4];
+    return `<div class="ins-card ${i===selected?'sel':''}" data-i="${i}">
+      <div class="cover ${c}"></div>
+      <h4>${esc(x.name)}</h4>
+      <p>${esc(x.sub)} · ${esc(x.loader)}<br>${x.mods} mods · ${esc(x.size)} · ${esc(x.lastTxt)}</p>
+    </div>`;}).join('');
+  document.querySelectorAll('.ins-card').forEach(cd=>{
+    const i=+cd.dataset.i;
+    cd.addEventListener('click',()=>pick(i));
+    cd.addEventListener('contextmenu',e=>{e.preventDefault();pick(i);openCtx(e.clientX,e.clientY);});
+  });
+}
+function pick(i){
+  state.selected=selected=i;const x=instances[i];
+  document.getElementById('curName').textContent=x.name;
+  document.getElementById('curSub').textContent=x.ver+' · '+x.loader+(x.lver!=='—'?' '+x.lver:'')+' · '+x.mods+' mods';
+  document.getElementById('verList').classList.remove('open');
+  render();
+}
+
+/* ================= 右侧实例列表 ================= */
+function renderVerList(){
+  document.getElementById('verList').innerHTML=instances.map((x,i)=>`
+    <button class="ver-item ${i===selected?'active':''}" data-i="${i}">
+      <div class="vsmall ${x.cls}"></div>
+      <div class="ver-item-name"><div class="n">${esc(x.name)}</div><div class="s">${esc(x.sub)} · ${x.mods} mods</div></div>
+      <div class="ver-item-time">${esc(x.lastTxt)}</div>
+    </button>`).join('');
+  document.querySelectorAll('.ver-item').forEach(b=>{
+    b.addEventListener('click',e=>{
+      e.stopPropagation();pick(+b.dataset.i);
+      document.getElementById('verList').classList.remove('open');
+    });
+  });
+}
+document.getElementById('verToggle').addEventListener('click',()=>{
+  document.getElementById('verList').classList.toggle('open');
+});
+
+/* ================= 排序 / 筛选 / 搜索 ================= */
+document.querySelectorAll('table.grid th[data-sort]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const k=th.dataset.sort;
+    if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=true;}
+    state.sortKey=sortKey;state.sortAsc=sortAsc;
+    document.querySelectorAll('table.grid th').forEach(x=>{x.classList.remove('sorted');const a=x.querySelector('.ar');if(a)a.textContent='▲';});
+    th.classList.add('sorted');th.querySelector('.ar').textContent=sortAsc?'▲':'▼';
+    renderTable();
+  });
+});
+document.getElementById('search').addEventListener('input',renderTable);
+document.getElementById('filterLoader').addEventListener('change',renderTable);
+
+/* ================= 视图切换 ================= */
+const titles={home:['实例总览','首页 · 本地 7 个实例 · 上次同步 2 分钟前'],
+  dl:['下载中心','下载中心 · 版本 / 加载器 / Mod'],
+  mods:['Mod 管理','Mod 管理 · 冲突检测 / 依赖 / 启用开关'],
+  tools:['工具箱','工具箱 · 桌面端自有工具，互联类只搬运公共目录'],
+  phone:['手机互联','手机互联 · 两端公共目录互传，不重复实现手机端功能'],
+  closet:['衣柜','衣柜 · 皮肤与角色'],
+  ctrl:['运行控制','控制 · 正在运行的游戏与快捷动作'],
+  set:['设置','设置 · 启动器全局配置'],
+  about:['关于','关于 · 版本信息']};
+document.querySelectorAll('.nav-item[data-view]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const v=b.dataset.view;
+    document.querySelectorAll('.view').forEach(s=>s.classList.remove('on'));
+    const map={home:'viewHome',dl:'viewDl',mods:'viewMods',phone:'viewPhone',tools:'viewTools',closet:'viewCloset',ctrl:'viewCtrl',set:'viewSet',about:'viewAbout'};
+    if(v==='tools')renderTools();
+    if(v==='phone')renderPhoneExtra();
+    if(v==='mods')renderMods();
+    if(v==='phone')renderPhone();
+    document.getElementById(map[v]).classList.add('on');
+    document.getElementById('viewTitle').textContent=titles[v][0];
+    document.getElementById('viewCrumb').textContent=titles[v][1];
+    const desk=v==='home';
+    document.getElementById('segView').style.display=desk?'flex':'none';
+    document.getElementById('btnAdd').style.display=desk?'inline-flex':'none';
+    document.getElementById('btnRefresh').style.display=desk?'inline-flex':'none';
+  });
+});
+
+/* ================= 列表 / 网格 ================= */
+document.getElementById('segView').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#segView button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  const card=b.dataset.mode==='card';
+  document.getElementById('listPanel').style.display=card?'none':'block';
+  document.getElementById('cardPanel').style.display=card?'grid':'none';
+});
+document.getElementById('segRelease').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#segRelease button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');renderDl();
+});
+
+/* ================= 下载列表 ================= */
+const dlData={
+  '正式版':[['1.21.4','2024-12-03 · 正式版发布','release'],['1.21.1','2024-08-08 · 稳定性修复','release'],
+    ['1.20.6','2024-04-29 · 试炼密室','release'],['1.20.1','2023-06-12 · 长期推荐','release'],
+    ['1.19.4','2023-03-14 · 遗迹与追踪弓','release'],['1.16.5','2021-01-15 · 光影生态成熟','release']],
+  '快照版':[['25w43a','本周快照 · 新粒子系统','snap'],['25w42a','建筑更新','snap'],['25w41a','红石修复','snap']],
+  '历史版本':[['b1.7.3','2011 · Beta 时代'],['1.5.2','2013 · 红石更新'],['1.7.10','2014 · Mod 黄金期'],['1.12.2','2017 · 整合包常青树']]
+};
+function renderDl(){
+  const tab=document.querySelector('#segRelease button.active').textContent;
+  document.getElementById('dlList').innerHTML=dlData[tab].map(v=>`
+    <div class="dl-row">
+      <div class="dl-ver">${esc(v[0])}</div>
+      <div class="dl-meta">${esc(v[1])}</div>
+      <div class="loaders">
+        <button class="btn">Forge</button><button class="btn">Fabric</button>
+        <button class="btn">NeoForge</button><button class="btn primary"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>原版</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ================= 衣柜 ================= */
+const grid=document.getElementById('skinGrid');
+skins.forEach((s,idx)=>{
+  const cell=document.createElement('div');
+  cell.className='skin-cell'+(s.active?' active':'');
+  cell.innerHTML=`<div class="skin-face">
+      <div class="hair" style="background:${s.hair}"></div>
+      <div class="fc"></div><div class="eyes"></div>
+      <div class="bd" style="background:${s.body}"></div></div>
+    <div class="skin-name">${s.name}</div>`;
+  cell.addEventListener('click',()=>{
+    document.querySelectorAll('.skin-cell').forEach(x=>x.classList.remove('active'));
+    cell.classList.add('active');
+    document.getElementById('pvHair').style.background=s.hair;
+    document.getElementById('pvBody').style.background=s.body;
+    document.getElementById('pvName').textContent=s.name;
+    toast('已选择皮肤 '+s.name);
+  });
+  grid.appendChild(cell);
+});
+document.getElementById('pvHair').style.background=skins[0].hair;
+document.getElementById('pvBody').style.background=skins[0].body;
+
+/* ================= 右键菜单 ================= */
+const ctx=document.getElementById('ctx');
+let winScale=1;
+function openCtx(x,y){
+  ctx.classList.add('show');
+  ctx.style.transform='scale('+winScale+')';
+  ctx.style.transformOrigin='top left';
+  const w=ctx.offsetWidth*winScale,h=ctx.offsetHeight*winScale;
+  ctx.style.left=Math.min(x,innerWidth-w-8)+'px';
+  ctx.style.top=Math.min(y,innerHeight-h-8)+'px';
+}
+document.addEventListener('pointerdown',()=>ctx.classList.remove('show'));
+addEventListener('contextmenu',e=>{if(!e.target.closest('tr,.ins-card'))ctx.classList.remove('show');});
+
+ctx.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const act=b.dataset.act,name=instances[selected].name;
+  if(act==='启动')launch();
+  else if(act==='删除实例')toast('已取消删除 '+name+'（原型不执行真实删除）');
+  else if(act==='重命名')toast('重命名 '+name);
+  else toast(act+'：'+name);
+});
+
+/* ================= 启动 + 日志 ================= */
+const launchBtn=document.getElementById('btnStart');
+const drawer=document.getElementById('logDrawer'),logBody=document.getElementById('logBody'),sbTask=document.getElementById('sbTask');
+let running=false;
+function stamp(){const d=new Date();return '['+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0')+']';}
+function logLine(html){const div=document.createElement('div');div.innerHTML=html;logBody.appendChild(div);logBody.scrollTop=logBody.scrollHeight;}
+function launch(){
+  if(running)return;running=true;
+  drawer.classList.add('open');
+  launchBtn.classList.add('busy');
+  launchBtn.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 4v4m0 8v4M4 12h4m8 0h4" stroke="currentColor" stroke-width="2" fill="none"/></svg>加载中…';
+  const x=instances[selected];
+  const steps=[
+    ['正在准备启动 '+x.name+'…',''],
+    ['<span class="lok">[OK]</span> 资源文件校验通过（assets / libraries）',''],
+    ['<span class="lok">[OK]</span> 已注入 '+x.mods+' 个 Mod',''],
+    ['<span class="lok">[OK]</span> Java 17 · 4096 MB · G1GC',''],
+    ['<span class="lok">[OK]</span> 游戏窗口已创建 1920 × 1080','']
+  ];
+  let i=0;
+  sbTask.innerHTML='<span class="run-dot">正在启动 '+esc(x.name)+'</span>';
+  const h=setInterval(()=>{
+    logLine('<span class="lt">'+stamp()+'</span> '+steps[i][0]);i++;
+    if(i>=steps.length){
+      clearInterval(h);
+      logLine('<span class="lt">'+stamp()+'</span> <span class="lok">[DONE]</span> 进程运行中 · PID 18422');
+      sbTask.innerHTML='<span class="run-dot">'+esc(x.name)+' 运行中 · PID 18422</span>';
+      sbTask.dataset.running='1';
+      launchBtn.classList.remove('busy');
+      launchBtn.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>运 行 中';
+      toast('已启动 '+x.name+'，可点击状态栏结束进程');
+    }
+  },420);
+}
+launchBtn.addEventListener('click',launch);
+document.getElementById('btnLog').addEventListener('click',()=>drawer.classList.toggle('open'));
+document.getElementById('logClose').addEventListener('click',()=>drawer.classList.remove('open'));
+addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='Enter'){e.preventDefault();launch();}
+  if(e.ctrlKey&&(e.key==='k'||e.key==='K')){e.preventDefault();document.getElementById('search').focus();}
+  if(e.key==='Escape')ctx.classList.remove('show');
+});
+
+/* 设置页与控制页的开关：此前只有样式没有行为，补上点击与语义 */
+document.querySelectorAll('.set-row .switch').forEach((sw,i)=>{
+  sw.setAttribute('role','switch');
+  sw.setAttribute('aria-checked',sw.classList.contains('on')?'true':'false');
+  sw.setAttribute('aria-label','设置开关 '+(i+1));
+  sw.addEventListener('click',()=>{
+    sw.classList.toggle('on');
+    sw.setAttribute('aria-checked',sw.classList.contains('on')?'true':'false');
+    toast((sw.classList.contains('on')?'已开启 · ':'已关闭 · ')+sw.closest('.set-row').querySelector('.sl').textContent);
+  });
+});
+
+/* 点击状态栏运行态结束进程 */
+sbTask.addEventListener('click',()=>{
+  if(sbTask.dataset.running!=='1'){toast('当前没有运行中的游戏实例');return;}
+  const nm=instances[selected].name;
+  sbTask.dataset.running='';sbTask.textContent='空闲';
+  running=false;
+  launchBtn.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>启 动';
+  logLine('<span class="lt">'+stamp()+'</span> <span class="lw">[STOP]</span> '+esc(nm)+' 进程已结束（PID 18422）');
+  toast('已结束 '+nm);
+});
+
+/* ================= 其他交互 ================= */
+document.getElementById('mem').addEventListener('input',e=>{
+  document.getElementById('memVal').textContent=e.target.value+' MB';
+});
+document.getElementById('btnCollapse').addEventListener('click',()=>{
+  document.getElementById('win').classList.toggle('narrow');
+});
+document.getElementById('noticeClose').addEventListener('click',()=>{
+  document.getElementById('noticeBar').style.display='none';toast('公告已隐藏');
+});
+document.getElementById('btnRefresh').addEventListener('click',()=>{
+  document.getElementById('viewCrumb').textContent='首页 · 本地 7 个实例 · 上次同步 刚刚';renderTable();toast('已刷新实例列表');
+});
+document.getElementById('btnSave').addEventListener('click',()=>toast('设置已保存'));
+document.getElementById('btnSwitchAcct').addEventListener('click',()=>toast('账户切换面板（原型占位）'));
+document.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click',()=>toast(b.dataset.toast)));
+
+/* ================= 窗口控制（原型内模拟） ================= */
+let maximized=false;
+function fit(){
+  const wrap=document.getElementById('deskWrap');
+  if(maximized){wrap.style.transform='';document.getElementById('toast').style.setProperty('--s','1');document.getElementById('win').style.width=innerWidth-24+'px';
+    document.getElementById('win').style.height=innerHeight-24+'px';return;}
+  document.getElementById('win').style.width='1440px';
+  document.getElementById('win').style.height='900px';
+  const s=Math.min((innerWidth-48)/1440,(innerHeight-56)/900,1);
+  winScale=s;wrap.style.transform='scale('+s.toFixed(3)+')';
+  document.getElementById('toast').style.setProperty('--s',s.toFixed(3));
+}
+addEventListener('resize',fit);
+document.querySelectorAll('.winctl button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const k=b.dataset.win;
+    if(k==='max'){maximized=!maximized;fit();toast(maximized?'窗口已最大化':'已还原为 1440 × 900');}
+    else if(k==='min')toast('原型中不最小化，仅提示');
+    else toast('关闭前将检查运行中的游戏进程');
+  });
+});
+
+/* ================= 工具箱 ================= */
+const tools=[
+ {id:'nbt',n:'NBT 存档快查',cat:'效率',st:'ready',c:'#3D6B66',d:'只读打开 level.dat 与区块数据，查实体、玩家坐标、时间天气，改动前自动备份。',
+  f:[{l:'目标存档',t:'sel',o:['存档备份','空岛挑战','纸鸢主城','创造测试场']},{l:'节点',t:'sel',o:['Data/player','Data/Dimensions','level.dat 根节点']}],
+  out:['读取 level.dat（压缩 NBT，4.2 MB）','根节点 12 项 · Data 下 8 项','player.Pos = [-128.5, 73.0, 402.25]','World Age 1,204,882 · Daylight Cycle 6,113']},
+ {id:'logscan',n:'日志分析器',cat:'分析',st:'ready',c:'#B8543F',d:'扫描 latest.log，把异常按 Mod、Loader、显驱归类并给出定位建议。',
+  f:[{l:'日志文件',t:'sel',o:['logs/latest.log','logs/2026-10-26-1.log.gz','崩溃转储 crash-261026.log']},{l:'严格程度',t:'sel',o:['只看致命','致命 + 警告','全量']}],
+  out:['解析 8,412 行 · 耗时 0.6s','致命 1：java.lang.NoClassDefFoundError: net/minecraft/class_5330','定位：Modern UI 3.11.1 引用了 1.20.1 已重命名的类','建议：升级到 3.11.2 或临时禁用该 Mod','警告 4：音频设备降级、纹理图集缺失 2 张']},
+ {id:'dep',n:'Mod 依赖体检',cat:'分析',st:'ready',c:'#4A6FA5',d:'解析 jar 内的 fabric.mod.json / mods.toml，画出前置依赖树，找出缺失与版本不匹配。',
+  f:[{l:'实例',t:'sel',o:['1.20.1-Fabric（当前）','1.12.2-Forge','1.21.4-NeoForge']},{l:'深度',t:'sel',o:['一层','全部递归']}],
+  out:['扫描 18 个 jar · 依赖边 27 条','缺失前置：Cloth Config API（被 Modern UI、Create 引用）','循环依赖：无','版本不匹配：Architectury 9.1.12 → 建议 9.2.14','体检结论：1 致命 / 1 建议']},
+ {id:'hash',n:'文件完整性校验',cat:'分析',st:'ready',c:'#6B8E4E',d:'对 libraries、assets、版本 jar 逐条比对官方哈希，缺什么补什么。',
+  f:[{l:'范围',t:'sel',o:['当前实例全部','仅 assets','仅 libraries']},{l:'并发',t:'sel',o:['8','16','32']}],
+  out:['校验 3,146 个文件 · SHA-1','通过 3,140 · 缺失 5 · 不匹配 1','缺失：assets/minecraft/textures/block/…（4 张）','不匹配：fabric-loader-0.16.9.jar（期望 a13f…，实际 7c20…）','已加入修复队列']},
+ {id:'diff',n:'实例差异对比',cat:'分析',st:'ready',c:'#8A6A50',d:'两个实例的 mods / config 做文件级 diff，用于排查「那个档能进这个档不能」。',
+  f:[{l:'左侧',t:'sel',o:['1.20.1-Fabric','1.21.4-NeoForge']},{l:'右侧',t:'sel',o:['1.19.2-Fabric','1.18.2-Quilt']}],
+  out:['仅左侧存在：ImmediatelyFast 1.2.18、EntityCulling 6.4.0','仅右侧存在：Starlight 1.1.4','内容不同：jei.json（配置项 12 处差异）、options.txt（键位 3 处）','相同：1,204 个文件']},
+ {id:'skin',n:'皮肤工具',cat:'资源',st:'ready',c:'#3D6B66',d:'导入/裁切 64×64 皮肤，旧 64×32 自动补全外层手臂与腿。',
+  f:[{l:'源文件',t:'sel',o:['share/skins/alex.png','share/skins/steve.png','本地导入…']},{l:'模型',t:'sel',o:['Alex（细臂）','Steve（标准）']}],
+  out:['读取 64×32 旧版皮肤','外层手臂、外层腿已按 8px 复制到第二排','输出 share/skins/alex_64x64.png','衣柜预览已刷新']},
+ {id:'pack',n:'资源包打包',cat:'资源',st:'ready',c:'#C9A961',d:'把改动过的材质/模型打包成 zip，附带 pack.mcmeta 与版本标记。',
+  f:[{l:'工作目录',t:'sel',o:['resourcepacks/纸鸢材质','resourcepacks/低配替换']},{l:'压缩',t:'sel',o:['无损 zip','最高压缩']}],
+  out:['收集 2,418 个文件 · 跳过 .DS_Store 3 个','pack.mcmeta pack_format=32（1.20.1）','输出 纸鸢材质_v14.zip · 38.4 MB','已放到 share/ 等待推给手机']},
+ {id:'backup',n:'存档压缩备份',cat:'资源',st:'ready',c:'#6B4A36',d:'定时把 saves 压成带时间戳的备份，保留最近 10 份，支持一键回滚。',
+  f:[{l:'备份对象',t:'sel',o:['全部世界','仅「存档备份」']},{l:'保留份数',t:'sel',o:['5','10','20']}],
+  out:['已创建 saves-2026-10-27-0031.zip · 1.1 GB','清理旧备份 2 份','当前保留 9 / 10','回滚入口：实例设置 → 存档历史']},
+ {id:'lan',n:'局域网开服桥',cat:'互联',st:'ready',c:'#4F8580',d:'把电脑上的存档临时开放为局域网世界，让手机端直接加入，不用外网服务器。',
+  f:[{l:'存档',t:'sel',o:['存档备份','空岛挑战']},{l:'游戏模式',t:'sel',o:['生存','创造']}],
+  out:['已广播局域网会话 192.168.1.37:51122','等待设备加入… Pixel 8 Pro 已进入','协议 Java↔Java 版本一致（1.20.1）','会话结束后可一键关闭']},
+ {id:'mig',n:'跨版本迁移入口',cat:'互联',st:'need',c:'#3D6B66',d:'迁移方案由手机端 ModMigrator 生成，桌面端在此接收并执行文件搬运，不重复实现扫描逻辑。',
+  f:[{l:'来源',t:'sel',o:['手机 · 纸鸢整合 1.20.1','手机 · 光影体验 1.16.5']},{l:'落到电脑实例',t:'sel',o:['新建实例','合并到 1.21.4-NeoForge']}],
+  out:['已读取手机 manifest.json（v3 · 6 KB）','迁移方案 7 条 · 2 条需要人工确认','桌面端仅搬运：mods 18 jar / config 42 文件','不搬运：natives、control、scripts']},
+ {id:'clip',n:'剪贴板接力',cat:'互联',st:'need',c:'#888888',d:'手机复制文本、坐标、指令，电脑端直接粘贴（含 MC 指令与分享链接解析）。',
+  f:[{l:'同步内容',t:'sel',o:['纯文本','文本 + 图片路径','全部']},{l:'历史长度',t:'sel',o:['20','50','100']}],
+  out:['监听已开启 · 轮询 2s','最近：/tp @s -128 73 402','最近：share/skins/alex.png','冲突策略：以最新写入为准']},
+ {id:'term',n:'快速终端',cat:'效率',st:'ro',c:'#2C2C2A',d:'面向桌面端的命令面板，只做文件与实例操作；Android 侧脚本不在这里执行。',
+  f:[{l:'预设',t:'sel',o:['打开实例目录','清理 assets 冗余','导出 modlist.txt']},{l:'执行前',t:'sel',o:['询问','直接执行']}],
+  out:['modlist.txt 已导出（18 行）','assets 冗余 0 个','提示：手机端 scripts/*.sh 不在此执行，请在手机上运行']}
+];
+const stText={ready:'可用',need:'需连接手机',ro:'仅查看'};
+let toolFilter='all',toolCat='全部分类',toolQuery='',toolFavIds=['nbt','logscan','dep','lan'];
+const icoOf=id=>({'nbt':'<path d="M4 6h16v12H4z"/><path d="M8 10h8M8 14h5"/>','logscan':'<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/>','dep':'<circle cx="12" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M12 8.5V12M12 12l-5 4M12 12l5 4"/>','hash':'<path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>','diff':'<path d="M9 4v16M15 4v16"/><path d="M4 8h5M15 8h5M4 16h5M15 16h5"/>','skin':'<rect x="6" y="3" width="12" height="12"/><path d="M6 21h12"/>','pack':'<path d="M4 8h16v11H4z"/><path d="M4 8l2-4h12l2 4M12 8v11"/>','backup':'<path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 19h16"/>'}[id]||'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/>');
+
+function renderTools(){
+  const fav=tools.filter(t=>toolFavIds.includes(t.id));
+  document.getElementById('toolFav').innerHTML=fav.map(t=>card(t,true)).join('');
+  const list=tools.filter(t=>{
+    if(toolFilter!=='all'&&t.st!==toolFilter)return false;
+    if(toolCat!=='全部分类'&&t.cat!==toolCat)return false;
+    if(toolQuery&&!(t.n.toLowerCase().includes(toolQuery)||t.d.includes(toolQuery)))return false;
+    return true;
+  });
+  document.getElementById('toolGrid').innerHTML=list.map(t=>card(t,false)).join('')||
+    '<div style="grid-column:1/-1;padding:28px;text-align:center;color:var(--ink-3);font-size:12px">没有匹配的工具</div>';
+  document.getElementById('toolCount').textContent='显示 '+list.length+' / 共 '+tools.length+' 个';
+  document.querySelectorAll('#viewTools .tool-card').forEach(cd=>cd.addEventListener('click',()=>openTool(cd.dataset.id)));
+}
+function card(t,fav){
+  return `<div class="tool-card" data-id="${t.id}">
+    <div class="tool-top">
+      <div class="tool-ico" style="background:${t.c}"><svg viewBox="0 0 24 24">${icoOf(t.id)}</svg></div>
+      <div><div class="tool-name">${esc(t.n)}</div><div class="tool-tag">${esc(t.cat)}${fav?' · 常用':''}</div></div>
+      ${fav?'<span class="tool-fav" style="margin-left:auto">★</span>':''}
+    </div>
+    <div class="tool-desc">${esc(t.d)}</div>
+    <div class="tool-foot">
+      <span class="tool-state ${t.st}">${stText[t.st]}</span>
+      ${t.st==='need'?'<span style="font-size:10px;color:var(--ink-3)">手机未连接时置灰</span>':''}
+      <span class="tool-open">打开 →</span>
+    </div>
+  </div>`;
+}
+let curTool=null;
+function openTool(id){
+  curTool=tools.find(t=>t.id===id);
+  if(curTool.st==='need'&&!devOn){toast('该工具需要手机处于连接状态');return;}
+  document.getElementById('tlTitle').textContent=curTool.n;
+  document.getElementById('tlNote2').textContent=curTool.cat+' · '+stText[curTool.st];
+  document.getElementById('tlIco').style.background=curTool.c;
+  document.getElementById('tlIco').innerHTML='<svg viewBox="0 0 24 24">'+icoOf(curTool.id)+'</svg>';
+  document.getElementById('tlHint').textContent=curTool.st==='ro'?'只读工具：只输出结果，不写入任何文件'
+    :(curTool.cat==='互联'?'互联类工具只搬运公共目录内容':'运行结果只在本地写入，不会自动同步到手机');
+  document.getElementById('tlBody').innerHTML=
+    curTool.f.map(f=>`<div class="md-field"><label>${esc(f.l)}</label><select class="sel">${f.o.map(o=>`<option>${esc(o)}</option>`).join('')}</select></div>`).join('')
+    +`<div class="md-sum" id="tlOut" style="display:none;font-family:ui-monospace,Consolas,monospace;font-size:11.5px;line-height:1.9"></div>`;
+  const run=document.getElementById('tlRun');
+  run.disabled=false;run.textContent='运行';
+  document.getElementById('toolMask').classList.add('show');
+}
+document.getElementById('tlClose').addEventListener('click',()=>document.getElementById('toolMask').classList.remove('show'));
+document.getElementById('tlCancel').addEventListener('click',()=>document.getElementById('toolMask').classList.remove('show'));
+document.getElementById('toolMask').addEventListener('click',e=>{if(e.target.id==='toolMask')e.currentTarget.classList.remove('show');});
+document.getElementById('tlRun').addEventListener('click',()=>{
+  if(!curTool)return;
+  const out=document.getElementById('tlOut');out.style.display='block';out.innerHTML='';
+  const btn=document.getElementById('tlRun');btn.disabled=true;btn.textContent='运行中…';
+  let i=0;
+  const h=setInterval(()=>{
+    out.innerHTML+='<div><span style="color:var(--accent)">›</span> '+esc(curTool.out[i])+'</div>';
+    i++;
+    if(i>=curTool.out.length){clearInterval(h);btn.textContent='完成';
+      toast(curTool.n+' 已完成 · '+curTool.out.length+' 条结果');
+      drawer.classList.add('open');
+      logLine('<span class="lt">'+stamp()+'</span> <span class="lok">[TOOL]</span> '+esc(curTool.n)+'：'+esc(curTool.out[curTool.out.length-1]));}
+  },260);
+});
+document.getElementById('segTool').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#segTool button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');toolFilter=b.dataset.tf;renderTools();
+});
+document.getElementById('toolCat').addEventListener('change',e=>{toolCat=e.target.value;renderTools();});
+document.getElementById('toolSearch').addEventListener('input',e=>{toolQuery=e.target.value.trim().toLowerCase();renderTools();});
+document.getElementById('btnToolAdd').addEventListener('click',()=>toast('可从 .jar / .sh 扩展工具（原型占位）'));
+
+/* ================= 手机互联（设备桥接） ================= */
+/* 两端只通过 KCU 公共目录 + manifest.json 互通；私有目录、Android 专属内容不搬运 */
+const pairs=[
+ {id:'instances',phone:'/sdcard/KCU/.minecraft/instances/纸鸢整合/',pc:'D:\\Games\\.minecraft\\instances\\1.20.1-Fabric\\',size:'4.8 GB',files:'213 文件',ok:1,note:'含 version.json 与 libraries 引用'},
+ {id:'mods',      phone:'/sdcard/KCU/.minecraft/mods/',        pc:'D:\\Games\\.minecraft\\mods\\',        size:'236 MB',files:'18 jar',ok:1,note:'仅搬运 jar，不改写'},
+ {id:'config',    phone:'/sdcard/KCU/config/',                 pc:'D:\\Games\\.minecraft\\config\\',      size:'8.1 MB',files:'42 文件',ok:1,note:'同名文件按冲突策略处理'},
+ {id:'saves',     phone:'/sdcard/KCU/.minecraft/saves/',       pc:'D:\\Games\\.minecraft\\saves\\',       size:'1.2 GB',files:'12 世界',ok:1,note:'存档格式两端一致'},
+ {id:'resourcepacks',phone:'/sdcard/KCU/.minecraft/resourcepacks/',pc:'D:\\Games\\.minecraft\\resourcepacks\\',size:'96 MB',files:'7 文件',ok:1,note:'含 shaders 目录'},
+ {id:'skins',     phone:'/sdcard/KCU/share/skins/',            pc:'D:\\Games\\.minecraft\\skin\\',        size:'0.1 MB',files:'4 PNG',ok:1,note:'与衣柜皮肤同源'},
+ {id:'manifest',  phone:'/sdcard/KCU/manifest.json',           pc:'（只读解析，不落地）',                  size:'6 KB',  files:'1 文件',ok:1,note:'机器可读清单，互传前必须校验'},
+ {id:'natives',   phone:'/sdcard/KCU/natives/arm64-v8a/',      pc:'D:\\Games\\.minecraft\\natives\\',     size:'312 MB',files:'64 .so',ok:0,note:'Android 的 .so 与桌面运行时无关，两端不通用'},
+ {id:'control',   phone:'/sdcard/KCU/control/',                pc:'（无对应）',                            size:'0.3 MB',files:'3 布局',ok:0,note:'触控映射为手机端专属'},
+ {id:'scripts',   phone:'/sdcard/KCU/scripts/',                pc:'（无对应）',                            size:'12 KB', files:'5 .sh',ok:0,note:'依赖 Android sh 环境，桌面端不执行'},
+ {id:'logs',      phone:'/sdcard/KCU/logs/',                   pc:'D:\\Games\\.minecraft\\logs\\',        size:'78 MB', files:'40 文件',ok:0,note:'默认不传，仅可在手机端查看'}
+];
+const picked=new Set(['instances','mods','config','saves']);
+let xferDir='down', policy='skip', planReady=false, xferTimer=null, xferBusy=false;
+
+function srcName(){return xferDir==='down'?'手机':'电脑';}
+function renderPhone(){
+  document.getElementById('mapA').innerHTML=pairs.map(p=>`
+    <div class="path-row ${p.ok?'':'blocked'} ${picked.has(p.id)?'picked':''}" data-id="${p.id}" data-side="a" title="${esc(p.note)}">
+      <span class="no"></span><code>${esc(p.phone)}</code><span class="sz">${esc(p.size)} · ${esc(p.files)}</span>
+    </div>`).join('');
+  document.getElementById('mapB').innerHTML=pairs.map(p=>`
+    <div class="path-row ${p.ok?'':'blocked'} ${picked.has(p.id)?'picked':''}" data-id="${p.id}" data-side="b" title="${esc(p.note)}">
+      <span class="no"></span><code>${esc(p.pc)}</code><span class="sz">${p.ok?'可直接搬运':'不搬运'}</span>
+    </div>`).join('');
+  document.querySelectorAll('#viewPhone .path-row').forEach(r=>{
+    r.addEventListener('click',()=>{
+      const p=pairs.find(x=>x.id===r.dataset.id);
+      if(!p.ok){toast('「'+p.phone.split('/').filter(Boolean).pop()+'」不搬运 · '+p.note);return;}
+      if(picked.has(p.id))picked.delete(p.id);else picked.add(p.id);
+      renderPhone();
+    });
+  });
+  const n=picked.size;
+  document.getElementById('devPending').textContent=n+' 项';
+  document.getElementById('devCnt').textContent=n;
+  document.getElementById('mapHeadA').innerHTML=`<svg class="svgw" viewBox="0 0 24 24"><rect x="6" y="2" width="9" height="14" rx="2"/><path d="M8.5 4.5h4"/></svg>${srcName()} · <span class="plat">${xferDir==='down'?'/sdcard/KCU/':'D:\\Games\\.minecraft\\'}</span>`;
+  document.getElementById('mapHeadB').innerHTML=`<svg class="svgw" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg>${xferDir==='down'?'电脑':'手机'} · <span class="plat">${xferDir==='down'?'D:\\Games\\.minecraft\\':'/sdcard/KCU/'}</span>`;
+}
+document.getElementById('segDir').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#segDir button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');xferDir=b.dataset.dir;renderPhone();
+  toast('传输方向：'+srcName()+' → '+(xferDir==='down'?'电脑':'手机'));
+});
+document.querySelectorAll('#policyChips .pick').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('#policyChips .pick').forEach(x=>x.classList.remove('sel'));
+  c.classList.add('sel');policy=c.dataset.p;
+  toast('冲突策略：'+c.textContent);
+}));
+document.getElementById('btnSelAll').addEventListener('click',()=>{
+  picked.clear();pairs.filter(p=>p.ok).forEach(p=>picked.add(p.id));renderPhone();
+  toast('已选 '+picked.size+' 项可互传内容');
+});
+
+/* 手机页扩展：实例清单 / 存储分布 / 同步历史 / 配对码 / 快捷互传 */
+const devInstances=[
+ {n:'纸鸢整合',v:'1.20.1 · Fabric 0.16.9',sz:'4.8 GB',t:'昨天 22:14',flag:''},
+ {n:'旧养老档',v:'1.12.2 · Forge 14.23.5',sz:'6.2 GB',t:'3 天前',flag:''},
+ {n:'光影体验',v:'1.16.5 · OptiFine H8',sz:'2.4 GB',t:'1 周前',flag:'需适配：桌面建议用 Iris'},
+ {n:'空岛测试',v:'1.21.4 · NeoForge',sz:'1.1 GB',t:'2 周前',flag:'两端版本一致，可直传'},
+ {n:'基岩存档',v:'Bedrock · com.mojang',sz:'310 MB',t:'1 月前',flag:'不搬运：ModMigrator 仅支持 Java 版'}
+];
+const store=[{k:'游戏实例',v:12.4,c:'#6B8E4E'},{k:'mods',v:5.6,c:'#3D6B66'},{k:'存档',v:3.2,c:'#4A6FA5'},
+  {k:'资源包',v:1.8,c:'#C9A961'},{k:'natives',v:1.5,c:'#8A8A8A'},{k:'其他',v:0.3,c:'#B8543F'}];
+let history=[
+ {k:'ok',t:'手机 → 电脑 · 纸鸢整合 mods',d:'18 个 jar · 236 MB · manifest 校验通过',time:'昨天 22:14'},
+ {k:'ok',t:'手机 → 电脑 · 存档「存档备份」',d:'level.dat 与 412 个区块 · 自动同步触发',time:'昨天 21:02'},
+ {k:'warn',t:'皮肤冲突 2 项',d:'同名不同内容，按策略「跳过已存在」保留电脑副本',time:'10-25 19:41'},
+ {k:'ok',t:'电脑 → 手机 · 光影配置',d:'optionsshaders.txt + 3 个包 · 62 MB',time:'10-24 23:07'},
+ {k:'err',t:'natives 目录尝试传输被拒绝',d:'Android 的 .so 与桌面运行时无关，已按规则拦截',time:'10-24 22:58'},
+ {k:'idle',t:'配对成功',d:'Pixel 8 Pro · 配对码 6 位 · 授权公共目录读写',time:'10-23 12:30'}
+];
+function pushHistory(k,t,d){history.unshift({k,t,d,time:'刚刚'});renderHistory();}
+function renderDevInst(){
+  document.getElementById('devInstList').innerHTML=devInstances.map((x,i)=>`
+    <div class="dev-inst" data-i="${i}">
+      <span class="ibadge ${x.flag.startsWith('不搬运')?'o':x.flag.startsWith('需适配')?'q':'f'}"></span>
+      <div><div class="nm">${esc(x.n)}</div><div class="sub">${esc(x.v)} · ${esc(x.sz)} · ${esc(x.t)}${x.flag?' · '+esc(x.flag):''}</div></div>
+      <div class="act">
+        ${x.flag.startsWith('不搬运')?'<span class="badge off">不搬运</span>':'<button class="btn" data-pull="'+i+'">拉取到电脑</button>'}
+        <button class="icon-btn" title="查看清单"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h6M9 16h4"/></svg></button>
+      </div>
+    </div>`).join('');
+  document.querySelectorAll('#devInstList [data-pull]').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
+    const x=devInstances[+b.dataset.pull];
+    if(!devOn){toast('设备未连接，先重新扫描');return;}
+    picked.add('instances');picked.add('mods');renderPhone();
+    document.getElementById('xferSub').textContent='已加入队列 · '+esc(x.n);
+    pushHistory('ok','手机 → 电脑 · '+x.n+' 已入队',x.sz+' · 来源 /sdcard/KCU/.minecraft/instances/');
+    toast('「'+x.n+'」已加入互传队列');
+    startTransfer();
+  }));
+}
+function renderBar(){
+  const total=store.reduce((a,x)=>a+x.v,0);
+  document.getElementById('barStack').innerHTML=store.map(x=>`<i style="width:${(x.v/total*100).toFixed(1)}%;background:${x.c}" title="${x.k} ${x.v} GB"></i>`).join('');
+  document.getElementById('barLegend').innerHTML=store.map(x=>`<span><em style="background:${x.c}"></em>${x.k} ${x.v} GB</span>`).join('');
+}
+function renderHistory(){
+  document.getElementById('tlList').innerHTML=history.slice(0,7).map(h=>`
+    <div class="tl-item">
+      <span class="tl-dot ${h.k==='ok'?'':h.k}"></span>
+      <div class="tl-main"><div class="tl-t">${esc(h.t)}</div><div class="tl-d">${esc(h.d)}</div></div>
+      <div class="tl-time">${esc(h.time)}</div>
+    </div>`).join('');
+  document.getElementById('tlSub').textContent='最近 '+Math.min(7,history.length)+' 次';
+}
+function renderQR(){
+  const n=11,cells=[];
+  for(let y=0;y<n;y++){
+    for(let x=0;x<n;x++){
+      const inCorner=(x<3&&y<3)||(x>n-4&&y<3)||(x<3&&y>n-4);
+      const cornerDot=inCorner&&((x+y)%2===0||(x===1&&y===1)||(x===n-2&&y===1)||(x===1&&y===n-2));
+      const on=inCorner?cornerDot:((x*7+y*5+pairSeed)%3===0);
+      cells.push('<i class="'+(on?'':'off')+'"></i>');
+    }
+  }
+  document.getElementById('qrBox').innerHTML=cells.join('');
+}
+let pairSeed=7;
+let pairTimer=null,pairLeft=59;
+function renderPair(){
+  document.getElementById('pairCode').textContent=String(400+pairSeed%500)+' '+String(100+(pairSeed*37)%900);
+  document.getElementById('qrBox')&&renderQR();
+  pairLeft=59;
+  clearInterval(pairTimer);
+  pairTimer=setInterval(()=>{pairLeft--;const el=document.getElementById('pairLeft');if(el)el.textContent=pairLeft;
+    if(pairLeft<=0){clearInterval(pairTimer);pairSeed++;renderPair();}},1000);
+}
+document.getElementById('btnNewCode').addEventListener('click',()=>{pairSeed+=3;renderPair();toast('已刷新配对码');});
+document.getElementById('btnRefreshDev').addEventListener('click',()=>{
+  if(!devOn){toast('设备未连接');return;}
+  devInstances[0].t='刚刚';renderDevInst();pushHistory('idle','重新读取 manifest','手机清单已刷新 · 5 个实例');
+  toast('已刷新手机端实例清单');
+});
+document.getElementById('bw').addEventListener('input',e=>{
+  document.getElementById('bwVal').textContent=e.target.value+' MB/s';
+});
+document.querySelectorAll('#quickRow .quick').forEach(q=>q.addEventListener('click',()=>{
+  if(!devOn){toast('设备未连接，先重新扫描');return;}
+  const map={saves:['saves','最近存档'],skins:['skins','皮肤'],shot:['resourcepacks','游戏截图'],log:['config','最新日志'],pack:['instances','整合包']};
+  const [id,label]=map[q.dataset.q];picked.add(id);renderPhone();
+  pushHistory('ok',srcName()+' → '+(xferDir==='down'?'电脑':'手机')+' · '+label+'已入队','快捷互传 · /sdcard/KCU/ 公共目录');
+  toast(label+' 已加入队列');
+  startTransfer();
+}));
+function renderPhoneExtra(){renderDevInst();renderBar();renderHistory();renderQR();}
+
+/* 拉取手机端 ModMigrator 方案：电脑端只做差异比对，不重复执行迁移 */
+const plan=[
+ {k:'new',t:'Sodium 0.5.11 → 0.6.0',d:'1.21.4 需要更新版本，由手机端方案给出目标 jar'},
+ {k:'ver',t:'Iris Shaders 1.7.5 版本不同',d:'电脑端为 1.6.8，按策略「'+ '跳过已存在' +'」处理'},
+ {k:'risk',t:'Create 0.5.1-f 加载器不匹配',d:'Fabric 版本无法用于 NeoForge，需手机端替换为对应构建'},
+ {k:'same',t:'Continuity 3.0.1 同名同版本',d:'哈希一致，搬运时直接跳过'},
+ {k:'risk',t:'OptiFine 残留 jar',d:'与 NeoForge 光影栈冲突，建议不搬运（手机端标记为待清理）'},
+ {k:'new',t:'saves/ 12 个世界可直接搬运',d:'存档格式两端一致，level.dat 无需转换'},
+ {k:'ver',t:'natives/ 64 个 .so 不搬运',d:'Android 动态库与桌面运行时无关'}
+];
+document.getElementById('btnPullPlan').addEventListener('click',()=>{
+  planReady=true;
+  document.getElementById('planStep2').className='plan-step done';
+  document.getElementById('planStep3').className='plan-step on';
+  document.getElementById('diffList').innerHTML=plan.map(p=>`
+    <div class="diff-row">
+      <div class="diff-ico ${p.k}">${p.k==='new'?'新':p.k==='ver'?'≠':p.k==='risk'?'!':'='}</div>
+      <div class="diff-main"><div class="diff-t">${esc(p.t)}</div><div class="diff-d">${esc(p.d)}</div></div>
+      <span class="chip">${p.k==='risk'?'建议不搬运':p.k==='same'?'跳过':'可搬运'}</span>
+    </div>`).join('');
+  document.getElementById('pcTargetVer').textContent=instances[selected].ver+' · '+instances[selected].loader;
+  toast('已读取手机 manifest 与迁移方案 · 7 条差异');
+  logLine('<span class="lt">'+stamp()+'</span> <span class="lok">[SYNC]</span> 读取 /sdcard/KCU/manifest.json 成功，比对 7 条差异');
+});
+/* 互传队列：分块进度模拟，可暂停/清空 */
+function startTransfer(){
+  const items=pairs.filter(p=>p.ok&&picked.has(p.id));
+  if(!items.length){toast('先在映射表里勾选要互传的内容');return;}
+  if(xferBusy)return;
+  xferBusy=true;
+  document.getElementById('xferSub').textContent='传输中 · '+srcName()+' → '+(xferDir==='down'?'电脑':'手机')+' · '+items.length+' 项';
+  document.getElementById('xferList').innerHTML=items.map((p,i)=>`
+    <div class="xfer" data-i="${i}">
+      <div class="xfer-dir ${xferDir==='down'?'':'up'}"><svg viewBox="0 0 24 24">${xferDir==='down'
+        ?'<path d="M12 4v14m0 0l-5-5m5 5l5-5"/>':'<path d="M12 20V6m0 0l-5 5m5-5l5 5"/>'}</svg></div>
+      <div class="xfer-main"><div class="xfer-t">${esc(p.id==='instances'?instances[selected].name+' 实例目录':p.id)}</div>
+        <div class="xfer-s">${esc(p.phone)} · ${esc(p.size)}</div>
+        <div class="progress" style="width:100%;margin-top:7px"><i data-bar="${i}" style="width:0%"></i></div></div>
+      <div class="xfer-right"><div data-pct="${i}">0%</div><div data-sp="${i}">—</div></div>
+    </div>`).join('');
+  const prog=items.map(()=>0), done=items.map(()=>false);
+  clearInterval(xferTimer);
+  xferTimer=setInterval(()=>{
+    let all=true;
+    items.forEach((p,i)=>{
+      if(done[i])return;
+      all=false;
+      prog[i]=Math.min(100,prog[i]+(p.size.startsWith('4.8')?3:p.size.startsWith('1.2')?5:9)+Math.random()*6);
+      const bar=document.querySelector(`[data-bar="${i}"]`),pct=document.querySelector(`[data-pct="${i}"]`),sp=document.querySelector(`[data-sp="${i}"]`);
+      if(!bar)return;
+      bar.style.width=prog[i]+'%';pct.textContent=Math.floor(prog[i])+'%';
+      sp.textContent=(6+Math.random()*7).toFixed(1)+' MB/s';
+      if(prog[i]>=100){done[i]=true;bar.parentElement.style.opacity=.5;pct.textContent='完成';pct.style.color='var(--accent)';
+        logLine('<span class="lt">'+stamp()+'</span> <span class="lok">[OK]</span> '+esc(p.id)+' 传输完成（'+esc(p.size)+'）');}
+    });
+    const cur=items[Math.min(items.length-1,done.findIndex(d=>!d)<0?items.length-1:done.findIndex(d=>!d))];
+    document.getElementById('devSpeed').textContent=(6+Math.random()*7).toFixed(1)+' MB/s';
+    if(all){
+      clearInterval(xferTimer);xferBusy=false;
+      document.getElementById('xferSub').textContent='已完成 · '+items.length+' 项 · 校验通过';
+      document.getElementById('devSpeed').textContent='—';
+      toast('互传完成 · '+items.length+' 项已'+(xferDir==='down'?'落到电脑':'推到手机')+'公共目录');
+      logLine('<span class="lt">'+stamp()+'</span> <span class="lok">[DONE]</span> 队列完成，manifest 校验一致');
+      document.getElementById('sbDevTxt').textContent='手机已连接 · 刚互传 '+items.length+' 项';
+    }
+  },500);
+  drawer.classList.add('open');
+  logLine('<span class="lt">'+stamp()+'</span> 开始互传：'+srcName()+' → '+(xferDir==='down'?'电脑':'手机')+'，共 '+items.length+' 项，策略「'+policy+'」');
+}
+document.getElementById('btnStartXfer').addEventListener('click',startTransfer);
+document.getElementById('btnPauseXfer').addEventListener('click',()=>{
+  if(!xferBusy){toast('当前没有进行中的传输');return;}
+  clearInterval(xferTimer);xferBusy=false;
+  document.getElementById('xferSub').textContent='已暂停 · 断点已记录，可继续';
+  toast('已暂停，断点位置写入队列状态');
+});
+document.getElementById('btnClearXfer').addEventListener('click',()=>{
+  clearInterval(xferTimer);xferBusy=false;
+  document.getElementById('xferList').innerHTML='<div style="padding:22px 18px;color:var(--ink-3);font-size:11.5px;line-height:1.8">队列已清空 · 传输只在两端公共目录之间进行，不会写入手机私有目录。</div>';
+  document.getElementById('xferSub').textContent='空闲 · 队列 0 项';
+  document.getElementById('devSpeed').textContent='—';toast('队列已清空');
+});
+/* 设备连接态：断开后整页降级为未连接 */
+let devOn=true;
+document.getElementById('btnDisconnect').addEventListener('click',()=>{
+  devOn=false;
+  document.getElementById('devPhone').classList.remove('streaming');
+  document.getElementById('devPhone').classList.add('off');
+  document.getElementById('devName').textContent='未连接设备';
+  document.getElementById('devMeta').textContent='请先在同一局域网内打开手机端 KCU-Launcher 的「与电脑互联」';
+  document.getElementById('devManifest').textContent='不可读';
+  document.getElementById('devManifest').className='link-bad';
+  document.getElementById('devPending').textContent='0 项';
+  document.getElementById('devCnt').textContent='0';
+  picked.clear();renderPhone();
+  toast('已断开 · 手机端不受影响，可重新扫描');
+});
+document.getElementById('btnRescan').addEventListener('click',()=>{
+  if(devOn){toast('已重新握手 · 心跳正常');return;}
+  devOn=true;
+  document.getElementById('devPhone').classList.add('streaming');
+  document.getElementById('devPhone').classList.remove('off');
+  document.getElementById('devName').textContent='Pixel 8 Pro · KCU-Launcher';
+  document.getElementById('devMeta').textContent='Android 16 · arm64-v8a · 局域网 192.168.1.37:35510';
+  document.getElementById('devManifest').textContent='读取成功';
+  document.getElementById('devManifest').className='link-ok';
+  ['instances','mods','config','saves'].forEach(id=>picked.add(id));renderPhone();
+  toast('已连接 Pixel 8 Pro · manifest 校验通过');
+});
+document.getElementById('btnPair').addEventListener('click',()=>toast('配对码 6 位有效 60 秒（原型占位）'));
+document.getElementById('sbDev').addEventListener('click',()=>document.querySelector('.nav-item[data-view="phone"]').click());
+
+/* ================= Mod 管理 ================= */
+const mods=[
+ {n:'Sodium',id:'sodium',v:'0.5.11',c:'渲染性能',d:'—',s:'ok',on:1,kb:'1.4 MB',src:'Modrinth'},
+ {n:'Iris Shaders',id:'iris',v:'1.7.5',c:'光影',d:'Sodium',s:'ok',on:1,kb:'2.8 MB',src:'Modrinth'},
+ {n:'Lithium',id:'lithium',v:'0.11.2',c:'逻辑优化',d:'—',s:'ok',on:1,kb:'0.6 MB',src:'Modrinth'},
+ {n:'ImmediatelyFast',id:'immediatelyfast',v:'1.2.18',c:'渲染性能',d:'—',s:'ok',on:1,kb:'0.4 MB',src:'Modrinth'},
+ {n:'EntityCulling',id:'entityculling',v:'6.4.0',c:'性能',d:'—',s:'ok',on:1,kb:'0.3 MB',src:'Modrinth'},
+ {n:'FerriteCore',id:'ferritecore',v:'6.0.3',c:'内存优化',d:'—',s:'ok',on:1,kb:'0.2 MB',src:'Modrinth'},
+ {n:'MemoryLeakFix',id:'memoryleakfix',v:'1.5.4',c:'内存优化',d:'—',s:'up',nv:'1.6.0',on:1,kb:'0.1 MB',src:'Modrinth'},
+ {n:'Fabric Language Kotlin',id:'kotlin',v:'1.10.20',c:'前置库',d:'—',s:'ok',on:1,kb:'5.2 MB',src:'Modrinth'},
+ {n:'Architectury API',id:'architectury',v:'9.1.12',c:'前置库',d:'—',s:'up',nv:'9.2.14',on:1,kb:'1.1 MB',src:'CurseForge'},
+ {n:'Modern UI',id:'modernui',v:'3.11.1',c:'界面',d:'YACL, Cloth Config',s:'miss',on:1,kb:'3.6 MB',src:'Modrinth'},
+ {n:'YetAnotherConfigLib',id:'yacl',v:'3.5.2',c:'前置库',d:'—',s:'up',nv:'3.6.0',on:1,kb:'0.9 MB',src:'Modrinth'},
+ {n:'Just Enough Items',id:'jei',v:'16.0.4',c:'物品查询',d:'—',s:'up',nv:'16.2.16',on:1,kb:'4.8 MB',src:'CurseForge'},
+ {n:'Create',id:'create',v:'0.5.1-f',c:'机械建造',d:'Cloth Config',s:'miss',on:1,kb:'12.6 MB',src:'CurseForge'},
+ {n:'Continuity',id:'continuity',v:'3.0.1',c:'连接纹理',d:'—',s:'ok',on:1,kb:'0.7 MB',src:'Modrinth'},
+ {n:'Zoomify',id:'zoomify',v:'2.11.5',c:'视角',d:'—',s:'ok',on:1,kb:'0.5 MB',src:'Modrinth'},
+ {n:'Xaero\u2019s Minimap',id:'xaero',v:'24.5.0',c:'地图',d:'—',s:'conf',on:1,kb:'2.2 MB',src:'Modrinth',cf:'与 JourneyMap 重复注册地图 HUD'},
+ {n:'JourneyMap',id:'journeymap',v:'5.9.0',c:'地图',d:'—',s:'conf',on:1,kb:'3.4 MB',src:'CurseForge',cf:'与 Xaero\u2019s Minimap 重复注册地图 HUD'},
+ {n:'OptiFine (残留)',id:'optifine',v:'1.20.1 pre7',c:'渲染 · 光影',d:'—',s:'conf',on:0,kb:'3.1 MB',src:'本地导入',cf:'与 Sodium / Iris 渲染管线冲突，会导致启动崩溃'}
+];
+const issues=[
+ {lv:'err',t:'OptiFine 与 Sodium / Iris 冲突',d:'两套渲染管线同时注册，1.20.1 下必然崩溃',fix:'移除 OptiFine',fx:'optifine'},
+ {lv:'err',t:'Xaero\u2019s Minimap 与 JourneyMap 冲突',d:'地图 HUD 重复注册，小地图会闪烁重影',fix:'禁用 JourneyMap',fx:'journeymap'},
+ {lv:'mut',t:'缺失前置 Cloth Config API',d:'Modern UI 与 Create 依赖它，当前 mods 目录中不存在',fix:'安装前置',fx:'cloth'},
+ {lv:'mut',t:'6 个 Mod 存在可用更新',d:'含 JEI 16.2.16 修复了物品网格崩溃',fix:'一键更新',fx:'updateAll'}
+];
+const recs=[
+ {n:'Cloth Config API',id:'cloth',v:'11.1.136',c:'前置库 · 配置界面',dl:'21.4M',ico:'#4A6FA5',dep:'—',kb:'1.9 MB'},
+ {n:'Sodium Extra',id:'sodiumextra',v:'0.5.4',c:'暴露 Sodium 隐藏选项',dl:'8.1M',ico:'#3D6B66',dep:'Sodium',kb:'0.6 MB'},
+ {n:'NotEnoughAnimations',id:'nea',v:'1.8.3',c:'实体动画并发优化',dl:'4.6M',ico:'#8A6A50',dep:'—',kb:'0.5 MB'},
+ {n:'Zoomonomi',id:'zoomonomi',v:'1.0.6',c:'平滑缩放与自由镜头',dl:'1.2M',ico:'#B8543F',dep:'Mod Menu',kb:'0.3 MB'}
+];
+const modState={filter:'all',query:'',src:'',installed:[]};
+let installedRecs=modState.installed;
+
+function modBadge(m){
+  if(!m.on) return '<span class="badge off">已禁用</span>';
+  if(m.s==='conf') return '<span class="badge err">冲突</span>';
+  if(m.s==='miss') return '<span class="badge miss">缺前置</span>';
+  if(m.s==='up') return '<span class="badge up">可更新 → '+m.nv+'</span>';
+  return '<span class="badge ok">正常</span>';
+}
+function renderMods(){
+  const inst=instances[selected];
+  document.getElementById('modCtxName').textContent=inst.name;
+  document.getElementById('modCtxSub').textContent=inst.sub+' · '+inst.loader+' '+(inst.lver!=='—'?inst.lver:'')+' · mods 目录 '+mods.length+' 个文件';
+  document.getElementById('modNavCnt').textContent=mods.filter(m=>m.on).length;
+
+  document.getElementById('modOn').textContent=mods.filter(m=>m.on).length;
+  document.getElementById('modOff').textContent=mods.filter(m=>!m.on).length;
+  document.getElementById('modConf').textContent=mods.filter(m=>m.s==='conf'&&m.on).length;
+  document.getElementById('modUp').textContent=mods.filter(m=>m.s==='up'&&m.on).length;
+
+  let rows=mods.filter(m=>{
+    if(modState.filter==='on'&&!m.on)return false;
+    if(modState.filter==='off'&&m.on)return false;
+    if(modState.filter==='bad'&&!(m.s==='conf'||m.s==='miss'||!m.on))return false;
+    if(modState.src&&modState.src!=='全部来源'&&m.src!==modState.src)return false;
+    if(modState.query&&!(m.n.toLowerCase().includes(modState.query)||m.id.includes(modState.query)))return false;
+    return true;
+  });
+  document.getElementById('modCount').textContent='显示 '+rows.length+' / 共 '+mods.length+' 个';
+  document.getElementById('modBody').innerHTML=rows.length?rows.map(m=>`
+    <tr data-id="${m.id}" class="${m.on?'':'disabled'}">
+      <td><div class="iname"><span class="ibadge ${m.s==='conf'?'q':m.on?'f':'o'}"></span>${esc(m.n)}</div>
+          <div class="tagline">${m.id}.jar${m.cf?' · '+esc(m.cf):''}</div></td>
+      <td class="mono">${esc(m.v)}</td>
+      <td>${esc(m.c)}</td>
+      <td style="font-size:11px;color:${m.d==='—'?'var(--ink-3)':'var(--ink-2)'}">${esc(m.d)}</td>
+      <td>${modBadge(m)}</td>
+      <td class="mono">${esc(m.kb)}</td>
+      <td style="text-align:right"><button class="switch ${m.on?'on':''}" role="switch" aria-checked="${m.on?'true':'false'}" aria-label="${esc(m.n)} 启用开关" title="${m.on?'点击禁用':'点击启用'}"></button></td>
+    </tr>`).join('')
+    :`<tr><td colspan="7" style="text-align:center;padding:34px;color:var(--ink-3)">没有符合条件的 Mod，试试切换筛选或清空搜索</td></tr>`;
+
+  document.querySelectorAll('#modBody tr[data-id]').forEach(tr=>{
+    const m=mods.find(x=>x.id===tr.dataset.id);
+    tr.querySelector('.switch').addEventListener('click',()=>{
+      m.on=m.on?0:1;renderMods();
+      toast(m.n+(m.on?' 已启用':' 已禁用'));
+    });
+    tr.addEventListener('dblclick',()=>{drawer.classList.add('open');
+      logLine('<span class="lt">'+stamp()+'</span> 正在校验 Mod '+esc(m.n)+'（'+esc(m.v)+'）…');});
+  });
+
+  document.getElementById('issueList').innerHTML=issues.map((it,i)=>`
+    <div class="issue ${it.fixed?'fixed':''}">
+      <div class="issue-ico ${it.lv}"><svg viewBox="0 0 24 24">${it.lv==='err'
+        ?'<path d="M12 4l9 16H3zM12 10v4M12 17h.01"/>'
+        :'<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>'}</svg></div>
+      <div class="issue-main"><div class="issue-t">${esc(it.t)}</div><div class="issue-d">${esc(it.d)}</div></div>
+      <button class="btn ${it.fixed?'':'primary'}" data-fi="${i}" ${it.fixed?'disabled':''}>${it.fixed?'已处理':esc(it.fix)}</button>
+    </div>`).join('');
+  document.querySelectorAll('#issueList [data-fi]').forEach(b=>b.addEventListener('click',()=>{
+    const it=issues[+b.dataset.fi];
+    if(it.fx==='optifine'){const m=mods.find(x=>x.id==='optifine');m.s='ok';m.cf='';m.on=0;}
+    if(it.fx==='journeymap'){mods.find(x=>x.id==='journeymap').on=0;mods.find(x=>x.id==='xaero').s='ok';mods.find(x=>x.id==='xaero').cf='';}
+    if(it.fx==='cloth'){mods.forEach(m=>{if(m.s==='miss')m.s='ok';});installedRecs.push('cloth');
+      mods.push({n:'Cloth Config API',id:'cloth',v:'11.1.136',c:'前置库',d:'—',s:'ok',on:1,kb:'1.9 MB',src:'Modrinth'});}
+    if(it.fx==='updateAll')mods.forEach(m=>{if(m.s==='up'){m.v=m.nv;m.s='ok';}});
+    it.fixed=1;renderMods();
+    document.getElementById('issueSub').textContent='剩余 '+issues.filter(i=>!i.fixed).length+' 个问题 · 已处理 '+issues.filter(i=>i.fixed).length+' 个';
+    toast(it.fix+' → 处理完成');
+  }));
+
+  document.getElementById('recGrid').innerHTML=recs.map(r=>{
+    const done=installedRecs.includes(r.id)||mods.some(m=>m.id===r.id);
+    return `<div class="rec-card ${done?'installed':''}" data-id="${r.id}">
+      <div class="rec-top"><div class="rec-ico" style="background:${r.ico}"></div>
+        <div><div class="rec-name">${esc(r.n)}</div><div class="rec-author">${esc(r.v)} · ${esc(r.dep)}</div></div></div>
+      <div class="rec-desc">${esc(r.c)}</div>
+      <div class="rec-meta"><span class="chip">${esc(r.c.split(' ')[0])}</span>
+        <span class="dl"><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>${r.dl}</span></div>
+      <button class="btn ${done?'':'primary'}" style="justify-content:center" ${done?'disabled':''}>${done?'已安装':'安装'}</button>
+    </div>`;}).join('');
+  document.querySelectorAll('#recGrid .rec-card').forEach(cd=>{
+    cd.querySelector('button').addEventListener('click',()=>{
+      const r=recs.find(x=>x.id===cd.dataset.id);
+      if(installedRecs.includes(r.id))return;
+      installedRecs.push(r.id);
+      mods.push({n:r.n,id:r.id,v:r.v,c:r.c,d:r.dep,s:'ok',on:1,kb:r.kb||'0.8 MB',src:'Modrinth'});
+      renderMods();toast('已安装 '+r.n+' '+r.v);
+      drawer.classList.add('open');
+      logLine('<span class="lt">'+stamp()+'</span> <span class="lok">[OK]</span> '+esc(r.n)+' 已写入 mods 目录');
+    });
+  });
+}
+document.getElementById('segMod').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#segMod button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');modState.filter=b.dataset.mf;renderMods();
+});
+document.getElementById('modSearch').addEventListener('input',e=>{modState.query=e.target.value.trim().toLowerCase();renderMods();});
+document.getElementById('modSrc').addEventListener('change',e=>{modState.src=e.target.value;renderMods();});
+document.getElementById('btnModScan').addEventListener('click',()=>{
+  renderMods();toast('已重新扫描 mods 目录（'+mods.length+' 个文件）');
+  drawer.classList.add('open');
+  logLine('<span class="lt">'+stamp()+'</span> 扫描 mods 目录…共 '+mods.length+' 个 jar，校验依赖关系');
+});
+document.getElementById('btnImportMod').addEventListener('click',()=>toast('拖拽 .jar 到窗口即可导入（原型占位）'));
+
+/* ================= 主题：浅色 / 深色揉纸 ================= */
+const winEl=document.getElementById('win');
+const themeSelect=document.getElementById('themeSelect');
+function setTheme(mode,quiet){
+  winEl.dataset.theme=mode;
+  if(themeSelect&&themeSelect.selectedIndex!==(mode==='dark'?1:0))themeSelect.selectedIndex=mode==='dark'?1:0;
+  if(!quiet)toast(mode==='dark'?'已切换到深色揉纸':'已切换到浅色揉纸');
+}
+document.getElementById('btnTheme').addEventListener('click',()=>{
+  setTheme(winEl.dataset.theme==='dark'?'light':'dark');
+});
+if(themeSelect){
+  themeSelect.addEventListener('change',()=>{
+    const v=themeSelect.value;
+    if(v.includes('深色'))setTheme('dark',true);
+    else if(v.includes('跟随系统'))setTheme(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light',true);
+    else setTheme('light',true);
+  });
+  if(matchMedia('(prefers-color-scheme: dark)').matches)themeSelect.selectedIndex=2;
+}
+
+/* ================= 三栏宽度可拖拽 ================= */
+let navW=200,sideW=320;
+function applyW(){
+  winEl.style.setProperty('--nav-w',navW+'px');
+  winEl.style.setProperty('--side-w',sideW+'px');
+}
+document.querySelectorAll('.grip').forEach(g=>{
+  g.addEventListener('pointerdown',e=>{
+    if(winEl.classList.contains('narrow')&&g.dataset.grip==='nav'){toast('侧栏已收起，先点击"收起侧栏"展开');return;}
+    const edge=g.dataset.grip,sx=e.clientX,sw=g.dataset.grip==='nav'?navW:sideW;
+    g.classList.add('drag');document.body.classList.add('resizing');
+    g.setPointerCapture(e.pointerId);
+    const move=ev=>{
+      const d=ev.clientX-sx;
+      if(edge==='nav')navW=Math.min(320,Math.max(150,sw+d));else sideW=Math.min(430,Math.max(260,sw-d));
+      applyW();
+    };
+    const up=()=>{
+      g.classList.remove('drag');document.body.classList.remove('resizing');
+      g.removeEventListener('pointermove',move);g.removeEventListener('pointerup',up);
+      toast((edge==='nav'?'导航栏':'操作栏')+'宽度 '+Math.round(edge==='nav'?navW:sideW)+' px');
+    };
+    g.addEventListener('pointermove',move);g.addEventListener('pointerup',up);
+  });
+  g.addEventListener('dblclick',()=>{
+    if(g.dataset.grip==='nav')navW=200;else sideW=320;applyW();toast('已恢复默认栏宽');
+  });
+});
+
+/* ================= 新建实例分步向导 ================= */
+const mask=document.getElementById('mask');
+const stepEls=[...document.querySelectorAll('#mdSteps .st')];
+const panes=[...document.querySelectorAll('.md-pane')];
+let step=1;
+const draft={ver:'1.21.4',loader:'Forge',lver:'21.4.60'};
+const loaderVer={Forge:'14.23.5.2860',Fabric:'loader 0.16.9',NeoForge:'21.4.60',Quilt:'0.21.2',OptiFine:'H8',原版:'—'};
+function showStep(n){
+  step=Math.min(4,Math.max(1,n));
+  panes.forEach(p=>p.classList.toggle('on',+p.dataset.pane===step));
+  stepEls.forEach((s,i)=>{
+    s.classList.toggle('on',i===step-1);
+    s.classList.toggle('done',i<step-1);
+    s.querySelector('.dot').textContent=i<step-1?'✓':(i+1);
+  });
+  document.getElementById('mdPrev').style.visibility=step===1?'hidden':'visible';
+  const next=document.getElementById('mdNext');
+  next.innerHTML=step===4
+    ? '<svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>创建实例'
+    : '下一步<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
+  if(step===4)syncSummary();
+}
+function syncSummary(){
+  document.getElementById('sVer').textContent=draft.ver;
+  document.getElementById('sLoader').textContent=draft.loader+' '+draft.lver;
+  document.getElementById('sName').textContent=document.getElementById('mdName').value||'未命名实例';
+  document.getElementById('sPath').textContent=document.getElementById('mdPath').value;
+  document.getElementById('sJava').textContent=document.getElementById('mdJava').value.split('（')[0];
+  document.getElementById('sMem').textContent=document.getElementById('mdMem').value;
+  const base={Forge:196,Fabric:148,NeoForge:182,Quilt:156,OptiFine:88,原版:78}[draft.loader]||160;
+  const mm=/^b?1\.(\d+)/.exec(draft.ver);const heavy=(!mm||+mm[1]>=17)?42:0;
+  document.getElementById('sSize').textContent='约 '+(base+heavy)+' MB';
+}
+function openWizard(){
+  mask.classList.add('show');showStep(1);
+  lastFocus=document.activeElement;
+  const f=mask.querySelector('button:not([disabled]),input,select');
+  if(f)f.focus();
+}
+function closeWizard(){
+  mask.classList.remove('show');
+  if(lastFocus&&lastFocus.focus)lastFocus.focus();
+}
+let lastFocus=null;
+/* 模态内 Tab 焦点陷阱 */
+mask.addEventListener('keydown',e=>{
+  if(e.key!=='Tab'||!mask.classList.contains('show'))return;
+  const f=[...mask.querySelectorAll('button,input,select,[tabindex]:not([tabindex="-1"])')].filter(x=>!x.disabled&&x.offsetParent!==null);
+  if(!f.length)return;
+  const first=f[0],last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+});
+document.getElementById('btnAdd').addEventListener('click',openWizard);
+document.getElementById('mdClose').addEventListener('click',closeWizard);
+document.getElementById('mdCancel').addEventListener('click',closeWizard);
+mask.addEventListener('click',e=>{if(e.target===mask)closeWizard();});
+document.getElementById('mdPrev').addEventListener('click',()=>showStep(step-1));
+document.getElementById('mdNext').addEventListener('click',()=>{
+  if(step<4){showStep(step+1);return;}
+  const name=(document.getElementById('mdName').value||'未命名实例').trim();
+  const cls=draft.loader==='Fabric'||draft.loader==='Quilt'?'f':(draft.loader==='OptiFine'?'o':'q');
+  instances.unshift({name:name+'-'+draft.loader,cls,sub:name,ver:draft.ver,loader:draft.loader,
+    lver:loaderVer[draft.loader],mods:0,size:'—',last:0,lastTxt:'刚刚'});
+  selected=0;closeWizard();
+  document.querySelector('.nav-item[data-view="home"]').click();
+  pick(0);renderTable();
+  drawer.classList.add('open');
+  logLine('<span class="lt">'+stamp()+'</span> <span class="lok">[NEW]</span> 已创建实例 '+esc(name)+'（'+esc(draft.ver)+' · '+esc(draft.loader)+'）');
+  logLine('<span class="lt">'+stamp()+'</span> 正在下载 libraries 与 assets…');
+  toast('实例已创建，正在后台下载');
+});
+document.querySelectorAll('#pickVer .pick').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('#pickVer .pick').forEach(x=>x.classList.remove('sel'));
+  p.classList.add('sel');draft.ver=p.dataset.v;
+  syncDraftFields();
+}));
+document.querySelectorAll('#pickLoader .pick').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('#pickLoader .pick').forEach(x=>x.classList.remove('sel'));
+  p.classList.add('sel');draft.loader=p.dataset.l;draft.lver=loaderVer[draft.loader];
+  syncDraftFields();
+}));
+/* 快照版（25w43a）与 1.20.5+ 走 JDK 21，1.17–1.20.4 走 17，其余走 8 */
+function javaIdx(v){
+  if(/^\d{2}w\d{2}[a-z]$/.test(v))return 0;
+  const mm=/^b?1\.(\d+)/.exec(v);const minor=mm?+mm[1]:99;
+  if(minor>=20)return /\.(5|6|7|8|9)$/.test(v)?0:1;
+  if(minor>=17)return 1;
+  if(v==='b1.7.3'||v==='1.5.2')return 2;
+  return 2;
+}
+function syncDraftFields(){
+  const slug=draft.ver.replace(/[^0-9a-zA-Z.]/g,'').replace(/\./g,'-')||draft.ver;
+  document.getElementById('mdPath').value='D:\\Games\\.minecraft\\instances\\'+slug+'-'+draft.loader.toLowerCase();
+  document.getElementById('mdJava').selectedIndex=javaIdx(draft.ver);
+}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&mask.classList.contains('show'))closeWizard();});
+
+/* ================= 初始化 ================= */
+setTheme(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light',true);applyW();renderPhone();renderPhoneExtra();renderTools();renderTable();renderDl();fit();
+</script>
+</body>
+</html>

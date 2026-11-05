@@ -4,4 +4,14 @@
     <string name="splash_agreement">KCU 需要取得儲存空間權限，才能管理及讀取遊戲檔案。\nKCU 的原始碼已完整公開於 GitHub，請放心使用，您的資料安全不會受到影響。此權限僅用於確保遊戲能正常運作，不會造成任何安全風險。</string>
     <string name="renderer_source">來源：</string>
     <string name="renderer_source_builtin">內建</string>
+    <string name="kcu_age_input_hint">請輸入週歲年齡（1–120）</string>
+    <string name="kcu_age_invalid">請輸入有效的年齡（1–120）</string>
+    <string name="settings_launcher_feature_center">功能中心</string>
+    <string name="settings_launcher_feature_center_open">開啟</string>
+    <string name="settings_launcher_feature_center_desc">重填年齡、遷移舊目錄資料，以及檢視沒有獨立入口的已實作功能。</string>
+    <string name="kcu_feature_center_body">已實作但沒有獨立選單入口的功能：遠端策略、強制停止、資料匯出、實例登錄表、存檔 UUID 重寫、帳號遷移、.kcul 格式、登入探測、版本中繼資料、地區與目標規則。可在此重新填寫年齡，並把舊 /sdcard/FCL 資料複製到 /sdcard/KCU。</string>
+    <string name="kcu_feature_age">重新填寫年齡</string>
+    <string name="kcu_feature_migrate">遷移舊目錄資料</string>
+    <string name="kcu_feature_migrate_done">舊目錄資料已複製到 /sdcard/KCU，原目錄保留未刪。</string>
+    <string name="kcu_feature_migrate_none">未發現舊目錄資料或複製失敗，原目錄未改動。</string>
 </resources>

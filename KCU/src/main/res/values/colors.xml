@@ -17,4 +17,12 @@
     <color name="kcu_line">#1A282826</color>
     <color name="kcu_card">#FAF8F2</color>
     <color name="kcu_watermark_bg">#4DFAF8F2</color>
+    <!-- 揉纸设计系统：与 docs/设计稿/ 两份稿的 :root token 一一对应 -->
+    <color name="kcu_paper">#F1EFE8</color>
+    <color name="kcu_paper_hi">#FAF8F2</color>
+    <color name="kcu_backdrop">#C9C6BB</color>
+    <color name="kcu_accent_hi">#4F8580</color>
+    <color name="kcu_sel">#1A3D6B66</color>
+    <color name="kcu_line_2">#29282826</color>
+    <color name="kcu_warn">#B8543F</color>
 </resources>

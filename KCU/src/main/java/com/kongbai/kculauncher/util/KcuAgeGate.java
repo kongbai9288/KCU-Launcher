@@ -99,33 +99,28 @@ public final class KcuAgeGate {
         card.addView(KcuUi.body(context, context.getString(R.string.kcu_age_prompt)));
         card.addView(KcuUi.gap(context, 18));
 
-        RadioGroup group = new RadioGroup(context);
-        group.setOrientation(RadioGroup.VERTICAL);
-        int[] options = {6, 12, 16, 18, 20};
-        String unit = context.getString(R.string.kcu_age_unit);
-        for (int i = 0; i < options.length; i++) {
-            RadioButton rb = new RadioButton(context);
-            rb.setId(i + 1);
-            rb.setText(options[i] + unit);
-            rb.setTag(options[i]);
-            rb.setTextColor(KcuUi.INK);
-            rb.setTextSize(15f);
-            group.addView(rb);
-            if (options[i] == THRESHOLD) {
-                group.check(rb.getId());
-            }
-        }
-        selected[0] = THRESHOLD;
-        group.setOnCheckedChangeListener((g, checkedId) -> {
-            android.view.View v = g.findViewById(checkedId);
-            if (v != null && v.getTag() instanceof Integer) {
-                selected[0] = (Integer) v.getTag();
-            }
-        });
-        card.addView(group);
+        // 不再预设 {6,12,16,18,20} 五个档位、也不再默认勾中 18：
+        // 判定只问「满没满 18」，替玩家决定「你会落在哪几档」并默认声明成年没有依据。
+        // 改为直接填周岁，未填时 selected[0] 保持 0，确认键校验 1..120。
+        android.widget.EditText ageInput = KcuUi.field(context, context.getString(R.string.kcu_age_input_hint));
+        ageInput.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        card.addView(ageInput);
+        selected[0] = 0;
 
         android.widget.Button confirm = KcuUi.primaryButton(context, context.getString(R.string.kcu_age_confirm));
         confirm.setOnClickListener(v -> {
+            int age;
+            try {
+                age = Integer.parseInt(ageInput.getText().toString().trim());
+            } catch (NumberFormatException e) {
+                age = -1;
+            }
+            if (age < 1 || age > 120) {
+                android.widget.Toast.makeText(context,
+                        R.string.kcu_age_invalid, android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+            selected[0] = age;
             if (onConfirm != null) {
                 onConfirm.run();
             }

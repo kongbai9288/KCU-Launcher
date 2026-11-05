@@ -10,8 +10,6 @@ import com.kongbai.kculauncher.util.KcuAgeGate;
 import com.kongbai.kculauncher.util.KcuDevMode;
 import com.kongbai.kculauncher.util.KcuUi;
 
-import android.widget.ScrollView;
-
 /**
  * 年龄声明，以及受限状态下的说明。
  * 界面一律经 KcuUi 构建。
@@ -36,7 +34,6 @@ public class KcuAgeActivity extends Activity {
      * notice 非空时在顶部加一句说明，用于"刚才选的年龄不符合要求"这种情况。
      */
     private void showDeclare(String notice) {
-        ScrollView scroll = new ScrollView(this);
         LinearLayout root = KcuUi.root(this);
 
         LinearLayout card = KcuUi.card(this);
@@ -45,7 +42,7 @@ public class KcuAgeActivity extends Activity {
             card.addView(KcuUi.gap(this, 12));
         }
         // 标题与说明由 KcuAgeGate.buildInto 统一构建，此处不再重复添加
-        final int[] selected = new int[]{KcuAgeGate.THRESHOLD};
+        final int[] selected = new int[]{0};
         KcuAgeGate.buildInto(this, card, selected, () -> {
             KcuAgeGate.declare(selected[0]);
             if (KcuAgeGate.isBlocked()) {
@@ -64,7 +61,6 @@ public class KcuAgeActivity extends Activity {
         });
 
         root.addView(card);
-        scroll.addView(root);
-        setContentView(scroll);
+        setContentView(root);
     }
 }

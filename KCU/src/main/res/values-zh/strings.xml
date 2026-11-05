@@ -1657,4 +1657,14 @@
     <string name="kcu_ime_dismissed">已收起键盘，再按一次即可粘贴</string>
     <string name="kcu_text_not_delivered">文字没有送达游戏</string>
     <string name="kcu_paste_truncated">粘贴的文字已截断为 %1$d 个字符</string>
+    <string name="kcu_age_input_hint">请输入周岁年龄（1–120）</string>
+    <string name="kcu_age_invalid">请输入有效的年龄（1–120）</string>
+    <string name="settings_launcher_feature_center">功能中心</string>
+    <string name="settings_launcher_feature_center_open">打开</string>
+    <string name="settings_launcher_feature_center_desc">重填年龄、迁移旧目录数据，以及查看没有独立入口的已实现功能。</string>
+    <string name="kcu_feature_center_body">已实现但没有独立菜单入口的功能：远程策略、强制停止、数据导出、实例注册表、存档 UUID 重写、账号迁移、.kcul 格式、登录探测、版本元数据、地区与目标规则。可在此重新填写年龄，并把旧 /sdcard/FCL 数据复制到 /sdcard/KCU。</string>
+    <string name="kcu_feature_age">重新填写年龄</string>
+    <string name="kcu_feature_migrate">迁移旧目录数据</string>
+    <string name="kcu_feature_migrate_done">旧目录数据已复制到 /sdcard/KCU，原目录保留未删。</string>
+    <string name="kcu_feature_migrate_none">未发现旧目录数据或复制失败，原目录未改动。</string>
 </resources>

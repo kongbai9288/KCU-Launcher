@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 揉纸设计系统：间距 / 圆角 / 栏宽，全部来自桌面端 v3 的 sp 与 r token -->
+    <dimen name="kcu_sp_1">4dp</dimen>
+    <dimen name="kcu_sp_2">8dp</dimen>
+    <dimen name="kcu_sp_3">12dp</dimen>
+    <dimen name="kcu_sp_4">16dp</dimen>
+    <dimen name="kcu_sp_6">24dp</dimen>
+    <dimen name="kcu_sp_10">40dp</dimen>
+    <dimen name="kcu_r_sm">4dp</dimen>
+    <dimen name="kcu_r_md">8dp</dimen>
+    <dimen name="kcu_r_lg">10dp</dimen>
+    <dimen name="kcu_rail_w">64dp</dimen>
+    <dimen name="kcu_side_w">300dp</dimen>
+</resources>

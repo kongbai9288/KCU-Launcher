@@ -36,6 +36,7 @@ enum class LauncherSettingTag {
     EXPORT_LOG,
     REQUEST_AUDIO,
     CLEAR_MOD_CACHE,
+    FEATURE_CENTER,
     THEME_COLOR_RESET,
     THEME_COLOR_FETCH,
     THEME_COLOR_SET,
@@ -154,6 +155,11 @@ class LauncherSettingAdapter(
                 listOf(Triple(0, R.string.settings_launcher_upgrade_check, LauncherSettingTag.CHECK_UPDATE),
                     Triple(0, R.string.settings_launcher_update_changelog, LauncherSettingTag.SHOW_CHANGELOG)),
                 R.string.settings_launcher_upgrade_desc,
+            ),
+            Row.ButtonRow(
+                R.string.settings_launcher_feature_center,
+                listOf(Triple(0, R.string.settings_launcher_feature_center_open, LauncherSettingTag.FEATURE_CENTER)),
+                R.string.settings_launcher_feature_center_desc,
             ),
             Row.ButtonRow(
                 R.string.settings_launcher_debug,

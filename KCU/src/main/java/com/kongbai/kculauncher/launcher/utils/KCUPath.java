@@ -47,28 +47,75 @@ public class KCUPath {
     public static String KCU_SHARED_ROOT = resolveSharedRoot();
     public static String SHARED_COMMON_DIR = KCU_SHARED_ROOT + "/.minecraft";
 
+    /** 旧公共根是否仍有数据待迁移；静态初始化不搬文件，避免大目录拖住启动 */
+    public static volatile boolean LEGACY_ROOT_PENDING = false;
+
     private static String resolveSharedRoot() {
         String external = Environment.getExternalStorageDirectory().getAbsolutePath();
         File kcu = new File(external, "KCU");
         File legacy = new File(external, "FCL");
+        // 根只在 KCU 下决策，不再把 legacy 当作候选根。
+        // 旧写法在 /sdcard/FCL/.minecraft 存在时直接沿用 FCL 为公共根并写标记固化，
+        // 于是「去完 FCL 的名字，数据却还留在 FCL 里」；真正的私有目录本来也读不到。
         if (new File(kcu, KCU_ROOT_MARKER).exists()) {
             return kcu.getAbsolutePath();
         }
-        if (new File(legacy, KCU_ROOT_MARKER).exists()) {
-            return legacy.getAbsolutePath();
+        if (new File(legacy, ".minecraft").isDirectory()
+                && !new File(kcu, ".minecraft").isDirectory()) {
+            LEGACY_ROOT_PENDING = true;
         }
-        // 首次决策：仅当 KCU 下确有游戏数据时沿用，避免空壳目录抢占
-        // 判定 .minecraft 而非 KCU 本身，因为 log/control 等目录可能单独残留
-        boolean legacyHasData = new File(legacy, ".minecraft").exists();
-        File chosen = legacyHasData ? legacy : kcu;
         try {
-            File marker = new File(chosen, KCU_ROOT_MARKER);
+            File marker = new File(kcu, KCU_ROOT_MARKER);
             marker.getParentFile().mkdirs();
             marker.createNewFile();
         } catch (Exception ignored) {
             // 标记写入失败（多为权限未授予）不阻断，下次启动会重新判定
         }
-        return chosen.getAbsolutePath();
+        return kcu.getAbsolutePath();
+    }
+
+    /**
+     * 把旧公共根下的 .minecraft 复制（不移动、不删除源）到 KCU 根。
+     * 保守口径：只在复制全过程无异常后才写标记；任何失败都保留源数据。
+     * 由「功能中心 → 迁移旧目录数据」显式触发，不在静态初始化里跑。
+     */
+    public static boolean migrateLegacySharedRoot() {
+        File external = Environment.getExternalStorageDirectory();
+        File legacy = new File(new File(external, "FCL"), ".minecraft");
+        File kcuRoot = new File(external, "KCU");
+        File target = new File(kcuRoot, ".minecraft");
+        if (!legacy.isDirectory()) {
+            return false;
+        }
+        if (new File(kcuRoot, KCU_ROOT_MARKER).exists() && target.isDirectory()) {
+            return true;
+        }
+        try {
+            copyRecursively(legacy, target);
+            new File(kcuRoot, KCU_ROOT_MARKER).createNewFile();
+            LEGACY_ROOT_PENDING = false;
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static void copyRecursively(File src, File dst) throws java.io.IOException {
+        if (src.isDirectory()) {
+            if (!dst.isDirectory() && !dst.mkdirs()) {
+                throw new java.io.IOException("mkdir " + dst);
+            }
+            File[] children = src.listFiles();
+            if (children == null) {
+                throw new java.io.IOException("list " + src);
+            }
+            for (File child : children) {
+                copyRecursively(child, new File(dst, child.getName()));
+            }
+        } else {
+            java.nio.file.Files.copy(src.toPath(), dst.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     public static String AUTHLIB_INJECTOR_PATH;
@@ -82,7 +129,7 @@ public class KCUPath {
         NATIVE_LIB_DIR = context.getApplicationInfo().nativeLibraryDir;
 
         LOG_DIR = KCU_SHARED_ROOT + "/log";
-        CACHE_DIR = context.getCacheDir() + "/fclauncher";
+        CACHE_DIR = context.getCacheDir() + "/kcu";
 
         RUNTIME_DIR = context.getDir("runtime", 0).getAbsolutePath();
         JAVA_PATH = RUNTIME_DIR + "/java";

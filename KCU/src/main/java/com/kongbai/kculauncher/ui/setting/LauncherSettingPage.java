@@ -123,6 +123,9 @@ public class LauncherSettingPage extends KCUPage implements LauncherSettingAdapt
             case EXPORT_LOG:
                 exportLog();
                 break;
+            case FEATURE_CENTER:
+                showFeatureCenter();
+                break;
             case CLEAR_MOD_CACHE:
                 Task.runAsync(RemoteModCache::clear).whenComplete(Schedulers.androidUIThread(), e -> {
                     Toast.makeText(getContext(), getContext().getString(R.string.settings_launcher_mod_cache_cleared), Toast.LENGTH_SHORT).show();
@@ -379,5 +382,29 @@ public class LauncherSettingPage extends KCUPage implements LauncherSettingAdapt
             default:
                 break;
         }
+    }
+
+    /** 功能中心：把「有实现、没有独立菜单项」的能力集中到一个可点到的入口。 */
+    private void showFeatureCenter() {
+        KCUAlertDialog.Builder builder = new KCUAlertDialog.Builder(getContext());
+        builder.setAlertLevel(KCUAlertDialog.AlertLevel.INFO);
+        builder.setTitle(getContext().getString(R.string.settings_launcher_feature_center));
+        builder.setMessage(getContext().getString(R.string.kcu_feature_center_body));
+        builder.setPositiveButton(getContext().getString(R.string.kcu_feature_age), () -> {
+            com.kongbai.kculauncher.util.KcuAgeGate.reset();
+            Intent intent = new Intent(getContext(),
+                    com.kongbai.kculauncher.activity.KcuAgeActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+        });
+        builder.setNeutralButton(getContext().getString(R.string.kcu_feature_migrate), () -> {
+            boolean ok = KCUPath.migrateLegacySharedRoot();
+            Toast.makeText(getContext(), ok
+                    ? getContext().getString(R.string.kcu_feature_migrate_done)
+                    : getContext().getString(R.string.kcu_feature_migrate_none),
+                    Toast.LENGTH_SHORT).show();
+        });
+        builder.setNegativeButton(getContext().getString(R.string.dialog_negative), null);
+        builder.create().show();
     }
 }

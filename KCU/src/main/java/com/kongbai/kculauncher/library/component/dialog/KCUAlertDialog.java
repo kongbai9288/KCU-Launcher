@@ -79,18 +79,21 @@ public class KCUAlertDialog extends KCUDialog implements View.OnClickListener {
 
     private void checkHeight() {
         parent.post(() -> message.post(() -> {
+            // 按钮行在 dialog_alert.xml 中位于 ScrollView 之外，永远不参与滚动。
+            // 旧写法把整个窗口钳到「屏高 - 30dp」，正常长度的弹窗因此被塞进滚动区，
+            // 表现为「标题看完要下滑才能看到确认按钮」。现在窗口一律自适应，
+            // 只有正文确实超过屏高 60% 时才给正文设上限，按钮始终同屏可见。
             WindowManager wm = getWindow().getWindowManager();
             Point point = new Point();
             wm.getDefaultDisplay().getSize(point);
-            int maxHeight = point.y - ConvertUtils.dip2px(getContext(), 30);
-            if (parent.getMeasuredHeight() < maxHeight) {
-                ViewGroup.LayoutParams layoutParams = scrollView.getLayoutParams();
-                layoutParams.height = message.getMeasuredHeight();
-                scrollView.setLayoutParams(layoutParams);
-                getWindow().setLayout(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
-            } else {
-                getWindow().setLayout(WindowManager.LayoutParams.WRAP_CONTENT, maxHeight);
-            }
+            int maxContent = (int) (point.y * 0.6f);
+            int content = message.getMeasuredHeight();
+            ViewGroup.LayoutParams lp = scrollView.getLayoutParams();
+            lp.height = (content > 0 && content > maxContent)
+                    ? maxContent : ViewGroup.LayoutParams.WRAP_CONTENT;
+            scrollView.setLayoutParams(lp);
+            getWindow().setLayout(WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT);
         }));
     }
 

@@ -1809,4 +1809,14 @@
     <string name="file_browser_clipboard_stale">The files in the clipboard no longer exist. The clipboard has been cleared.</string>
     <string name="file_browser_paste_skipped_same_dir">%1$d file(s) were already in this folder and were skipped.</string>
     <string name="file_browser_missing_dir">This folder does not exist.</string>
+    <string name="kcu_age_input_hint">Enter your age (1-120)</string>
+    <string name="kcu_age_invalid">Please enter a valid age (1-120).</string>
+    <string name="settings_launcher_feature_center">Feature center</string>
+    <string name="settings_launcher_feature_center_open">Open</string>
+    <string name="settings_launcher_feature_center_desc">Age declaration, legacy data migration, and a list of features without a standalone entry.</string>
+    <string name="kcu_feature_center_body">Implemented features without a standalone menu entry: remote policy, force stop, data export, instance registry, world UUID rewrite, account transfer, .kcul format, login probe, version metadata, region and target rules. Age can be redeclared here; legacy /sdcard/FCL data can be copied into /sdcard/KCU.</string>
+    <string name="kcu_feature_age">Redeclare age</string>
+    <string name="kcu_feature_migrate">Migrate legacy data</string>
+    <string name="kcu_feature_migrate_done">Legacy data copied to /sdcard/KCU. The original folder is kept.</string>
+    <string name="kcu_feature_migrate_none">No legacy data found, or copy failed. The original folder is untouched.</string>
 </resources>

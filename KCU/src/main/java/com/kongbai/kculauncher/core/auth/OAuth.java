@@ -55,6 +55,13 @@ public class OAuth {
     }
 
     public Result authenticate(GrantFlow grantFlow, Options options) throws AuthenticationException {
+        // 未配置公开的 client_id 时直接给出可读提示，不再发出缺参请求。
+        // 否则微软会回 AADSTS900144，整串英文报错被原样弹给玩家。
+        String clientId = options.callback.getClientId();
+        if (clientId == null || clientId.trim().isEmpty()) {
+            throw new AuthenticationException(
+                    "正版登录未配置：缺少公开的 client_id。请在构建时配置 OAUTH_CLIENT_ID，或改用离线账号。");
+        }
         try {
             switch (grantFlow) {
                 case AUTHORIZATION_CODE:

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FCL · 揉纸 UI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23F2F1EC'/%3E%3Ctext x='32' y='44' font-size='32' text-anchor='middle' fill='%233a3a3a' font-family='serif'%3EF%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap">
+<style>
+  :root{
+    --paper:      #F1EFE8;
+    --paper-hi:   #FAF8F2;
+    --ink:        #2C2C2A;
+    --ink-2:      #55534C;
+    --ink-3:      #8E8B80;
+    --line:       rgba(40,40,38,.10);
+    --accent:     #3D6B66;
+    --accent-hi:  #4F8580;
+    --sel:        rgba(61,107,102,.10);
+    --card:       rgba(255,255,255,.72);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:'Noto Sans SC',-apple-system,sans-serif;
+    color:var(--ink);
+    background:#C9C6BB;
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+  }
+
+  /* ============ 揉纸背景 ============ */
+  .paper{
+    width:100%;max-width:1280px;
+    aspect-ratio:16/9;
+    min-height:640px;
+    border-radius:4px;
+    position:relative;
+    overflow:hidden;
+    background-color:var(--paper);
+    background-image:
+      radial-gradient(1200px 800px at 20% 15%, rgba(255,255,255,.55), transparent 60%),
+      radial-gradient(900px 700px at 85% 90%, rgba(0,0,0,.06), transparent 60%),
+      linear-gradient(128deg,
+        transparent 0%, transparent 30%,
+        rgba(0,0,0,.05) 30.6%, rgba(255,255,255,.5) 31.2%,
+        transparent 32%, transparent 100%),
+      linear-gradient(52deg,
+        transparent 0%, transparent 62%,
+        rgba(255,255,255,.45) 62.5%, rgba(0,0,0,.045) 63.2%,
+        transparent 64%, transparent 100%),
+      linear-gradient(178deg,
+        transparent 0%, transparent 78%,
+        rgba(0,0,0,.035) 78.4%, rgba(255,255,255,.4) 78.9%,
+        transparent 79.5%, transparent 100%),
+      linear-gradient(100deg,
+        transparent 0%, transparent 45%,
+        rgba(0,0,0,.03) 45.3%, rgba(255,255,255,.35) 45.7%,
+        transparent 46.2%, transparent 100%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.2  0 0 0 0 0.2  0 0 0 0 0.18  0 0 0 .07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    box-shadow:
+      0 1px 2px rgba(0,0,0,.12),
+      0 12px 40px rgba(0,0,0,.18),
+      0 30px 80px rgba(0,0,0,.22);
+    display:flex;
+  }
+  .paper::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    box-shadow:inset 0 0 40px rgba(0,0,0,.05), inset 1px 1px 0 rgba(255,255,255,.6);
+  }
+
+  /* ============ 左侧图标栏 ============ */
+  .rail{
+    width:64px;flex-shrink:0;
+    padding:14px 0;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    border-right:1px solid var(--line);
+    z-index:3;
+  }
+  .rail button{
+    width:44px;height:44px;border-radius:8px;
+    background:transparent;border:none;cursor:pointer;
+    color:var(--ink-2);
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s,color .15s;
+  }
+  .rail button:hover{background:rgba(0,0,0,.05);color:var(--ink);}
+  .rail button.active{background:var(--sel);color:var(--accent);}
+  .rail svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .rail .spacer{flex:1;}
+
+  /* ============ 中央：主视图 / 衣柜视图 ============ */
+  .stage{
+    flex:1;position:relative;
+    display:flex;align-items:center;justify-content:center;
+    min-width:0;
+  }
+
+  /* 主视图：最近启动 */
+  .hero{width:100%;max-width:560px;padding:0 20px;}
+
+  /* 空状态 */
+  .empty{text-align:center;padding:20px 0;}
+  .empty-icon{
+    width:64px;height:64px;margin:0 auto 18px;
+    color:var(--ink-3);
+  }
+  .empty-icon svg{width:100%;height:100%;}
+  .empty-title{
+    font-family:'Noto Serif SC',serif;
+    font-size:20px;font-weight:700;color:var(--ink);
+  }
+  .empty-sub{
+    font-size:13px;color:var(--ink-3);margin-top:8px;
+    line-height:1.7;
+  }
+  .empty-btn{
+    margin-top:22px;
+    background:var(--ink);color:#fff;
+    border:none;
+    padding:12px 32px;border-radius:8px;
+    font-family:inherit;font-size:14px;letter-spacing:2px;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,.2);
+    transition:transform .1s;
+  }
+  .empty-btn:hover{background:#000;}
+  .empty-btn:active{transform:scale(.97);}
+  .empty-skip{
+    margin-top:16px;font-size:11px;color:var(--ink-3);
+    cursor:pointer;text-decoration:underline dotted;
+  }
+  .empty-skip:hover{color:var(--ink-2);}
+
+  /* 公告卡 */
+  .notice{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px 24px;
+    box-shadow:0 4px 14px rgba(0,0,0,.05);
+  }
+  .notice-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding-bottom:12px;border-bottom:1px solid var(--line);
+    margin-bottom:14px;
+  }
+  .notice-title{
+    font-family:'Noto Serif SC',serif;
+    font-size:18px;font-weight:700;color:var(--ink);
+  }
+  .notice-date{font-size:11px;color:var(--ink-3);}
+  .notice-body{
+    font-size:13px;line-height:1.9;color:var(--ink-2);
+  }
+  .notice-body b{color:var(--accent);font-weight:600;}
+  .notice-foot{
+    margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);
+    display:flex;gap:6px;
+  }
+  .notice-tag{
+    font-size:10px;padding:3px 8px;border-radius:3px;
+    background:rgba(61,107,102,.10);color:var(--accent);
+    letter-spacing:.5px;
+  }
+
+  /* 衣柜视图 */
+  .closet{
+    width:100%;max-width:520px;
+    padding:0 20px;
+  }
+  .closet-head{margin-bottom:18px;}
+  .closet-title{
+    font-family:'Noto Serif SC',serif;
+    font-size:22px;font-weight:700;color:var(--ink);
+  }
+  .closet-sub{font-size:12px;color:var(--ink-3);margin-top:4px;}
+  .skin-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+  }
+  .skin-cell{
+    background:var(--paper-hi);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px;
+    cursor:pointer;
+    text-align:center;
+    transition:transform .15s, box-shadow .15s, border-color .15s;
+  }
+  .skin-cell:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.08);}
+  .skin-cell.active{
+    border-color:var(--accent);
+    box-shadow:0 0 0 2px rgba(61,107,102,.2);
+  }
+  .skin-face{
+    width:100%;aspect-ratio:1/1;border-radius:4px;
+    position:relative;overflow:hidden;
+    margin-bottom:8px;
+  }
+  .skin-face .hair{position:absolute;top:0;left:0;right:0;height:38%;}
+  .skin-face .face{position:absolute;top:38%;left:0;right:0;bottom:32%;background:#C8956C;}
+  .skin-face .eyes{
+    position:absolute;top:55%;left:18%;right:18%;height:6%;background:#3B6EA5;
+  }
+  .skin-face .body{position:absolute;bottom:0;left:0;right:0;height:30%;}
+  .skin-name{font-size:11px;color:var(--ink-2);}
+
+  /* 底部中央水印 */
+  .watermark{
+    position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+    font-size:12px;color:var(--ink-3);letter-spacing:1px;
+    padding:6px 18px;border-radius:20px;
+    background:rgba(255,255,255,.4);
+  }
+
+  /* ============ 右侧面板 ============ */
+  .side{
+    width:300px;flex-shrink:0;
+    padding:20px 20px 20px 0;
+    display:flex;flex-direction:column;gap:12px;
+    z-index:3;
+  }
+
+  /* 账号卡 */
+  .acct{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px;
+    display:flex;align-items:center;gap:12px;
+    backdrop-filter:blur(4px);
+  }
+  .face{
+    width:48px;height:48px;border-radius:6px;
+    background:linear-gradient(135deg,#E8D0B8,#C8956C);
+    position:relative;flex-shrink:0;
+    overflow:hidden;
+  }
+  .face::before{ /* 头发 */
+    content:"";position:absolute;top:0;left:0;right:0;height:40%;background:#6B4A36;
+  }
+  .face::after{ /* 眼睛 */
+    content:"";position:absolute;top:50%;left:15%;right:15%;
+    height:4px;background:#3B6EA5;
+    box-shadow:0 8px 0 #C8956C;
+  }
+  .acct-info{flex:1;min-width:0;}
+  .acct-name{font-weight:700;font-size:15px;}
+  .acct-type{font-size:11px;color:var(--ink-3);margin-top:2px;}
+  .acct-btn{
+    background:none;border:none;cursor:pointer;
+    color:var(--ink-3);font-size:11px;
+    padding:4px 8px;border-radius:4px;
+  }
+  .acct-btn:hover{background:rgba(0,0,0,.05);color:var(--ink);}
+
+  /* 当前版本卡（可展开列表） */
+  .vercard{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    backdrop-filter:blur(4px);
+  }
+  .ver-current{
+    display:flex;align-items:center;gap:10px;
+    padding:12px 14px;cursor:pointer;
+    border:none;background:none;width:100%;text-align:left;
+    font-family:inherit;color:inherit;
+  }
+  .ver-current:hover{background:rgba(0,0,0,.03);}
+  .ver-icon{
+    width:36px;height:36px;border-radius:6px;flex-shrink:0;
+    background:linear-gradient(180deg,#6B8E4E 50%,#6B4A36 50%);
+    position:relative;
+  }
+  .ver-icon::after{
+    content:"";position:absolute;top:20%;left:20%;right:20%;height:20%;
+    background:rgba(255,255,255,.2);
+  }
+  .ver-info{flex:1;min-width:0;}
+  .ver-name{font-weight:700;font-size:14px;}
+  .ver-sub{font-size:11px;color:var(--ink-3);margin-top:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .gear{
+    width:28px;height:28px;border-radius:6px;
+    background:none;border:none;cursor:pointer;color:var(--ink-3);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .gear:hover{background:rgba(0,0,0,.06);color:var(--ink);}
+  .gear svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;}
+
+  /* 多实例列表（展开态） */
+  .ver-list{
+    max-height:0;overflow:hidden;
+    transition:max-height .25s ease;
+    border-top:1px solid transparent;
+  }
+  .ver-list.open{
+    max-height:340px;overflow-y:auto;
+    border-top-color:var(--line);
+  }
+  .ver-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 14px;cursor:pointer;
+    border:none;background:none;width:100%;text-align:left;
+    font-family:inherit;color:inherit;
+  }
+  .ver-item:hover{background:rgba(0,0,0,.04);}
+  .ver-item.active{background:var(--sel);}
+  .ver-item.active .ver-name{color:var(--accent);}
+  .ver-item .vsmall{
+    width:26px;height:26px;border-radius:4px;flex-shrink:0;
+    background:linear-gradient(180deg,#6B8E4E 50%,#6B4A36 50%);
+  }
+  .ver-item .vsmall.f{background:linear-gradient(180deg,#4A6FA5 50%,#2C4A7C 50%);}
+  .ver-item .vsmall.o{background:linear-gradient(180deg,#888 50%,#444 50%);}
+  .ver-item .vsmall.q{background:linear-gradient(180deg,#B8543F 50%,#8C3A28 50%);}
+  .ver-item-name{flex:1;min-width:0;}
+  .ver-item-name .n{font-size:13px;font-weight:500;}
+  .ver-item-name .s{font-size:10px;color:var(--ink-3);margin-top:1px;}
+  .ver-item-time{font-size:10px;color:var(--ink-3);}
+
+  /* 启动按钮 */
+  .launch{
+    width:100%;
+    background:var(--ink);color:#fff;
+    border:none;
+    padding:16px;border-radius:10px;
+    font-family:inherit;font-size:15px;font-weight:500;letter-spacing:4px;
+    cursor:pointer;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+    transition:transform .1s, background .15s;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .launch:hover{background:#000;}
+  .launch:active{transform:scale(.98);}
+  .launch svg{width:16px;height:16px;fill:currentColor;}
+
+  /* 窄屏适配 */
+  @media (max-width: 900px){
+    body{padding:0;align-items:flex-start;background:var(--paper);}
+    .paper{aspect-ratio:auto;min-height:100vh;max-width:100%;border-radius:0;flex-direction:column;}
+    .rail{flex-direction:row;width:100%;height:60px;border-right:none;border-bottom:1px solid var(--line);padding:0 10px;}
+    .stage{order:2;min-height:300px;}
+    .side{order:3;width:100%;padding:0 16px 20px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="paper">
+
+  <!-- 左图标栏 -->
+  <nav class="rail">
+    <button class="active" title="首页">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>
+    </button>
+    <button title="设置">
+      <svg viewBox="0 0 24 24"><path d="M14 7l-3-3L7 8l3 3zM7 8l-4 4 5 5 4-4M13 13l4 4 4-4-4-4"/></svg>
+    </button>
+    <button title="下载">
+      <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+    </button>
+    <button title="控制">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="3"/><path d="M7 11v3M5.5 12.5h3M15 12h.01M18 14h.01"/></svg>
+    </button>
+    <button title="衣柜" id="btnCloset">
+      <svg viewBox="0 0 24 24"><path d="M6 3h12v4H6zM6 7l-2 4v10h16V11l-2-4M10 11h4"/></svg>
+    </button>
+    <button title="版本">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg>
+    </button>
+    <button title="偏好">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6A7 7 0 0 0 19 12z"/></svg>
+    </button>
+    <div class="spacer"></div>
+    <button title="返回">
+      <svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+  </nav>
+
+  <!-- 中央：主视图 / 衣柜视图 -->
+  <section class="stage">
+
+    <!-- 默认主视图：公告 / 空状态 -->
+    <div class="hero" id="viewHome">
+
+      <!-- 空状态：新用户没有实例 -->
+      <div class="empty" id="emptyState" style="display:none;">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <path d="M4 9h16M9 4v5"/>
+            <path d="M9 15l2 2 4-4"/>
+          </svg>
+        </div>
+        <div class="empty-title">还没有游戏版本</div>
+        <div class="empty-sub">下载或导入第一个实例后，<br>这里会显示公告与更新</div>
+        <button class="empty-btn" id="btnGoDownload">前往下载</button>
+        <div class="empty-skip" id="btnSkipEmpty">查看示例数据</div>
+      </div>
+
+      <!-- 有数据时：公告卡 -->
+      <div id="recentBlock">
+        <div class="notice">
+          <div class="notice-head">
+            <div class="notice-title">公告：关于 1.3.1.5</div>
+            <div class="notice-date">2026.06.28</div>
+          </div>
+          <div class="notice-body">
+            如果你发现更新到 <b>1.3.1.5</b> 后在部分需要选择文件夹的操作中启动器发生崩溃，可以前往 GitHub 重新下载最新版本。
+          </div>
+          <div class="notice-foot">
+            <span class="notice-tag">更新</span>
+            <span class="notice-tag">稳定性</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 衣柜视图：皮肤选择 -->
+    <div class="closet" id="viewCloset" style="display:none;">
+      <div class="closet-head">
+        <div class="closet-title">衣柜</div>
+        <div class="closet-sub">选一套当前使用的皮肤</div>
+      </div>
+      <div class="skin-grid" id="skinGrid">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </div>
+
+    <div class="watermark">Fold Craft Launcher 1.3.3.3</div>
+  </section>
+
+  <!-- 右侧面板 -->
+  <aside class="side">
+
+    <!-- 账号 -->
+    <div class="acct">
+      <div class="face"></div>
+      <div class="acct-info">
+        <div class="acct-name">kongbai</div>
+        <div class="acct-type">离线账户</div>
+      </div>
+      <button class="acct-btn">切换</button>
+    </div>
+
+    <!-- 当前版本 + 多实例列表 -->
+    <div class="vercard">
+      <button class="ver-current" id="verToggle">
+        <div class="ver-icon"></div>
+        <div class="ver-info">
+          <div class="ver-name" id="curName">1.12.2-Forge</div>
+          <div class="ver-sub" id="curSub">1.12.2 · Forge 14.23.5 · 23 mods</div>
+        </div>
+        <div class="gear" title">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6A7 7 0 0 0 19 12z"/></svg>
+        </div>
+      </button>
+
+      <div class="ver-list" id="verList">
+        <button class="ver-item active" data-name="1.12.2-Forge" data-sub="1.12.2 · Forge 14.23.5 · 23 mods">
+          <div class="vsmall"></div>
+          <div class="ver-item-name">
+            <div class="n">1.12.2-Forge</div>
+            <div class="s">旧养老档 · 23 mods</div>
+          </div>
+          <div class="ver-item-time">3 天前</div>
+        </button>
+        <button class="ver-item" data-name="1.20.1-Fabric" data-sub="1.20.1 · Fabric 0.16 · 47 mods">
+          <div class="vsmall f"></div>
+          <div class="ver-item-name">
+            <div class="n">1.20.1-Fabric</div>
+            <div class="s">纸鸢整合 · 47 mods</div>
+          </div>
+          <div class="ver-item-time">1 周前</div>
+        </button>
+        <button class="ver-item" data-name="1.21.4-NeoForge" data-sub="1.21.4 · NeoForge · 12 mods">
+          <div class="vsmall q"></div>
+          <div class="ver-item-name">
+            <div class="n">1.21.4-NeoForge</div>
+            <div class="s">新版本试水</div>
+          </div>
+          <div class="ver-item-time">2 周前</div>
+        </button>
+        <button class="ver-item" data-name="1.16.5-OptiFine" data-sub="1.16.5 · OptiFine · 光影">
+          <div class="vsmall o"></div>
+          <div class="ver-item-name">
+            <div class="n">1.16.5-OptiFine</div>
+            <div class="s">光影专用档</div>
+          </div>
+          <div class="ver-item-time">1 月前</div>
+        </button>
+        <button class="ver-item" data-name="1.7.10-Vanilla" data-sub="1.7.10 · 原版纯净">
+          <div class="vsmall"></div>
+          <div class="ver-item-name">
+            <div class="n">1.7.10-Vanilla</div>
+            <div class="s">怀旧原版</div>
+          </div>
+          <div class="ver-item-time">2 月前</div>
+        </button>
+        <button class="ver-item" data-name="1.18.2-Quilt" data-sub="1.18.2 · Quilt · 18 mods">
+          <div class="vsmall q"></div>
+          <div class="ver-item-name">
+            <div class="n">1.18.2-Quilt</div>
+            <div class="s">实验性整合</div>
+          </div>
+          <div class="ver-item-time">2 月前</div>
+        </button>
+        <button class="ver-item" data-name="1.19.2-Fabric" data-sub="1.19.2 · Fabric · 31 mods">
+          <div class="vsmall f"></div>
+          <div class="ver-item-name">
+            <div class="n">1.19.2-Fabric</div>
+            <div class="s">建筑向整合</div>
+          </div>
+          <div class="ver-item-time">3 月前</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 启动 -->
+    <button class="launch" id="btnStart">
+      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      启 动
+    </button>
+
+  </aside>
+</div>
+
+<script>
+  // 空状态 → 公告 切换
+  const emptyState=document.getElementById('emptyState');
+  const recentBlock=document.getElementById('recentBlock');
+  document.getElementById('btnSkipEmpty').addEventListener('click',()=>{
+    emptyState.style.display='none';
+    recentBlock.style.display='';
+  });
+  document.getElementById('btnGoDownload').addEventListener('click',()=>{
+    const b=document.getElementById('btnGoDownload');
+    b.textContent='跳转到下载…';
+    setTimeout(()=>{b.textContent='前往下载';},1000);
+  });
+
+  // 左栏切换高亮
+  document.querySelectorAll('.rail button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.rail button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+    });
+  });
+
+  // 衣柜 / 首页 视图切换
+  const viewHome=document.getElementById('viewHome');
+  const viewCloset=document.getElementById('viewCloset');
+  document.querySelector('.rail button[title="首页"]').addEventListener('click',()=>{
+    viewHome.style.display='';
+    viewCloset.style.display='none';
+  });
+  document.getElementById('btnCloset').addEventListener('click',()=>{
+    viewHome.style.display='none';
+    viewCloset.style.display='';
+  });
+
+  // 渲染皮肤网格
+  const skins=[
+    {name:'Alex',    hair:'#6B4A36', body:'#2E8B8B', active:true},
+    {name:'Steve',   hair:'#4A3428', body:'#3B6EA5'},
+    {name:'Ghost',   hair:'#2C2C2A', body:'#E8E6DF'},
+    {name:'Ember',   hair:'#B8543F', body:'#6B4A36'},
+    {name:'Moss',    hair:'#3D6B66', body:'#6B8E4E'},
+    {name:'Snow',    hair:'#E8E6DF', body:'#4A6FA5'},
+    {name:'Shadow',   hair:'#1A1A1A', body:'#2C2C2A'},
+    {name:'Custom',  hair:'#C9A961', body:'#B8543F'},
+  ];
+  const grid=document.getElementById('skinGrid');
+  skins.forEach(s=>{
+    const cell=document.createElement('div');
+    cell.className='skin-cell'+(s.active?' active':'');
+    cell.innerHTML=`
+      <div class="skin-face">
+        <div class="hair" style="background:${s.hair}"></div>
+        <div class="face"></div>
+        <div class="eyes"></div>
+        <div class="body" style="background:${s.body}"></div>
+      </div>
+      <div class="skin-name">${s.name}</div>`;
+    cell.addEventListener('click',()=>{
+      document.querySelectorAll('.skin-cell').forEach(x=>x.classList.remove('active'));
+      cell.classList.add('active');
+    });
+    grid.appendChild(cell);
+  });
+
+  // 版本列表展开/收起
+  const list=document.getElementById('verList');
+  document.getElementById('verToggle').addEventListener('click',()=>{
+    list.classList.toggle('open');
+  });
+
+  // 选实例
+  document.querySelectorAll('.ver-item').forEach(it=>{
+    it.addEventListener('click',()=>{
+      document.querySelectorAll('.ver-item').forEach(x=>x.classList.remove('active'));
+      it.classList.add('active');
+      document.getElementById('curName').textContent=it.dataset.name;
+      document.getElementById('curSub').textContent=it.dataset.sub;
+      list.classList.remove('open');
+    });
+  });
+
+  // 启动
+  document.getElementById('btnStart').addEventListener('click',()=>{
+    const b=document.getElementById('btnStart');
+    b.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 4v4m0 8v4M4 12h4m8 0h4" stroke="currentColor" stroke-width="2" fill="none"/></svg>加载中…';
+    setTimeout(()=>{
+      b.innerHTML='<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>启 动';
+    },1500);
+  });
+
+  // 切换账号占位
+  document.querySelector('.acct-btn').addEventListener('click',()=>{
+    const n=document.querySelector('.acct-name');
+    const t=n.textContent;
+    n.textContent='选择账号…';
+    setTimeout(()=>{n.textContent=t;},1000);
+  });
+  // 齿轮占位
+  document.querySelector('.gear').addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const sub=document.getElementById('curSub');
+    const t=sub.textContent;
+    sub.textContent='（实例设置）';
+    setTimeout(()=>{sub.textContent=t;},1000);
+  });
+</script>
+</body>
+</html>
