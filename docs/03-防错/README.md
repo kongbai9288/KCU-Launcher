@@ -448,3 +448,7 @@
 ## 240 对话压缩后先拉远端再判断
 
 本地副本与平台压缩后的对话摘要都不是真源。任何「上轮改动丢了/已经做了」的判断，先以 API 拉取的远端文件为准。
+
+241. **重做主界面只能换皮，不能换 id**：`activity_main.xml` 的 `home/manage/download/controller/multiplayer/setting/back` 与 `account/version_card/start/ui_layout/title` 等全部 `R.id` 由 `ActivityMainBinding` 与 `MainActivity` 直接引用，删一个就启动即崩。新增控件一律 `kcu_` 前缀，并在宿主类里挂事件。<!-- ✓ -->
+242. **可见控件必须挂事件**：布局里出现 `clickable="true"` 的按钮 / tab / 格子，宿主类里必须有对应的 `setOnClickListener` 且产生可见反馈。只加静态控件等于又造一批「有入口、点不动」。<!-- ✓ -->
+

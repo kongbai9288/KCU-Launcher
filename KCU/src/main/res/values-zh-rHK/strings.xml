@@ -1094,4 +1094,29 @@
     <string name="kcu_feature_migrate">遷移舊目錄資料</string>
     <string name="kcu_feature_migrate_done">舊目錄資料已複製到 /sdcard/KCU，原目錄保留未刪。</string>
     <string name="kcu_feature_migrate_none">未發現舊目錄資料或複製失敗，原目錄未改動。</string>
+    <!-- 0.99.1 主界面骨架：揉纸中央舞台 -->
+    <string name="kcu_tab_home">首頁</string>
+    <string name="kcu_tab_closet">衣櫃</string>
+    <string name="kcu_empty_title">還沒有遊戲版本</string>
+    <string name="kcu_empty_sub">下載或導入第一個實例後，這裡會顯示公告與更新</string>
+    <string name="kcu_empty_go_download">前往下載</string>
+    <string name="kcu_empty_skip">查看範例資料</string>
+    <string name="kcu_notice_title">公告：關於 1.3.1.5</string>
+    <string name="kcu_notice_date">2026.06.28</string>
+    <string name="kcu_notice_body">如果你發現更新到 1.3.1.5 後在部分需要選擇資料夾的操作中啟動器發生崩潰，可以前往 GitHub 重新下載最新版本。</string>
+    <string name="kcu_notice_tag_update">更新</string>
+    <string name="kcu_notice_tag_stability">穩定性</string>
+    <string name="kcu_closet_title">衣櫃</string>
+    <string name="kcu_closet_sub">選一套目前使用的皮膚</string>
+    <string name="kcu_closet_current">目前：%1$s</string>
+    <string name="kcu_notice_collapse_hint">點擊收起</string>
+    <string name="kcu_notice_expand_hint">點擊展開</string>
+    <string name="kcu_skin_1">Alex</string>
+    <string name="kcu_skin_2">Steve</string>
+    <string name="kcu_skin_3">Ghost</string>
+    <string name="kcu_skin_4">Ember</string>
+    <string name="kcu_skin_5">Moss</string>
+    <string name="kcu_skin_6">Snow</string>
+    <string name="kcu_skin_7">Shadow</string>
+    <string name="kcu_skin_8">Custom</string>
 </resources>

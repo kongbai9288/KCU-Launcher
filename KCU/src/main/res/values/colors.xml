@@ -25,4 +25,13 @@
     <color name="kcu_sel">#1A3D6B66</color>
     <color name="kcu_line_2">#29282826</color>
     <color name="kcu_warn">#B8543F</color>
+    <!-- 揉纸衣柜 8 格皮肤色：取自移动端设计稿 skin 数组 -->
+    <color name="kcu_skin_1">#2E8B8B</color>
+    <color name="kcu_skin_2">#3B6EA5</color>
+    <color name="kcu_skin_3">#E8E6DF</color>
+    <color name="kcu_skin_4">#6B4A36</color>
+    <color name="kcu_skin_5">#6B8E4E</color>
+    <color name="kcu_skin_6">#4A6FA5</color>
+    <color name="kcu_skin_7">#2C2C2A</color>
+    <color name="kcu_skin_8">#B8543F</color>
 </resources>

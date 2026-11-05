@@ -1,6 +1,25 @@
 [
  {
   "type": "release",
+  "versionCode": 155,
+  "versionName": "0.99.1",
+  "date": "2026.11.05",
+  "author": "yuanbao",
+  "description": [
+   {
+    "lang": "zh_CN",
+    "text": [
+     "主界面骨架重建：按移动端揉纸试卷 UI 重建中央舞台，activity_main.xml 全部既有 R.id 一个不动。",
+     "⓿ 中央舞台：首页 / 衣柜双视图 tab、空状态（前往下载、查看示例数据）、公告卡（默认全文同屏、点击折叠）、当前版本卡、底部水印；衣柜 4 列 × 2 行共 8 格，点击切换选中态并显示当前皮肤名。",
+     "❶ 每个新增可点控件都在 MainUI.java 挂了真实反馈：tab 切换视图、前往下载走 UIManager.switchUI 与左栏 download 同一条路径、公告卡折叠展开、8 格皮肤选中态。避免再次出现「有入口、点不动」。",
+     "❷ 左右栏揉纸换皮：bg_game_menu / bg_right_menu 换成 bg_kcu_rail，账号卡与版本卡套 bg_kcu_card_flat；start 背景由 MainActivity.createBackground 动态生成，未动以免覆盖。",
+     "❸ 新增 18 个揉纸 drawable、8 个皮肤色、21 条文案四份同步；新增 id 一律 kcu_ 前缀，保留 stage_card / stage_version / watermark 三个既有 id。"
+    ]
+   }
+  ]
+ },
+ {
+  "type": "release",
   "versionCode": 154,
   "versionName": "0.99.0",
   "date": "2026.11.05",

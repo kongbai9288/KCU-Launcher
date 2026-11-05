@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:transitionName="background"
+    android:background="@color/kcu_paper"
     tools:context=".activity.MainActivity">
 
     <VideoView
@@ -17,7 +18,7 @@
         android:id="@+id/left_menu"
         android:layout_width="64dp"
         android:layout_height="0dp"
-        android:background="@drawable/bg_game_menu"
+        android:background="@drawable/bg_kcu_rail"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:elevation="100dp"
@@ -111,7 +112,7 @@
         android:id="@+id/right_menu"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:background="@drawable/bg_right_menu"
+        android:background="@drawable/bg_kcu_rail"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:elevation="100dp"
@@ -145,7 +146,12 @@
                 android:id="@+id/account"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:background="@drawable/bg_kcu_card_flat"
+                android:foreground="?android:attr/selectableItemBackgroundBorderless"
+                android:paddingStart="@dimen/kcu_sp_3"
+                android:paddingTop="@dimen/kcu_sp_3"
+                android:paddingEnd="@dimen/kcu_sp_3"
+                android:paddingBottom="@dimen/kcu_sp_3"
                 android:clickable="true"
                 android:clipChildren="false"
                 android:clipToPadding="false"
@@ -199,6 +205,7 @@
             <!-- 版本卡片：图标 + 版本名 + 组件摘要，点击进入版本选择，齿轮进入版本设置 -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/version_card"
+                android:background="@drawable/bg_kcu_card_flat"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="8dp"

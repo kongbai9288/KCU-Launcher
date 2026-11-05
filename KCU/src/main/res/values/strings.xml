@@ -1819,4 +1819,29 @@
     <string name="kcu_feature_migrate">Migrate legacy data</string>
     <string name="kcu_feature_migrate_done">Legacy data copied to /sdcard/KCU. The original folder is kept.</string>
     <string name="kcu_feature_migrate_none">No legacy data found, or copy failed. The original folder is untouched.</string>
+    <!-- 0.99.1 主界面骨架：揉纸中央舞台 -->
+    <string name="kcu_tab_home">Home</string>
+    <string name="kcu_tab_closet">Wardrobe</string>
+    <string name="kcu_empty_title">No game version yet</string>
+    <string name="kcu_empty_sub">Download or import your first instance to see announcements here.</string>
+    <string name="kcu_empty_go_download">Go to download</string>
+    <string name="kcu_empty_skip">View sample data</string>
+    <string name="kcu_notice_title">Announcement: About 1.3.1.5</string>
+    <string name="kcu_notice_date">2026.06.28</string>
+    <string name="kcu_notice_body">If the launcher crashes when choosing a folder after updating to 1.3.1.5, download the latest version from GitHub.</string>
+    <string name="kcu_notice_tag_update">Update</string>
+    <string name="kcu_notice_tag_stability">Stability</string>
+    <string name="kcu_closet_title">Wardrobe</string>
+    <string name="kcu_closet_sub">Choose a skin to use</string>
+    <string name="kcu_closet_current">Current: %1$s</string>
+    <string name="kcu_notice_collapse_hint">Tap to collapse</string>
+    <string name="kcu_notice_expand_hint">Tap to expand</string>
+    <string name="kcu_skin_1">Alex</string>
+    <string name="kcu_skin_2">Steve</string>
+    <string name="kcu_skin_3">Ghost</string>
+    <string name="kcu_skin_4">Ember</string>
+    <string name="kcu_skin_5">Moss</string>
+    <string name="kcu_skin_6">Snow</string>
+    <string name="kcu_skin_7">Shadow</string>
+    <string name="kcu_skin_8">Custom</string>
 </resources>
