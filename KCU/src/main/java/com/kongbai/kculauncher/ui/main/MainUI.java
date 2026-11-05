@@ -40,6 +40,8 @@ public class MainUI extends KCUCommonUI {
             R.string.kcu_skin_5, R.string.kcu_skin_6, R.string.kcu_skin_7, R.string.kcu_skin_8
     };
     private boolean noticeExpanded = true;
+    /** 玩家点过「查看示例数据」后，即使仍没有版本也保持公告卡可见 */
+    private boolean showSample = false;
 
     public MainUI(Context context, int id) {
         super(context, id);
@@ -61,6 +63,7 @@ public class MainUI extends KCUCommonUI {
             @Override
             public void onViewAttachedToWindow(@NonNull View v) {
                 refreshSelectedVersion();
+                applyEmptyState();
             }
 
             @Override
@@ -87,8 +90,8 @@ public class MainUI extends KCUCommonUI {
         findViewById(R.id.kcu_btn_go_download).setOnClickListener(v -> openDownload());
         // 查看示例数据：空状态切到公告卡（可见反馈）
         findViewById(R.id.kcu_btn_skip_empty).setOnClickListener(v -> {
-            emptyState.setVisibility(View.GONE);
-            noticeCard.setVisibility(View.VISIBLE);
+            showSample = true;
+            applyEmptyState();
         });
         // 公告卡：默认全文同屏显示，点击在全文 / 折叠之间切换
         noticeCard.setOnClickListener(v -> toggleNotice());
@@ -109,6 +112,16 @@ public class MainUI extends KCUCommonUI {
         showStage(true);
         selectSkin(0);
         applyNoticeState();
+        applyEmptyState();
+    }
+
+    /** 没有选中版本时显示空状态，有版本时显示公告卡；重回前台会按最新值重判。 */
+    private void applyEmptyState() {
+        String version = Profiles.getSelectedVersion();
+        boolean hasVersion = version != null && !version.isEmpty();
+        boolean showNotice = hasVersion || showSample;
+        emptyState.setVisibility(showNotice ? View.GONE : View.VISIBLE);
+        noticeCard.setVisibility(showNotice ? View.VISIBLE : View.GONE);
     }
 
     private void showStage(boolean home) {
